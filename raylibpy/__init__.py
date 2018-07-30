@@ -7,14 +7,14 @@ from ctypes import (
     c_byte,
     c_ubyte,
     c_int,
-    c_int32,
+    # c_int32,
     c_uint,
-    c_uint32,
+    # c_uint32,
     c_short,
     c_ushort,
     c_void_p,
-    c_ssize_t,
-    c_size_t,
+    # c_ssize_t,
+    # c_size_t,
     c_float,
     c_double,
     POINTER,
@@ -31,7 +31,7 @@ _lib_filename = {
 _platform = sys.platform
 
 
-# RAYLIB_BIN_PATH = os.path.abspath(os.path.dirname(__file__))
+RAYLIB_BIN_PATH = None
 if "RAYLIB_BIN_PATH" in os.environ:
     env_path = os.environ['RAYLIB_BIN_PATH']
     if env_path == '__main__':
@@ -56,7 +56,9 @@ else:
         )
         raise RuntimeError(f"Unable to find raylib library ('{_lib_filename[_platform]}').")
 
-_rl = CDLL(os.path.join(RAYLIB_BIN_PATH, _lib_filename[_platform]))
+if RAYLIB_BIN_PATH:
+    _rl = CDLL(os.path.join(RAYLIB_BIN_PATH, _lib_filename[_platform]))
+
 
 __all__ = [
     # CONSTANTS
@@ -1800,7 +1802,7 @@ def get_file_name(file_path: bytes) -> bytes:
 _rl.GetDirectoryPath.argtypes = [CharPtr]
 _rl.GetDirectoryPath.restype = CharPtr
 def get_directory_path(file_name: bytes) -> bytes:
-    """Get full path for a given fileName (uses static string)"""
+    """Get full path for a given file_name (uses static string)"""
     return _rl.GetDirectoryPath(file_name)
 
 
@@ -2197,9 +2199,9 @@ def draw_pixel_v(position: Vector2, color: Color) -> None:
 
 _rl.DrawLine.argtypes = [Int, Int, Int, Int, Color]
 _rl.DrawLine.restype = None
-def draw_line(startPos_x: int, startPos_y: int, endPos_x: int, endPos_y: int, color: Color) -> None:
+def draw_line(start_pos_x: int, start_pos_y: int, end_pos_x: int, end_pos_y: int, color: Color) -> None:
     """Draw a line"""
-    return _rl.DrawLine(startPos_x, startPos_y, endPos_x, endPos_y, color)
+    return _rl.DrawLine(start_pos_x, start_pos_y, end_pos_x, end_pos_y, color)
 
 
 _rl.DrawLineV.argtypes = [Vector2, Vector2, Color]
@@ -2253,9 +2255,9 @@ def draw_circle_lines(center_x: int, center_y: int, radius: float, color: Color)
 
 _rl.DrawRectangle.argtypes = [Int, Int, Int, Int, Color]
 _rl.DrawRectangle.restype = None
-def draw_rectangle(posX: int, posY: int, width: int, height: int, color: Color) -> None:
+def draw_rectangle(pos_x: int, pos_y: int, width: int, height: int, color: Color) -> None:
     """Draw a color-filled rectangle"""
-    return _rl.DrawRectangle(posX, posY, width, height, color)
+    return _rl.DrawRectangle(pos_x, pos_y, width, height, color)
 
 
 _rl.DrawRectangleV.argtypes = [Vector2, Vector2, Color]
@@ -2281,16 +2283,16 @@ def draw_rectangle_pro(rec: Rectangle, origin: Vector2, rotation: float, color: 
 
 _rl.DrawRectangleGradientV.argtypes = [Int, Int, Int, Int, Color, Color]
 _rl.DrawRectangleGradientV.restype = None
-def draw_rectangle_gradient_v(posX: int, posY: int, width: int, height: int, color1: Color, color2: Color) -> None:
+def draw_rectangle_gradient_v(pos_x: int, pos_y: int, width: int, height: int, color1: Color, color2: Color) -> None:
     """Draw a vertical-gradient-filled rectangle"""
-    return _rl.DrawRectangleGradientV(posX, posY, width, height, color1, color2)
+    return _rl.DrawRectangleGradientV(pos_x, pos_y, width, height, color1, color2)
 
 
 _rl.DrawRectangleGradientH.argtypes = [Int, Int, Int, Int, Color, Color]
 _rl.DrawRectangleGradientH.restype = None
-def draw_rectangle_gradient_h(posX: int, posY: int, width: int, height: int, color1: Color, color2: Color) -> None:
+def draw_rectangle_gradient_h(pos_x: int, pos_y: int, width: int, height: int, color1: Color, color2: Color) -> None:
     """Draw a horizontal-gradient-filled rectangle"""
-    return _rl.DrawRectangleGradientH(posX, posY, width, height, color1, color2)
+    return _rl.DrawRectangleGradientH(pos_x, pos_y, width, height, color1, color2)
 
 
 _rl.DrawRectangleGradientEx.argtypes = [Rectangle, Color, Color, Color, Color]
@@ -2302,9 +2304,9 @@ def draw_rectangle_gradient_ex(rec: Rectangle, col1: Color, col2: Color, col3: C
 
 _rl.DrawRectangleLines.argtypes = [Int, Int, Int, Int, Color]
 _rl.DrawRectangleLines.restype = None
-def draw_rectangle_lines(posX: int, posY: int, width: int, height: int, color: Color) -> None:
+def draw_rectangle_lines(pos_x: int, pos_y: int, width: int, height: int, color: Color) -> None:
     """Draw rectangle outline"""
-    return _rl.DrawRectangleLines(posX, posY, width, height, color)
+    return _rl.DrawRectangleLines(pos_x, pos_y, width, height, color)
 
 
 _rl.DrawRectangleLinesEx.argtypes = [Rectangle, Int, Color]
@@ -2419,30 +2421,30 @@ def load_image_ex(pixels: ColorPtr, width: int, height: int) -> Image:
 
 _rl.LoadImagePro.argtypes = [VoidPtr, Int, Int, Int]
 _rl.LoadImagePro.restype = Image
-def load_image_pro(data: VoidPtr, width: int, height: int, format: int) -> Image:
+def load_image_pro(data: VoidPtr, width: int, height: int, img_format: int) -> Image:
     """Load image from raw data with parameters"""
-    return _rl.LoadImagePro(data, width, height, format)
+    return _rl.LoadImagePro(data, width, height, img_format)
 
 
 _rl.LoadImageRaw.argtypes = [CharPtr, Int, Int, Int, Int]
 _rl.LoadImageRaw.restype = Image
-def load_image_raw(fileName: bytes, width: int, height: int, format: int, headerSize: int) -> Image:
+def load_image_raw(file_name: bytes, width: int, height: int, img_format: int, header_size: int) -> Image:
     """Load image from RAW file data"""
-    return _rl.LoadImageRaw(fileName, width, height, format, headerSize)
+    return _rl.LoadImageRaw(file_name, width, height, img_format, header_size)
 
 
 _rl.ExportImage.argtypes = [CharPtr, Image]
 _rl.ExportImage.restype = None
-def export_image(fileName: bytes, image: Image) -> None:
+def export_image(file_name: bytes, image: Image) -> None:
     """Export image as a PNG file"""
-    return _rl.ExportImage(fileName, image)
+    return _rl.ExportImage(file_name, image)
 
 
 _rl.LoadTexture.argtypes = [CharPtr]
 _rl.LoadTexture.restype = Texture2D
-def load_texture(fileName: bytes) -> Texture2D:
+def load_texture(file_name: bytes) -> Texture2D:
     """Load texture from file into GPU memory (VRAM)"""
-    return _rl.LoadTexture(fileName)
+    return _rl.LoadTexture(file_name)
 
 
 _rl.LoadTextureFromImage.argtypes = [Image]
@@ -2496,9 +2498,9 @@ def get_image_data_normalized(image: Image) -> Vector4Ptr:
 
 _rl.GetPixelDataSize.argtypes = [Int, Int, Int]
 _rl.GetPixelDataSize.restype = Int
-def get_pixel_data_size(width: int, height: int, format: int) -> int:
+def get_pixel_data_size(width: int, height: int, pxl_format: int) -> int:
     """Get pixel data size in bytes (image or texture)"""
-    return _rl.GetPixelDataSize(width, height, format)
+    return _rl.GetPixelDataSize(width, height, pxl_format)
 
 
 _rl.GetTextureData.argtypes = [Texture2D]
@@ -2525,23 +2527,23 @@ def image_copy(image: Image):
 
 _rl.ImageToPOT.argtypes = [ImagePtr, Color]
 _rl.ImageToPOT.restype = None
-def image_to_pot(image: Image, fillColor: Color) -> None:
+def image_to_pot(image: Image, fill_color: Color) -> None:
     """Convert image to POT (power-of-two)"""
-    return _rl.ImageToPOT(image, fillColor)
+    return _rl.ImageToPOT(image, fill_color)
 
 
 _rl.ImageFormat.argtypes = [ImagePtr, Int]
 _rl.ImageFormat.restype = None
-def image_format(image: Image, newFormat: int) -> None:
+def image_format(image: Image, new_format: int) -> None:
     """Convert image data to desired format"""
-    return _rl.ImageFormat(image, newFormat)
+    return _rl.ImageFormat(image, new_format)
 
 
 _rl.ImageAlphaMask.argtypes = [ImagePtr, Image]
 _rl.ImageAlphaMask.restype = None
-def image_alpha_mask(image: Image, alphaMask: Image) -> None:
+def image_alpha_mask(image: Image, alpha_mask: Image) -> None:
     """Apply alpha mask to image"""
-    return _rl.ImageAlphaMask(image, alphaMask)
+    return _rl.ImageAlphaMask(image, alpha_mask)
 
 
 _rl.ImageAlphaClear.argtypes = [ImagePtr, Color, Float]
@@ -2574,23 +2576,23 @@ def image_crop(image: Image, crop: Rectangle) -> None:
 
 _rl.ImageResize.argtypes = [ImagePtr, Int, Int]
 _rl.ImageResize.restype = None
-def image_resize(image: Image, newWidth: int, newHeight: int) -> None:
+def image_resize(image: Image, new_width: int, new_height: int) -> None:
     """Resize image (bilinear filtering)"""
-    return _rl.ImageResize(image, newWidth, newHeight)
+    return _rl.ImageResize(image, new_width, new_height)
 
 
 _rl.ImageResizeNN.argtypes = [ImagePtr, Int, Int]
 _rl.ImageResizeNN.restype = None
-def image_resize_nn(image: Image, newWidth: int, newHeight: int) -> None:
+def image_resize_nn(image: Image, new_width: int, new_height: int) -> None:
     """Resize image (Nearest-Neighbor scaling algorithm)"""
-    return _rl.ImageResizeNN(image, newWidth, newHeight)
+    return _rl.ImageResizeNN(image, new_width, new_height)
 
 
 _rl.ImageResizeCanvas.argtypes = [ImagePtr, Int, Int, Int, Int, Color]
 _rl.ImageResizeCanvas.restype = None
-def image_resize_canvas(image: Image, newWidth: int, newHeight: int, offsetX: int, offsetY: int, color: Color) -> None:
+def image_resize_canvas(image: Image, new_width: int, new_height: int, offset_x: int, offset_y: int, color: Color) -> None:
     """Resize canvas and fill with color"""
-    return _rl.ImageResizeCanvas(image, newWidth, newHeight, offsetX, offsetY, color)
+    return _rl.ImageResizeCanvas(image, new_width, new_height, offset_x, offset_y, color)
 
 
 _rl.ImageMipmaps.argtypes = [ImagePtr]
@@ -2602,30 +2604,30 @@ def image_mipmaps(image: Image) -> None:
 
 _rl.ImageDither.argtypes = [ImagePtr, Int, Int, Int, Int]
 _rl.ImageDither.restype = None
-def image_dither(image: Image, rBpp: int, gBpp: int, bBpp: int, aBpp: int) -> None:
+def image_dither(image: Image, r_bpp: int, g_bpp: int, b_bpp: int, a_bpp: int) -> None:
     """Dither image data to 16bpp or lower (Floyd-Steinberg dithering)"""
-    return _rl.ImageDither(image, rBpp, gBpp, bBpp, aBpp)
+    return _rl.ImageDither(image, r_bpp, g_bpp, b_bpp, a_bpp)
 
 
 _rl.ImageText.argtypes = [CharPtr, Int, Color]
 _rl.ImageText.restype = Image
-def image_text(text: bytes, fontSize: int, color: Color) -> Image:
+def image_text(text: bytes, font_size: int, color: Color) -> Image:
     """Create an image from text (default font)"""
-    return _rl.ImageText(text, fontSize, color)
+    return _rl.ImageText(text, font_size, color)
 
 
 _rl.ImageTextEx.argtypes = [Font, CharPtr, Float, Float, Color]
 _rl.ImageTextEx.restype = Image
-def image_text_ex(font: Font, text: bytes, fontSize: float, spacing: float, tint: Color) -> Image:
+def image_text_ex(font: Font, text: bytes, font_size: float, spacing: float, tint: Color) -> Image:
     """Create an image from text (custom sprite font)"""
-    return _rl.ImageTextEx(font, text, fontSize, spacing, tint)
+    return _rl.ImageTextEx(font, text, font_size, spacing, tint)
 
 
 _rl.ImageDraw.argtypes = [ImagePtr, Image, Rectangle, Rectangle]
 _rl.ImageDraw.restype = None
-def image_draw(dst: Image, src: Image, srcRec: Rectangle, dstRec: Rectangle) -> None:
+def image_draw(dst: Image, src: Image, src_rec: Rectangle, dst_rec: Rectangle) -> None:
     """Draw a source image within a destination image"""
-    return _rl.ImageDraw(dst, src, srcRec, dstRec)
+    return _rl.ImageDraw(dst, src, src_rec, dst_rec)
 
 
 _rl.ImageDrawRectangle.argtypes = [ImagePtr, Vector2, Rectangle, Color]
@@ -2637,16 +2639,16 @@ def image_draw_rectangle(dst: Image, position: Vector2, rec: Rectangle, color: C
 
 _rl.ImageDrawText.argtypes = [ImagePtr, Vector2, CharPtr, Int, Color]
 _rl.ImageDrawText.restype = None
-def image_draw_text(dst: Image, position: Vector2, text: bytes, fontSize: int, color: Color) -> None:
+def image_draw_text(dst: Image, position: Vector2, text: bytes, font_size: int, color: Color) -> None:
     """Draw text (default font) within an image (destination)"""
-    return _rl.ImageDrawText(dst, position, text, fontSize, color)
+    return _rl.ImageDrawText(dst, position, text, font_size, color)
 
 
 _rl.ImageDrawTextEx.argtypes = [ImagePtr, Vector2, Font, CharPtr, Float, Float, Color]
 _rl.ImageDrawTextEx.restype = None
-def image_draw_text_ex(dst: Image, position: Vector2, font: Font, text: bytes, fontSize: float, spacing: float, color: Color) -> None:
+def image_draw_text_ex(dst: Image, position: Vector2, font: Font, text: bytes, font_size: float, spacing: float, color: Color) -> None:
     """Draw text (custom sprite font) within an image (destination)"""
-    return _rl.ImageDrawTextEx(dst, position, font, text, fontSize, spacing, color)
+    return _rl.ImageDrawTextEx(dst, position, font, text, font_size, spacing, color)
 
 
 _rl.ImageFlipVertical.argtypes = [ImagePtr]
@@ -2749,9 +2751,9 @@ def gen_image_gradient_radial(width: int, height: int, density: float, inner: Co
 
 _rl.GenImageChecked.argtypes = [Int, Int, Int, Int, Color, Color]
 _rl.GenImageChecked.restype = Image
-def gen_image_checked(width: int, height: int, checksX: int, checksY: int, col1: Color, col2: Color) -> Image:
+def gen_image_checked(width: int, height: int, checks_x: int, checks_y: int, col1: Color, col2: Color) -> Image:
     """Generate image: checked"""
-    return _rl.GenImageChecked(width, height, checksX, checksY, col1, col2)
+    return _rl.GenImageChecked(width, height, checks_x, checks_y, col1, col2)
 
 
 _rl.GenImageWhiteNoise.argtypes = [Int, Int, Float]
@@ -2763,16 +2765,16 @@ def gen_image_white_noise(width: int, height: int, factor: float) -> Image:
 
 _rl.GenImagePerlinNoise.argtypes = [Int, Int, Int, Int, Float]
 _rl.GenImagePerlinNoise.restype = Image
-def gen_image_perlin_noise(width: int, height: int, offsetX: int, offsetY: int, scale: float) -> Image:
+def gen_image_perlin_noise(width: int, height: int, offset_x: int, offset_y: int, scale: float) -> Image:
     """Generate image: perlin noise"""
-    return _rl.GenImagePerlinNoise(width, height, offsetX, offsetY, scale)
+    return _rl.GenImagePerlinNoise(width, height, offset_x, offset_y, scale)
 
 
 _rl.GenImageCellular.argtypes = [Int, Int, Int]
 _rl.GenImageCellular.restype = Image
-def gen_image_cellular(width: int, height: int, tileSize: int) -> Image:
+def gen_image_cellular(width: int, height: int, tile_size: int) -> Image:
     """Generate image: cellular algorithm. Bigger tileSize means bigger cells"""
-    return _rl.GenImageCellular(width, height, tileSize)
+    return _rl.GenImageCellular(width, height, tile_size)
 
 
 _rl.GenTextureMipmaps.argtypes = [Texture2DPtr]
@@ -2784,23 +2786,23 @@ def gen_texture_mipmaps(texture: Texture2DPtr) -> None:
 
 _rl.SetTextureFilter.argtypes = [Texture2D, Int]
 _rl.SetTextureFilter.restype = None
-def set_texture_filter(texture: Texture2D, filterMode: int) -> None:
+def set_texture_filter(texture: Texture2D, filter_mode: int) -> None:
     """Set texture scaling filter mode"""
-    return _rl.SetTextureFilter(texture, filterMode)
+    return _rl.SetTextureFilter(texture, filter_mode)
 
 
 _rl.SetTextureWrap.argtypes = [Texture2D, Int]
 _rl.SetTextureWrap.restype = None
-def set_texture_wrap(texture: Texture2D, wrapMode: int) -> None:
+def set_texture_wrap(texture: Texture2D, wrap_mode: int) -> None:
     """Set texture wrapping mode"""
-    return _rl.SetTextureWrap(texture, wrapMode)
+    return _rl.SetTextureWrap(texture, wrap_mode)
 
 
 _rl.DrawTexture.argtypes = [Texture2D, Int, Int, Color]
 _rl.DrawTexture.restype = None
-def draw_texture(texture: Texture2D, posX: int, posY: int, tint: Color) -> None:
+def draw_texture(texture: Texture2D, pos_x: int, pos_y: int, tint: Color) -> None:
     """Draw a Texture2D"""
-    return _rl.DrawTexture(texture, posX, posY, tint)
+    return _rl.DrawTexture(texture, pos_x, pos_y, tint)
 
 
 _rl.DrawTextureV.argtypes = [Texture2D, Vector2, Color]
@@ -2819,16 +2821,16 @@ def draw_texture_ex(texture: Texture2D, position: Vector2, rotation: float, scal
 
 _rl.DrawTextureRec.argtypes = [Texture2D, Rectangle, Vector2, Color]
 _rl.DrawTextureRec.restype = None
-def draw_texture_rec(texture: Texture2D, sourceRec: Rectangle, position: Vector2, tint: Color) -> None:
+def draw_texture_rec(texture: Texture2D, source_rec: Rectangle, position: Vector2, tint: Color) -> None:
     """Draw a part of a texture defined by a rectangle"""
-    return _rl.DrawTextureRec(texture, sourceRec, position, tint)
+    return _rl.DrawTextureRec(texture, source_rec, position, tint)
 
 
 _rl.DrawTexturePro.argtypes = [Texture2D, Rectangle, Rectangle, Vector2, Float, Color]
 _rl.DrawTexturePro.restype = None
-def draw_texture_pro(texture: Texture2D, sourceRec: Rectangle, destRec: Rectangle, origin: Vector2, rotation: float, tint: Color) -> None:
+def draw_texture_pro(texture: Texture2D, source_rec: Rectangle, dest_rec: Rectangle, origin: Vector2, rotation: float, tint: Color) -> None:
     """Draw a part of a texture defined by a rectangle with 'pro' parameters"""
-    return _rl.DrawTexturePro(texture, sourceRec, destRec, origin, rotation, tint)
+    return _rl.DrawTexturePro(texture, source_rec, dest_rec, origin, rotation, tint)
 
 
 # -----------------------------------------------------------------------------------
@@ -2845,30 +2847,30 @@ def get_font_default() -> Font:
 
 _rl.LoadFont.argtypes = [CharPtr]
 _rl.LoadFont.restype = Font
-def load_font(fileName: bytes) -> Font:
+def load_font(file_name: bytes) -> Font:
     """Load font from file into GPU memory (VRAM)"""
-    return _rl.LoadFont(fileName)
+    return _rl.LoadFont(file_name)
 
 
 _rl.LoadFontEx.argtypes = [CharPtr, Int, Int, IntPtr]
 _rl.LoadFontEx.restype = Font
-def load_font_ex(fileName: bytes, fontSize: int, charsCount: int, fontChars: int) -> Font:
+def load_font_ex(file_name: bytes, font_size: int, chars_count: int, font_chars: int) -> Font:
     """Load font from file with extended parameters"""
-    return _rl.LoadFontEx(fileName, fontSize, charsCount, fontChars)
+    return _rl.LoadFontEx(file_name, font_size, chars_count, font_chars)
 
 
 _rl.LoadFontData.argtypes = [CharPtr, Int, IntPtr, Int, Bool]
 _rl.LoadFontData.restype = CharInfoPtr
-def load_font_data(fileName: bytes, fontSize: int, fontChars: int, charsCount: int, sdf: bool) -> CharInfoPtr:
+def load_font_data(file_name: bytes, font_size: int, font_chars: int, chars_count: int, sdf: bool) -> CharInfoPtr:
     """Load font data for further use"""
-    return _rl.LoadFontData(fileName, fontSize, fontChars, charsCount, sdf)
+    return _rl.LoadFontData(file_name, font_size, font_chars, chars_count, sdf)
 
 
 _rl.GenImageFontAtlas.argtypes = [CharInfoPtr, Int, Int, Int, Int]
 _rl.GenImageFontAtlas.restype = Image
-def gen_image_font_atlas(chars: CharInfoPtr, fontSize: int, charsCount: int, padding: int, packMethod: int) -> Image:
+def gen_image_font_atlas(chars: CharInfoPtr, font_size: int, chars_count: int, padding: int, pack_method: int) -> Image:
     """Generate image font atlas using chars info"""
-    return _rl.GenImageFontAtlas(chars, fontSize, charsCount, padding, packMethod)
+    return _rl.GenImageFontAtlas(chars, font_size, chars_count, padding, pack_method)
 
 
 _rl.UnloadFont.argtypes = [Font]
@@ -2880,38 +2882,38 @@ def unload_font(font: Font) -> None:
 # Text drawing functions
 _rl.DrawFPS.argtypes = [Int, Int]
 _rl.DrawFPS.restype = None
-def draw_fps(posX: int, posY: int) -> None:
+def draw_fps(pos_x: int, pos_y: int) -> None:
     """Shows current FPS"""
-    return _rl.DrawFPS(posX, posY)
+    return _rl.DrawFPS(pos_x, pos_y)
 
 
 _rl.DrawText.argtypes = [CharPtr, Int, Int, Int, Color]
 _rl.DrawText.restype = None
-def draw_text(text: bytes, posX: int, posY: int, fontSize: int, color: Color) -> None:
+def draw_text(text: bytes, pos_x: int, pos_y: int, font_size: int, color: Color) -> None:
     """Draw text (using default font)"""
-    return _rl.DrawText(text, posX, posY, fontSize, color)
+    return _rl.DrawText(text, pos_x, pos_y, font_size, color)
 
 
 _rl.DrawTextEx.argtypes = [Font, CharPtr, Vector2, Float, Float, Color]
 _rl.DrawTextEx.restype = None
-def draw_text_ex(font: Font, text: bytes, position: Vector2, fontSize: float, spacing: float, tint: Color) -> None:
+def draw_text_ex(font: Font, text: bytes, position: Vector2, font_size: float, spacing: float, tint: Color) -> None:
     """Draw text using font and additional parameters"""
-    return _rl.DrawTextEx(font, text, position, fontSize, spacing, tint)
+    return _rl.DrawTextEx(font, text, position, font_size, spacing, tint)
 
 
 # Text misc. functions
 _rl.MeasureText.argtypes = [CharPtr, Int]
 _rl.MeasureText.restype = Int
-def measure_text(text: bytes, fontSize: int) -> int:
+def measure_text(text: bytes, font_size: int) -> int:
     """Measure string width for default font"""
-    return _rl.MeasureText(text, fontSize)
+    return _rl.MeasureText(text, font_size)
 
 
 _rl.MeasureTextEx.argtypes = [Font, CharPtr, Float, Float]
 _rl.MeasureTextEx.restype = Vector2
-def measure_text_ex(font: Font, text: bytes, fontSize: float, spacing: float) -> Vector2:
+def measure_text_ex(font: Font, text: bytes, font_size: float, spacing: float) -> Vector2:
     """Measure string size for Font"""
-    return _rl.MeasureTextEx(font, text, fontSize, spacing)
+    return _rl.MeasureTextEx(font, text, font_size, spacing)
 
 
 _rl.FormatText.argtypes = [CharPtr]
@@ -2942,16 +2944,16 @@ def get_glyph_index(font: Font, character: int) -> int:
 # Basic geometric 3D shapes drawing functions
 _rl.DrawLine3D.argtypes = [Vector3, Vector3, Color]
 _rl.DrawLine3D.restype = None
-def draw_line3_d(startPos: Vector3, endPos: Vector3, color: Color) -> None:
+def draw_line3_d(start_pos: Vector3, end_pos: Vector3, color: Color) -> None:
     """Draw a line in 3D world space"""
-    return _rl.DrawLine3D(startPos, endPos, color)
+    return _rl.DrawLine3D(start_pos, end_pos, color)
 
 
 _rl.DrawCircle3D.argtypes = [Vector3, Float, Vector3, Float, Color]
 _rl.DrawCircle3D.restype = None
-def draw_circle3_d(center: Vector3, radius: float, rotationAxis: Vector3, rotationAngle: float, color: Color) -> None:
+def draw_circle3_d(center: Vector3, radius: float, rotation_axis: Vector3, rotation_angle: float, color: Color) -> None:
     """Draw a circle in 3D world space"""
-    return _rl.DrawCircle3D(center, radius, rotationAxis, rotationAngle, color)
+    return _rl.DrawCircle3D(center, radius, rotation_axis, rotation_angle, color)
 
 
 _rl.DrawCube.argtypes = [Vector3, Float, Float, Float, Color]
@@ -2984,44 +2986,44 @@ def draw_cube_texture(texture: Texture2D, position: Vector3, width: float, heigh
 
 _rl.DrawSphere.argtypes = [Vector3, Float, Color]
 _rl.DrawSphere.restype = None
-def draw_sphere(centerPos: Vector3, radius: float, color: Color) -> None:
+def draw_sphere(center_pos: Vector3, radius: float, color: Color) -> None:
     """Draw sphere"""
-    return _rl.DrawSphere(centerPos, radius, color)
+    return _rl.DrawSphere(center_pos, radius, color)
 
 
 _rl.DrawSphereEx.argtypes = [Vector3, Float, Int, Int, Color]
 _rl.DrawSphereEx.restype = None
-def draw_sphere_ex(centerPos: Vector3, radius: float, rings: int, slices: int, color: Color) -> None:
+def draw_sphere_ex(center_pos: Vector3, radius: float, rings: int, slices: int, color: Color) -> None:
     """Draw sphere with extended parameters"""
-    return _rl.DrawSphereEx(centerPos, radius, rings, slices, color)
+    return _rl.DrawSphereEx(center_pos, radius, rings, slices, color)
 
 
 _rl.DrawSphereWires.argtypes = [Vector3, Float, Int, Int, Color]
 _rl.DrawSphereWires.restype = None
-def draw_sphere_wires(centerPos: Vector3, radius: float, rings: int, slices: int, color: Color) -> None:
+def draw_sphere_wires(center_pos: Vector3, radius: float, rings: int, slices: int, color: Color) -> None:
     """Draw sphere wires"""
-    return _rl.DrawSphereWires(centerPos, radius, rings, slices, color)
+    return _rl.DrawSphereWires(center_pos, radius, rings, slices, color)
 
 
 _rl.DrawCylinder.argtypes = [Vector3, Float, Float, Float, Int, Color]
 _rl.DrawCylinder.restype = None
-def draw_cylinder(position: Vector3, radiusTop: float, radiusBottom: float, height: float, slices: int, color: Color) -> None:
+def draw_cylinder(position: Vector3, radius_top: float, radius_bottom: float, height: float, slices: int, color: Color) -> None:
     """Draw a cylinder/cone"""
-    return _rl.DrawCylinder(position, radiusTop, radiusBottom, height, slices, color)
+    return _rl.DrawCylinder(position, radius_top, radius_bottom, height, slices, color)
 
 
 _rl.DrawCylinderWires.argtypes = [Vector3, Float, Float, Float, Int, Color]
 _rl.DrawCylinderWires.restype = None
-def draw_cylinder_wires(position: Vector3, radiusTop: float, radiusBottom: float, height: float, slices: int, color: Color) -> None:
+def draw_cylinder_wires(position: Vector3, radius_top: float, radius_bottom: float, height: float, slices: int, color: Color) -> None:
     """Draw a cylinder/cone wires"""
-    return _rl.DrawCylinderWires(position, radiusTop, radiusBottom, height, slices, color)
+    return _rl.DrawCylinderWires(position, radius_top, radius_bottom, height, slices, color)
 
 
 _rl.DrawPlane.argtypes = [Vector3, Vector2, Color]
 _rl.DrawPlane.restype = None
-def draw_plane(centerPos: Vector3, size: Vector2, color: Color) -> None:
+def draw_plane(center_pos: Vector3, size: Vector2, color: Color) -> None:
     """Draw a plane XZ"""
-    return _rl.DrawPlane(centerPos, size, color)
+    return _rl.DrawPlane(center_pos, size, color)
 
 
 _rl.DrawRay.argtypes = [Ray, Color]
@@ -3052,9 +3054,9 @@ def draw_gizmo(position: Vector3) -> None:
 # Model loading/unloading functions
 _rl.LoadModel.argtypes = [CharPtr]
 _rl.LoadModel.restype = Model
-def load_model(fileName: bytes) -> Mesh:
+def load_model(file_name: bytes) -> Mesh:
     """Load model from files (mesh and material)"""
-    return _rl.LoadModel(fileName)
+    return _rl.LoadModel(file_name)
 
 
 _rl.LoadModelFromMesh.argtypes = [Mesh]
@@ -3074,9 +3076,9 @@ def unload_model(model: Model) -> None:
 # Mesh loading/unloading functions
 _rl.LoadMesh.argtypes = [CharPtr]
 _rl.LoadMesh.restype = Mesh
-def load_mesh(fileName: bytes) -> Mesh:
+def load_mesh(file_name: bytes) -> Mesh:
     """Load mesh from file"""
-    return _rl.LoadMesh(fileName)
+    return _rl.LoadMesh(file_name)
 
 
 _rl.UnloadMesh.argtypes = [MeshPtr]
@@ -3088,9 +3090,9 @@ def unload_mesh(mesh: Mesh) -> None:
 
 _rl.ExportMesh.argtypes = [CharPtr, Mesh]
 _rl.ExportMesh.restype = None
-def export_mesh(fileName: bytes, mesh: Mesh) -> None:
+def export_mesh(file_name: bytes, mesh: Mesh) -> None:
     """Export mesh as an OBJ file"""
-    return _rl.ExportMesh(fileName, mesh)
+    return _rl.ExportMesh(file_name, mesh)
 
 
 # Mesh manipulation functions
@@ -3118,9 +3120,9 @@ def mesh_binormals(mesh: MeshPtr) -> None:
 # Mesh generation functions
 _rl.GenMeshPlane.argtypes = [Float, Float, Int, Int]
 _rl.GenMeshPlane.restype = Mesh
-def gen_mesh_plane(width: float, length: float, resX: int, resZ: int) -> Mesh:
+def gen_mesh_plane(width: float, length: float, res_x: int, res_z: int) -> Mesh:
     """Generate plane mesh (with subdivisions)"""
-    return _rl.GenMeshPlane(width, length, resX, resZ)
+    return _rl.GenMeshPlane(width, length, res_x, res_z)
 
 
 _rl.GenMeshCube.argtypes = [Float, Float, Float]
@@ -3153,16 +3155,16 @@ def gen_mesh_cylinder(radius: float, height: float, slices: int) -> Mesh:
 
 _rl.GenMeshTorus.argtypes = [Float, Float, Int, Int]
 _rl.GenMeshTorus.restype = Mesh
-def gen_mesh_torus(radius: float, size: float, radSeg: int, sides: int) -> Mesh:
+def gen_mesh_torus(radius: float, size: float, rad_seg: int, sides: int) -> Mesh:
     """Generate torus mesh"""
-    return _rl.GenMeshTorus(radius, size, radSeg, sides)
+    return _rl.GenMeshTorus(radius, size, rad_seg, sides)
 
 
 _rl.GenMeshKnot.argtypes = [Float, Float, Int, Int]
 _rl.GenMeshKnot.restype = Mesh
-def gen_mesh_knot(radius: float, size: float, radSeg: int, sides: int) -> Mesh:
+def gen_mesh_knot(radius: float, size: float, rad_seg: int, sides: int) -> Mesh:
     """Generate trefoil knot mesh"""
-    return _rl.GenMeshKnot(radius, size, radSeg, sides)
+    return _rl.GenMeshKnot(radius, size, rad_seg, sides)
 
 
 _rl.GenMeshHeightmap.argtypes = [Image, Vector3]
@@ -3174,17 +3176,17 @@ def gen_mesh_heightmap(heightmap: Image, size: Vector3) -> Mesh:
 
 _rl.GenMeshCubicmap.argtypes = [Image, Vector3]
 _rl.GenMeshCubicmap.restype = Mesh
-def gen_mesh_cubicmap(cubicmap: Image, cubeSize: Vector3) -> Mesh:
+def gen_mesh_cubicmap(cubicmap: Image, cube_size: Vector3) -> Mesh:
     """Generate cubes-based map mesh from image data"""
-    return _rl.GenMeshCubicmap(cubicmap, cubeSize)
+    return _rl.GenMeshCubicmap(cubicmap, cube_size)
 
 
 # Material loading/unloading functions
 _rl.LoadMaterial.argtypes = [CharPtr]
 _rl.LoadMaterial.restype = Material
-def load_material(fileName: bytes) -> Material:
+def load_material(file_name: bytes) -> Material:
     """Load material from file"""
-    return _rl.LoadMaterial(fileName)
+    return _rl.LoadMaterial(file_name)
 
 
 _rl.LoadMaterialDefault.argtypes = _NOARGS
@@ -3211,9 +3213,9 @@ def draw_model(model: Model, position: Vector3, scale: float, tint: Color) -> No
 
 _rl.DrawModelEx.argtypes = [Model, Vector3, Vector3, Float, Vector3, Color]
 _rl.DrawModelEx.restype = None
-def draw_model_ex(model: Model, position: Vector3, rotationAxis: Vector3, rotationAngle: float, scale: Vector3, tint: Color) -> None:
+def draw_model_ex(model: Model, position: Vector3, rotation_axis: Vector3, rotation_angle: float, scale: Vector3, tint: Color) -> None:
     """Draw a model with extended parameters"""
-    return _rl.DrawModelEx(model, position, rotationAxis, rotationAngle, scale, tint)
+    return _rl.DrawModelEx(model, position, rotation_axis, rotation_angle, scale, tint)
 
 
 _rl.DrawModelWires.argtypes = [Model, Vector3, Float, Color]
@@ -3225,9 +3227,9 @@ def draw_model_wires(model: Model, position: Vector3, scale: float, tint: Color)
 
 _rl.DrawModelWiresEx.argtypes = [Model, Vector3, Vector3, Float, Vector3, Color]
 _rl.DrawModelWiresEx.restype = None
-def draw_model_wires_ex(model: Model, position: Vector3, rotationAxis: Vector3, rotationAngle: float, scale: Vector3, tint: Color) -> None:
+def draw_model_wires_ex(model: Model, position: Vector3, rotation_axis: Vector3, rotation_angle: float, scale: Vector3, tint: Color) -> None:
     """Draw a model wires (with texture if set) with extended parameters"""
-    return _rl.DrawModelWiresEx(model, position, rotationAxis, rotationAngle, scale, tint)
+    return _rl.DrawModelWiresEx(model, position, rotation_axis, rotation_angle, scale, tint)
 
 
 _rl.DrawBoundingBox.argtypes = [BoundingBox, Color]
@@ -3246,17 +3248,17 @@ def draw_billboard(camera: Camera, texture: Texture2D, center: Vector3, size: fl
 
 _rl.DrawBillboardRec.argtypes = [Camera, Texture2D, Rectangle, Vector3, Float, Color]
 _rl.DrawBillboardRec.restype = None
-def draw_billboard_rec(camera: Camera, texture: Texture2D, sourceRec: Rectangle, center: Vector3, size: float, tint: Color) -> None:
-    """Draw a billboard texture defined by sourceRec"""
-    return _rl.DrawBillboardRec(camera, texture, sourceRec, center, size, tint)
+def draw_billboard_rec(camera: Camera, texture: Texture2D, source_rec: Rectangle, center: Vector3, size: float, tint: Color) -> None:
+    """Draw a billboard texture defined by source_rec"""
+    return _rl.DrawBillboardRec(camera, texture, source_rec, center, size, tint)
 
 
 # Collision detection functions
 _rl.CheckCollisionSpheres.argtypes = [Vector3, Float, Vector3, Float]
 _rl.CheckCollisionSpheres.restype = Bool
-def check_collision_spheres(centerA: Vector3, radiusA: float, centerB: Vector3, radiusB: float) -> bool:
+def check_collision_spheres(center_a: Vector3, radius_a: float, center_b: Vector3, radius_b: float) -> bool:
     """Detect collision between two spheres"""
-    return _rl.CheckCollisionSpheres(centerA, radiusA, centerB, radiusB)
+    return _rl.CheckCollisionSpheres(center_a, radius_a, center_b, radius_b)
 
 
 _rl.CheckCollisionBoxes.argtypes = [BoundingBox, BoundingBox]
@@ -3268,23 +3270,23 @@ def check_collision_boxes(box1: BoundingBox, box2: BoundingBox) -> bool:
 
 _rl.CheckCollisionBoxSphere.argtypes = [BoundingBox, Vector3, Float]
 _rl.CheckCollisionBoxSphere.restype = Bool
-def check_collision_box_sphere(box: BoundingBox, centerSphere: Vector3, radiusSphere: float) -> bool:
+def check_collision_box_sphere(box: BoundingBox, center_sphere: Vector3, radius_sphere: float) -> bool:
     """Detect collision between box and sphere"""
-    return _rl.CheckCollisionBoxSphere(box, centerSphere, radiusSphere)
+    return _rl.CheckCollisionBoxSphere(box, center_sphere, radius_sphere)
 
 
 _rl.CheckCollisionRaySphere.argtypes = [Ray, Vector3, Float]
 _rl.CheckCollisionRaySphere.restype = Bool
-def check_collision_ray_sphere(ray: Ray, spherePosition: Vector3, sphereRadius: float) -> bool:
+def check_collision_ray_sphere(ray: Ray, sphere_position: Vector3, sphere_radius: float) -> bool:
     """Detect collision between ray and sphere"""
-    return _rl.CheckCollisionRaySphere(ray, spherePosition, sphereRadius)
+    return _rl.CheckCollisionRaySphere(ray, sphere_position, sphere_radius)
 
 
 _rl.CheckCollisionRaySphereEx.argtypes = [Ray, Vector3, Float, Vector3Ptr]
 _rl.CheckCollisionRaySphereEx.restype = Bool
-def check_collision_ray_sphere_ex(ray: Ray, spherePosition: Vector3, sphereRadius: float, collisionPoint: Vector3Ptr) -> bool:
+def check_collision_ray_sphere_ex(ray: Ray, sphere_position: Vector3, sphere_radius: float, collision_point: Vector3Ptr) -> bool:
     """Detect collision between ray and sphere, returns collision point"""
-    return _rl.CheckCollisionRaySphereEx(ray, spherePosition, sphereRadius, collisionPoint)
+    return _rl.CheckCollisionRaySphereEx(ray, sphere_position, sphere_radius, collision_point)
 
 
 _rl.CheckCollisionRayBox.argtypes = [Ray, BoundingBox]
@@ -3310,9 +3312,9 @@ def get_collision_ray_triangle(ray: Ray, p1: Vector3, p2: Vector3, p3: Vector3) 
 
 _rl.GetCollisionRayGround.argtypes = [Ray, Float]
 _rl.GetCollisionRayGround.restype = RayHitInfo
-def get_collision_ray_ground(ray: Ray, groundHeight: float) -> RayHitInfo:
+def get_collision_ray_ground(ray: Ray, ground_height: float) -> RayHitInfo:
     """Get collision info between ray and ground plane (Y-normal plane)"""
-    return _rl.GetCollisionRayGround(ray, groundHeight)
+    return _rl.GetCollisionRayGround(ray, ground_height)
 
 
 # -----------------------------------------------------------------------------------
@@ -3323,23 +3325,23 @@ def get_collision_ray_ground(ray: Ray, groundHeight: float) -> RayHitInfo:
 # Shader loading/unloading functions
 _rl.LoadText.argtypes = [CharPtr]
 _rl.LoadText.restype = CharPtr
-def load_text(fileName: bytes) -> bytes:
+def load_text(file_name: bytes) -> bytes:
     """Load bytess array from text file"""
-    return _rl.LoadText(fileName)
+    return _rl.LoadText(file_name)
 
 
 _rl.LoadShader.argtypes = [CharPtr, CharPtr]
 _rl.LoadShader.restype = Shader
-def load_shader(vsFileName: bytes, fsFileName: bytes) -> Shader:
+def load_shader(vs_file_name: bytes, fs_filen_name: bytes) -> Shader:
     """Load shader from files and bind default locations"""
-    return _rl.LoadShader(vsFileName, fsFileName)
+    return _rl.LoadShader(vs_file_name, fs_filen_name)
 
 
 _rl.LoadShaderCode.argtypes = [CharPtr, CharPtr]
 _rl.LoadShaderCode.restype = Shader
-def load_shader_code(vsCode: bytes, fsCode: bytes) -> Shader:
+def load_shader_code(vs_code: bytes, fs_code: bytes) -> Shader:
     """Load shader from code strings and bind default locations"""
-    return _rl.LoadShaderCode(vsCode, fsCode)
+    return _rl.LoadShaderCode(vs_code, fs_code)
 
 
 _rl.UnloadShader.argtypes = [Shader]
@@ -3366,30 +3368,30 @@ def get_texture_default() -> Texture2D:
 # Shader configuration functions
 _rl.GetShaderLocation.argtypes = [Shader, CharPtr]
 _rl.GetShaderLocation.restype = Int
-def get_shader_location(shader: Shader, uniformName: bytes) -> int:
+def get_shader_location(shader: Shader, uniform_name: bytes) -> int:
     """Get shader uniform location"""
-    return _rl.GetShaderLocation(shader, uniformName)
+    return _rl.GetShaderLocation(shader, uniform_name)
 
 
 _rl.SetShaderValue.argtypes = [Shader, Int, FloatPtr, Int]
 _rl.SetShaderValue.restype = None
-def set_shader_value(shader: Shader, uniformLoc: int, value: FloatPtr, size: int) -> None:
+def set_shader_value(shader: Shader, uniform_loc: int, value: FloatPtr, size: int) -> None:
     """Set shader uniform value (float)"""
-    return _rl.SetShaderValue(shader, uniformLoc, value, size)
+    return _rl.SetShaderValue(shader, uniform_loc, value, size)
 
 
 _rl.SetShaderValuei.argtypes = [Shader, Int, IntPtr, Int]
 _rl.SetShaderValuei.restype = None
-def set_shader_valuei(shader: Shader, uniformLoc: int, value: IntPtr, size: int) -> None:
+def set_shader_valuei(shader: Shader, uniform_loc: int, value: IntPtr, size: int) -> None:
     """Set shader uniform value (int)"""
-    return _rl.SetShaderValuei(shader, uniformLoc, value, size)
+    return _rl.SetShaderValuei(shader, uniform_loc, value, size)
 
 
 _rl.SetShaderValueMatrix.argtypes = [Shader, Int, Matrix]
 _rl.SetShaderValueMatrix.restype = None
-def set_shader_value_matrix(shader: Shader, uniformLoc: Int, mat: Matrix) -> None:
+def set_shader_value_matrix(shader: Shader, uniform_loc: Int, mat: Matrix) -> None:
     """Set shader uniform value (matrix 4x4)"""
-    return _rl.SetShaderValueMatrix(shader, uniformLoc, mat)
+    return _rl.SetShaderValueMatrix(shader, uniform_loc, mat)
 
 
 _rl.SetMatrixProjection.argtypes = [Matrix]
@@ -3417,9 +3419,9 @@ def get_matrix_modelview() -> Matrix:
 # NOTE: Required shaders should be provided
 _rl.GenTextureCubemap.argtypes = [Shader, Texture2D, Int]
 _rl.GenTextureCubemap.restype = Texture2D
-def gen_texture_cubemap(shader: Shader, skyHDR: Texture2D, size: int) -> Texture2D:
+def gen_texture_cubemap(shader: Shader, sky_hdr: Texture2D, size: int) -> Texture2D:
     """Generate cubemap texture from HDR texture"""
-    return _rl.GenTextureCubemap(shader, skyHDR, size)
+    return _rl.GenTextureCubemap(shader, sky_hdr, size)
 
 
 _rl.GenTextureIrradiance.argtypes = [Shader, Texture2D, Int]
@@ -3475,9 +3477,9 @@ def end_blend_mode() -> None:
 # VR control functions
 _rl.GetVrDeviceInfo.argtypes = [Int]
 _rl.GetVrDeviceInfo.restype = VrDeviceInfo
-def get_vr_device_info(vrDeviceType: int):
+def get_vr_device_info(vr_device_type: int):
     """Get VR device information for some standard devices"""
-    return _rl.GetVrDeviceInfo(vrDeviceType)
+    return _rl.GetVrDeviceInfo(vr_device_type)
 
 
 _rl.InitVrSimulator.argtypes = [VrDeviceInfo]
@@ -3572,23 +3574,23 @@ def set_master_volume(volume: float) -> None:
 # Wave/Sound loading/unloading functions
 _rl.LoadWave.argtypes = [CharPtr]
 _rl.LoadWave.restype = Wave
-def load_wave(fileName: CharPtr) -> Wave:
+def load_wave(file_name: CharPtr) -> Wave:
     """Load wave data from file"""
-    return _rl.LoadWave(fileName)
+    return _rl.LoadWave(file_name)
 
 
 _rl.LoadWaveEx.argtypes = [VoidPtr, Int, Int, Int, Int]
 _rl.LoadWaveEx.restype = Wave
-def load_wave_ex(data: VoidPtr, sampleCount: int, sampleRate: int, sampleSize: int, channels: int) -> Wave:
+def load_wave_ex(data: VoidPtr, sample_count: int, sample_rate: int, sample_size: int, channels: int) -> Wave:
     """Load wave data from raw array data"""
-    return _rl.LoadWaveEx(data, sampleCount, sampleRate, sampleSize, channels)
+    return _rl.LoadWaveEx(data, sample_count, sample_rate, sample_size, channels)
 
 
 _rl.LoadSound.argtypes = [CharPtr]
 _rl.LoadSound.restype = Sound
-def load_sound(fileName: CharPtr) -> Sound:
+def load_sound(file_name: CharPtr) -> Sound:
     """Load sound from file"""
-    return _rl.LoadSound(fileName)
+    return _rl.LoadSound(file_name)
 
 
 _rl.LoadSoundFromWave.argtypes = [Wave]
@@ -3600,9 +3602,9 @@ def load_sound_from_wave(wave: Wave) -> Sound:
 
 _rl.UpdateSound.argtypes = [Sound, VoidPtr, Int]
 _rl.UpdateSound.restype = None
-def update_sound(sound: Sound, data: VoidPtr, samplesCount: int) -> None:
+def update_sound(sound: Sound, data: VoidPtr, samples_count: int) -> None:
     """Update sound buffer with new data"""
-    return _rl.UpdateSound(sound, data, samplesCount)
+    return _rl.UpdateSound(sound, data, samples_count)
 
 
 _rl.UnloadWave.argtypes = [Wave]
@@ -3671,9 +3673,9 @@ def set_sound_pitch(sound: Sound, pitch: float) -> None:
 
 _rl.WaveFormat.argtypes = [WavePtr, Int, Int, Int]
 _rl.WaveFormat.restype = None
-def wave_format(wave: WavePtr, sampleRate: int, sampleSize: int, channels: int) -> None:
+def wave_format(wave: WavePtr, sample_rate: int, sample_size: int, channels: int) -> None:
     """Convert wave data to desired format"""
-    return _rl.WaveFormat(wave, sampleRate, sampleSize, channels)
+    return _rl.WaveFormat(wave, sample_rate, sample_size, channels)
 
 
 _rl.WaveCopy.argtypes = [Wave]
@@ -3685,9 +3687,9 @@ def wave_copy(wave: Wave) -> Wave:
 
 _rl.WaveCrop.argtypes = [WavePtr, Int, Int]
 _rl.WaveCrop.restype = None
-def wave_crop(wave: WavePtr, initSample: int, finalSample: int) -> None:
+def wave_crop(wave: WavePtr, init_sample: int, final_sample: int) -> None:
     """Crop a wave to defined samples range"""
-    return _rl.WaveCrop(wave, initSample, finalSample)
+    return _rl.WaveCrop(wave, init_sample, final_sample)
 
 
 _rl.GetWaveData.argtypes = [Wave]
@@ -3700,9 +3702,9 @@ def get_wave_data(wave: Wave) -> FloatPtr:
 # Music management functions
 _rl.LoadMusicStream.argtypes = [CharPtr]
 _rl.LoadMusicStream.restype = Music
-def load_music_stream(fileName: CharPtr) -> Music:
+def load_music_stream(file_name: CharPtr) -> Music:
     """Load music stream from file"""
-    return _rl.LoadMusicStream(fileName)
+    return _rl.LoadMusicStream(file_name)
 
 
 _rl.UnloadMusicStream.argtypes = [Music]
@@ -3792,16 +3794,16 @@ def get_music_time_played(music: Music) -> float:
 # AudioStream management functions
 _rl.InitAudioStream.argtypes = [UInt, UInt, UInt]
 _rl.InitAudioStream.restype = AudioStream
-def init_audio_stream(sampleRate: int, sampleSize: int, channels: int) -> AudioStream:
+def init_audio_stream(sample_rate: int, sample_size: int, channels: int) -> AudioStream:
     """Init audio stream (to stream raw audio pcm data)"""
-    return _rl.InitAudioStream(sampleRate, sampleSize, channels)
+    return _rl.InitAudioStream(sample_rate, sample_size, channels)
 
 
 _rl.UpdateAudioStream.argtypes = [AudioStream, VoidPtr, Int]
 _rl.UpdateAudioStream.restype = None
-def update_audio_stream(stream: AudioStream, data: VoidPtr, samplesCount: int) -> None:
+def update_audio_stream(stream: AudioStream, data: VoidPtr, samples_count: int) -> None:
     """Update audio stream buffers with data"""
-    return _rl.UpdateAudioStream(stream, data, samplesCount)
+    return _rl.UpdateAudioStream(stream, data, samples_count)
 
 
 _rl.CloseAudioStream.argtypes = [AudioStream]
