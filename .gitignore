@@ -1,0 +1,21 @@
+# general things to ignore
+*.sublime-project
+*.sublime-workspace
+*.wpr
+*.wpu
+*.pyc
+build/
+dist/
+*.egg-info/
+*.egg
+*.py[cod]
+__pycache__/
+*~
+pylint.html
+.idea/
+.vs/
+env
+venv/
+.pytest_cache/
+.tox
+.cache

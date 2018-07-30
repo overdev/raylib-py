@@ -1,11 +1,12 @@
 # core_2d_camera.py
 
-from raylibpy.structures import *
-from raylibpy.constants import *
-from raylibpy.colors import *
-from raylibpy.core import *
-from raylibpy.text import *
-from raylibpy.shapes import *
+from raylibpy import *
+# from raylibpy.structures import *
+# from raylibpy.constants import *
+# from raylibpy.colors import *
+# from raylibpy.core import *
+# from raylibpy.text import *
+# from raylibpy.shapes import *
 
 MAX_BUILDINGS = 100
 
@@ -42,12 +43,14 @@ def main():
             )
         )
 
-    camera = Camera2D(
-        Vector2(0, 0),
-        Vector2(player.x + 20, player.y + 20),
-        0.0,
-        1.0
-    )
+    camera = Camera2D()
+
+    camera.offset = Vector2(0, 0)
+    camera.target = Vector2(player.x + 20, player.y + 20)
+    camera.rotation = 0.0
+    camera.zoom = 1.0
+
+    print(camera.__class__, Camera2D.__class__)
 
     set_target_fps(60)
     # ---------------------------------------------------------------

@@ -64,7 +64,7 @@ def main():
 
         rl.clear_background(rl.RAYWHITE)
 
-        rl.begin_mode3D(camera)
+        rl.begin_mode3d(camera)
 
         rl.draw_plane(rl.Vector3(0.0, 0.0, 0.0), rl.Vector2(32.0, 32.0), rl.LIGHTGRAY)
         rl.draw_cube(rl.Vector3(-16.0, 2.5, 0.0), 1.0, 5.0, 32.0, rl.BLUE)
@@ -79,7 +79,7 @@ def main():
         rl.draw_rectangle(int(camera.target.x), int(-500), 1, screen_height * 4, rl.GREEN)
         rl.draw_rectangle(int(-500), int(camera.target.y), screen_width * 4, 1, rl.GREEN)
 
-        rl.end_mode3D()
+        rl.end_mode3d()
 
         # rl.draw_text(b"SCREEN AREA", 640, 10, 20, rl.RED)
 

@@ -47,14 +47,14 @@ def main():
 
         rl.clear_background(rl.RAYWHITE)
 
-        rl.begin_mode3D(camera)
+        rl.begin_mode3d(camera)
 
         rl.draw_cube(cube_position, 2.0, 2.0, 2.0, rl.RED)
         rl.draw_cube_wires(cube_position, 2.0, 2.0, 2.0, rl.MAROON)
 
         rl.draw_grid(10, 1.0)
 
-        rl.end_mode3D()
+        rl.end_mode3d()
 
         rl.draw_rectangle(10, 10, 320, 133, rl.fade(rl.SKYBLUE, 0.5))
         rl.draw_rectangle_lines(10, 10, 320, 133, rl.BLUE)
