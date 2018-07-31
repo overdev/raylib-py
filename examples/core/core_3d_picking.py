@@ -11,7 +11,7 @@ def main() -> int:
 
     init_window(screen_width, screen_height, b"raylib [core] example - 3d picking")
 
-    # 
+    # Define the camera to look into our 3d world
     camera: Camera = Camera()
     camera.position = Vector3(10., 10., 10.)
     camera.target = Vector3(0., 0., 0.)

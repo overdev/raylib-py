@@ -968,6 +968,14 @@ MAX_MATERIAL_MAPS = 12
 # -------------------------------------------------------------------
 
 class Vector2(Structure):
+    """
+    Wrapper for raylib Vector2 struct:
+    
+        typedef struct Vector2 {
+            float x;
+            float y;
+        } Vector2;
+    """
     _fields_ = [
         ('x', c_float),
         ('y', c_float)
@@ -978,6 +986,15 @@ Vector2Ptr = POINTER(Vector2)
 
 
 class Vector3(Structure):
+    """
+    Wrapper for raylib Vector3 struct:
+    
+        typedef struct Vector3 {
+            float x;
+            float y;
+            float z;
+        } Vector3;
+    """
     _fields_ = [
         ('x', c_float),
         ('y', c_float),
@@ -989,6 +1006,16 @@ Vector3Ptr = POINTER(Vector3)
 
 
 class Vector4(Structure):
+    """
+    Wrapper for raylib Vector4 struct:
+    
+        typedef struct Vector4 {
+            float x;
+            float y;
+            float z;
+            float w;
+        } Vector4;
+    """
     _fields_ = [
         ('x', c_float),
         ('y', c_float),
@@ -1057,7 +1084,6 @@ ImagePtr = POINTER(Image)
 
 class Texture2D(Structure):
     _fields_ = [
-        ('data', c_void_p),
         ('id', c_uint),
         ('width', c_int),
         ('height', c_int),
@@ -1454,7 +1480,11 @@ _rl.InitWindow.argtypes = [Int, Int, CharPtr]
 _rl.InitWindow.restype = None
 def init_window(width: int, height: int, title: bytes) -> None:
     """Initialize window and OpenGL context"""
-    return _rl.InitWindow(width, height, title)
+    return _rl.InitWindow(
+        width if isinstance(width, int) else int(width),
+        height if isinstance(width, int) else int(width),
+        title if isinstance(title, bytes) else title.encode('utf-8', 'ignore')
+    )
 
 
 _rl.CloseWindow.argtypes = _NOARGS
@@ -1510,28 +1540,38 @@ _rl.SetWindowPosition.argtypes = [Int, Int]
 _rl.SetWindowPosition.restype = None
 def set_window_position(x: int, y: int) -> None:
     """Set window position on screen (only PLATFORM_DESKTOP)"""
-    return _rl.SetWindowPosition(x, y)
+    return _rl.SetWindowPosition(
+        x if isinstance(x, int) else int(x),
+        y if isinstance(y, int) else int(y)
+    )
+
+def set_window_position_v(pos: Vector2) -> None:
+    """Set window position on screen (only PLATFORM_DESKTOP)"""
+    return _rl.SetWindowPosition(
+        pos.x if isinstance(pos.x, int) else int(pos.x),
+        pos.y if isinstance(pos.y, int) else int(pos.y)
+    )
 
 
 _rl.SetWindowMonitor.argtypes = [Int]
 _rl.SetWindowMonitor.restype = None
 def set_window_monitor(monitor: int) -> None:
     """Set monitor for the current window (fullscreen mode)"""
-    return _rl.SetWindowMonitor(monitor)
+    return _rl.SetWindowMonitor(int(monitor))
 
 
 _rl.SetWindowMinSize.argtypes = [Int, Int]
 _rl.SetWindowMinSize.restype = None
 def set_window_min_size(width: int, height: int) -> None:
     """Set window minimum dimensions (for FLAG_WINDOW_RESIZABLE)"""
-    return _rl.SetWindowMinSize(width, height)
+    return _rl.SetWindowMinSize(int(width), int(height))
 
 
 _rl.SetWindowSize.argtypes = [Int, Int]
 _rl.SetWindowSize.restype = None
 def set_window_size(width: int, height: int):
     """Set window dimensions"""
-    return _rl.SetWindowSize(width, height)
+    return _rl.SetWindowSize(int(width), int(height))
 
 
 _rl.GetScreenWidth.argtypes = _NOARGS
@@ -1829,11 +1869,14 @@ def is_file_dropped() -> bool:
 
 _rl.GetDroppedFiles.argtypes = [IntPtr]
 _rl.GetDroppedFiles.restype = CharPtrPrt
-def get_dropped_files() -> Tuple[int, bytes]:
+def get_dropped_files() -> Tuple[str, ...]:
     """Get dropped files names"""
     count = Int(0)
-    files: bytes = _rl.GetDroppedFiles(byref(count))
-    return count.value, files
+    result = _rl.GetDroppedFiles(byref(count))
+    files: list = []
+    for i in range(count.value):
+        files.append(result[i].decode('utf-8'))
+    return tuple(files)
 
 
 _rl.ClearDroppedFiles.argtypes = _NOARGS
@@ -2409,7 +2452,7 @@ _rl.LoadImage.argtypes = [CharPtr]
 _rl.LoadImage.restype = Image
 def load_image(file_name: bytes) -> Image:
     """Load image from file into CPU memory (RAM)"""
-    return _rl.LoadImage(file_name)
+    return _rl.LoadImage(file_name if isinstance(file_name, bytes) else file_name.encode('utf-8', 'ignore'))
 
 
 _rl.LoadImageEx.argtypes = [ColorPtr, Int, Int]
@@ -2891,7 +2934,8 @@ _rl.DrawText.argtypes = [CharPtr, Int, Int, Int, Color]
 _rl.DrawText.restype = None
 def draw_text(text: bytes, pos_x: int, pos_y: int, font_size: int, color: Color) -> None:
     """Draw text (using default font)"""
-    return _rl.DrawText(text, pos_x, pos_y, font_size, color)
+    return _rl.DrawText(text if isinstance(text, bytes) else text.encode('utf-8', 'ignore'),
+                        pos_x, pos_y, font_size, color)
 
 
 _rl.DrawTextEx.argtypes = [Font, CharPtr, Vector2, Float, Float, Color]
