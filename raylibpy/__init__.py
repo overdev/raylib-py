@@ -766,6 +766,10 @@ __all__ = [
 ]
 
 
+# -----------------------------------------------------------------------------------
+# Package utility functions and types
+# ----------------------------------------------------------------------------------
+
 Bool = c_bool
 VoidPtr = c_void_p
 CharPtr = c_char_p
@@ -782,6 +786,61 @@ Int = c_int
 UInt = c_uint
 Float = c_float
 Double = c_double
+
+Number = Union[int, float]
+Seq = Sequence[Number]
+
+
+def _float(value) -> float:
+    return float(value) if isinstance(value, int) else value
+
+
+def _int(value) -> int:
+    return int(value) if isinstance(value, float) else value
+
+
+def _str_in(value: bytes) -> str:
+    return value.encode('utf-8', 'ignore') if isinstance(value, str) else value
+
+
+def _str_out(value: str) -> bytes:
+    return value.decode('utf-8', 'ignore') if isinstance(value, bytes) else value
+
+
+def _vec2(seq: Sequence[Number]) -> 'Vector2':
+    if isinstance(seq, Vector2):
+        return seq
+    x, y = seq
+    return Vector2(_float(x), _float(y))
+
+
+def _vec3(seq: Sequence[Number]) -> 'Vector3':
+    if isinstance(seq, Vector3):
+        return seq
+    x, y, z = seq
+    return Vector3(_float(x), _float(y), _float(z))
+
+
+def _vec4(seq: Sequence[Number]) -> 'Vector3':
+    if isinstance(seq, Vector4):
+        return seq
+    x, y, z, w = seq
+    return Vector4(_float(x), _float(y), _float(z), _float(w))
+
+
+def _rect(seq: Sequence[Number]) -> 'Rectangle':
+    if isinstance(seq, Rectangle):
+        return seq
+    x, y, w, h = seq
+    return Rectangle(_float(x), _float(y), _float(w), _float(h))
+
+
+def _color(seq: Sequence[Number]) -> 'Color':
+    if isinstance(seq, Color):
+        return seq
+    r, g, b, q = seq
+    return Color(_float(r), _float(r), _float(b), _float(q))
+
 
 
 _NOARGS = []
@@ -995,7 +1054,7 @@ class Vector2(Structure):
     def __repr__(self) -> str:
         return "{}({}, {})".format(self.__class__.__qualname__, self.x, self.y)
 
-    def __getitem__(self, key: str) -> Union[float, Vector2, Vector3, Vector4]:
+    def __getitem__(self, key: str) -> Union[float, 'Vector2', 'Vector3', 'Vector4']:
         assert isinstance(key, str), "key must be a str of 1 to 4 characters ('x' or 'y')."
         assert 0 < len(key) < 5, "key must have between 1 and 4 characters ('x' or 'y')."
         comps = [self.x, self.y, 0., 0.]
@@ -1036,49 +1095,49 @@ class Vector2(Structure):
     def __abs__(self) -> 'Vector2':
         return Vector2(abs(self.x), abs(self.y))
 
-    def __add__(self, other: Union[Vector2, Seq]) -> 'Vector2':
+    def __add__(self, other: Union['Vector2', Seq]) -> 'Vector2':
         other = _vec2(other) if not isinstance(other, Vector2) else other
         return Vector2(self.x + other.x, self.y + other.y)
 
-    def __sub__(self, other: Union[Vector2, Seq]) -> 'Vector2':
+    def __sub__(self, other: Union['Vector2', Seq]) -> 'Vector2':
         other = _vec2(other) if not isinstance(other, Vector2) else other
         return Vector2(self.x - other.x, self.y - other.y)
 
-    def __truediv__(self, other: Union[Vector2, Seq]) -> 'Vector2':
+    def __truediv__(self, other: Union['Vector2', Seq]) -> 'Vector2':
         if isinstance(other, (int, float)):
             return Vector2(self.x / other, self.y / other)
         other = _vec2(other) if not isinstance(other, Vector2) else other
         return Vector2(self.x / other.x, self.y / other.y)
 
-    def __floordiv__(self, other: Union[Vector2, Seq]) -> 'Vector2':
+    def __floordiv__(self, other: Union['Vector2', Seq]) -> 'Vector2':
         if isinstance(other, (int, float)):
             return Vector2(float(self.x // other), float(self.y // other))
         other = _vec2(other) if not isinstance(other, Vector2) else other
         return Vector2(float(self.x // other.x), float(self.y // other.y))
 
-    def __mod__(self, other: Union[Vector2, Seq]) -> 'Vector2':
+    def __mod__(self, other: Union['Vector2', Seq]) -> 'Vector2':
         if isinstance(other, (int, float)):
             return Vector2(self.x % other, self.y % other)
         other = _vec2(other) if not isinstance(other, Vector2) else other
         return Vector2(self.x % other.x, self.y % other.y)
 
-    def __mul__(self, other: Union[Vector2, Seq]) -> 'Vector2':
+    def __mul__(self, other: Union['Vector2', Seq]) -> 'Vector2':
         if isinstance(other, (int, float)):
             return Vector2(self.x * other, self.y * other)
         other = _vec2(other) if not isinstance(other, Vector2) else other
         return Vector2(self.x * other.x, self.y * other.y)
 
-    def __iadd__(self, other: Union[Vector2, Seq]) -> 'Vector2':
+    def __iadd__(self, other: Union['Vector2', Seq]) -> 'Vector2':
         other = _vec2(other) if not isinstance(other, Vector2) else other
         self.x += other.x
         self.y += other.y
 
-    def __isub__(self, other: Union[Vector2, Seq]) -> 'Vector2':
+    def __isub__(self, other: Union['Vector2', Seq]) -> 'Vector2':
         other = _vec2(other) if not isinstance(other, Vector2) else other
         self.x -= other.x
         self.y -= other.y
 
-    def __itruediv__(self, other: Union[Vector2, Seq]) -> 'Vector2':
+    def __itruediv__(self, other: Union['Vector2', Seq]) -> 'Vector2':
         if isinstance(other, (int, float)):
             self.x /= other
             self.y /= other
@@ -1088,7 +1147,7 @@ class Vector2(Structure):
             self.y /= other.y
         return self
 
-    def __ifloordiv__(self, other: Union[Vector2, Seq]) -> 'Vector2':
+    def __ifloordiv__(self, other: Union['Vector2', Seq]) -> 'Vector2':
         if isinstance(other, (int, float)):
             self.x = float(self.x // other)
             self.y = float(self.y // other)
@@ -1098,7 +1157,7 @@ class Vector2(Structure):
             self.y = float(self.y // other.y)
         return self
 
-    def __imod__(self, other: Union[Vector2, Seq]) -> 'Vector2':
+    def __imod__(self, other: Union['Vector2', Seq]) -> 'Vector2':
         if isinstance(other, (int, float)):
             self.x %= other
             self.y %= other
@@ -1108,7 +1167,7 @@ class Vector2(Structure):
             self.y %= other.y
         return self
 
-    def __imul__(self, other: Union[Vector2, Seq]) -> 'Vector2':
+    def __imul__(self, other: Union['Vector2', Seq]) -> 'Vector2':
         if isinstance(other, (int, float)):
             self.x *= other
             self.y *= other
@@ -1152,7 +1211,7 @@ class Vector3(Structure):
     def __repr__(self) -> str:
         return "{}({}, {}, {})".format(self.__class__.__qualname__, self.x, self.y, self.z)
 
-    def __getitem__(self, key: str) -> Union[float, Vector2, Vector3, Vector4]:
+    def __getitem__(self, key: str) -> Union[float, 'Vector2', 'Vector3', 'Vector4']:
         assert isinstance(key, str), "key must be a str of 1 to 4 characters ('x', 'y', or 'z')."
         assert 0 < len(key) < 5, "key must have between 1 and 4 characters ('x', 'y', or 'z')."
         comps = [self.x, self.y, self.z, 0.]
@@ -1195,53 +1254,53 @@ class Vector3(Structure):
     def __abs__(self) -> 'Vector3':
         return Vector3(abs(self.x), abs(self.y), abs(self.z))
 
-    def __add__(self, other: Union[Vector3, Seq]) -> 'Vector3':
+    def __add__(self, other: Union['Vector3', Seq]) -> 'Vector3':
         other = _vec3(other) if not isinstance(other, Vector3) else other
         return Vector3(self.x + other.x, self.y + other.y, self.z + other.z)
 
-    def __sub__(self, other: Union[Vector3, Seq]) -> 'Vector3':
+    def __sub__(self, other: Union['Vector3', Seq]) -> 'Vector3':
         other = _vec3(other) if not isinstance(other, Vector3) else other
         return Vector3(self.x - other.x, self.y - other.y, self.z - other.z)
 
-    def __truediv__(self, other: Union[Vector3, Seq]) -> 'Vector3':
+    def __truediv__(self, other: Union['Vector3', Seq]) -> 'Vector3':
         if isinstance(other, (int, float)):
             return Vector3(self.x / other, self.y / other, self.z / other)
         other = _vec3(other) if not isinstance(other, Vector3) else other
         return Vector3(self.x / other.x, self.y / other.y, self.z / other.z)
 
-    def __floordiv__(self, other: Union[Vector3, Seq]) -> 'Vector3':
+    def __floordiv__(self, other: Union['Vector3', Seq]) -> 'Vector3':
         if isinstance(other, (int, float)):
             return Vector3(float(self.x // other), float(self.y // other), float(self.z // other))
         other = _vec3(other) if not isinstance(other, Vector3) else other
         return Vector3(float(self.x // other.x), float(self.y // other.y), float(self.z // other.z))
 
-    def __mod__(self, other: Union[Vector3, Seq]) -> 'Vector3':
+    def __mod__(self, other: Union['Vector3', Seq]) -> 'Vector3':
         if isinstance(other, (int, float)):
             return Vector3(self.x % other, self.y % other, self.z % other)
         other = _vec3(other) if not isinstance(other, Vector3) else other
         return Vector3(self.x % other.x, self.y % other.y, self.z % other.z)
 
-    def __mul__(self, other: Union[Vector3, Seq]) -> 'Vector3':
+    def __mul__(self, other: Union['Vector3', Seq]) -> 'Vector3':
         if isinstance(other, (int, float)):
             return Vector3(self.x * other, self.y * other, self.z * other)
         other = _vec3(other) if not isinstance(other, Vector3) else other
         return Vector3(self.x * other.x, self.y * other.y, self.z * other.z)
 
-    def __iadd__(self, other: Union[Vector3, Seq]) -> 'Vector3':
+    def __iadd__(self, other: Union['Vector3', Seq]) -> 'Vector3':
         other = _vec3(other) if not isinstance(other, Vector3) else other
         self.x += other.x
         self.y += other.y
         self.z += other.z
         return self
 
-    def __isub__(self, other: Union[Vector3, Seq]) -> 'Vector3':
+    def __isub__(self, other: Union['Vector3', Seq]) -> 'Vector3':
         other = _vec3(other) if not isinstance(other, Vector3) else other
         self.x -= other.x
         self.y -= other.y
         self.z -= other.z
         return self
 
-    def __itruediv__(self, other: Union[Vector3, Seq]) -> 'Vector3':
+    def __itruediv__(self, other: Union['Vector3', Seq]) -> 'Vector3':
         if isinstance(other, (int, float)):
             self.x /= other
             self.y /= other
@@ -1253,7 +1312,7 @@ class Vector3(Structure):
             self.z /= other.z
         return self
 
-    def __ifloordiv__(self, other: Union[Vector3, Seq]) -> 'Vector3':
+    def __ifloordiv__(self, other: Union['Vector3', Seq]) -> 'Vector3':
         if isinstance(other, (int, float)):
             self.x = float(self.x // other)
             self.y = float(self.y // other)
@@ -1265,7 +1324,7 @@ class Vector3(Structure):
             self.z = float(self.z // other.z)
         return self
 
-    def __imod__(self, other: Union[Vector3, Seq]) -> 'Vector3':
+    def __imod__(self, other: Union['Vector3', Seq]) -> 'Vector3':
         if isinstance(other, (int, float)):
             self.x %= other
             self.y %= other
@@ -1277,7 +1336,7 @@ class Vector3(Structure):
             self.z %= other.z
         return self
 
-    def __imul__(self, other: Union[Vector3, Seq]) -> 'Vector3':
+    def __imul__(self, other: Union['Vector3', Seq]) -> 'Vector3':
         if isinstance(other, (int, float)):
             self.x *= other
             self.y *= other
@@ -1325,7 +1384,7 @@ class Vector4(Structure):
     def __repr__(self) -> str:
         return "{}({}, {}, {}, {})".format(self.__class__.__qualname__, self.x, self.y, self.z, self.w)
 
-    def __getitem__(self, key: str) -> Union[float, Vector2, Vector3, Vector4]:
+    def __getitem__(self, key: str) -> Union[float, 'Vector2', 'Vector3', 'Vector4']:
         assert isinstance(key, str), "key must be a str of 1 to 4 characters ('x', 'y', 'z' or 'w')."
         assert 0 < len(key) < 5, "key must have between 1 and 4 characters ('x', 'y', 'z' or 'w')."
         comps = [self.x, self.y, self.z, self.w]
@@ -1368,53 +1427,53 @@ class Vector4(Structure):
     def __abs__(self) -> 'Vector4':
         return Vector4(abs(self.x), abs(self.y), abs(self.z), 1.)
 
-    def __add__(self, other: Union[Vector4, Seq]) -> 'Vector4':
+    def __add__(self, other: Union['Vector4', Seq]) -> 'Vector4':
         other = _vec4(other) if not isinstance(other, Vector4) else other
         return Vector4(self.x + other.x, self.y + other.y, self.z + other.z, 1.)
 
-    def __sub__(self, other: Union[Vector4, Seq]) -> 'Vector4':
+    def __sub__(self, other: Union['Vector4', Seq]) -> 'Vector4':
         other = _vec4(other) if not isinstance(other, Vector4) else other
         return Vector4(self.x - other.x, self.y - other.y, self.z - other.z, 1.)
 
-    def __truediv__(self, other: Union[Vector4, Seq]) -> 'Vector4':
+    def __truediv__(self, other: Union['Vector4', Seq]) -> 'Vector4':
         if isinstance(other, (int, float)):
             return Vector4(self.x / other, self.y / other, self.z / other, 1.)
         other = _vec4(other) if not isinstance(other, Vector4) else other
         return Vector4(self.x / other.x, self.y / other.y, self.z / other.z, 1.)
 
-    def __floordiv__(self, other: Union[Vector4, Seq]) -> 'Vector4':
+    def __floordiv__(self, other: Union['Vector4', Seq]) -> 'Vector4':
         if isinstance(other, (int, float)):
             return Vector4(float(self.x // other), float(self.y // other), float(self.z // other), 1.)
         other = _vec4(other) if not isinstance(other, Vector4) else other
         return Vector4(float(self.x // other.x), float(self.y // other.y), float(self.z // other.z), 1.)
 
-    def __mod__(self, other: Union[Vector4, Seq]) -> 'Vector4':
+    def __mod__(self, other: Union['Vector4', Seq]) -> 'Vector4':
         if isinstance(other, (int, float)):
             return Vector4(self.x % other, self.y % other, self.z % other, 1.)
         other = _vec4(other) if not isinstance(other, Vector4) else other
         return Vector4(self.x % other.x, self.y % other.y, self.z % other.z, 1.)
 
-    def __mul__(self, other: Union[Vector4, Seq]) -> 'Vector4':
+    def __mul__(self, other: Union['Vector4', Seq]) -> 'Vector4':
         if isinstance(other, (int, float)):
             return Vector4(self.x * other, self.y * other, self.z * other, 1.)
         other = _vec4(other) if not isinstance(other, Vector4) else other
         return Vector4(self.x * other.x, self.y * other.y, self.z * other.z, 1.)
 
-    def __iadd__(self, other: Union[Vector4, Seq]) -> 'Vector4':
+    def __iadd__(self, other: Union['Vector4', Seq]) -> 'Vector4':
         other = _vec4(other) if not isinstance(other, Vector4) else other
         self.x += other.x
         self.y += other.y
         self.z += other.z
         return self
 
-    def __isub__(self, other: Union[Vector4, Seq]) -> 'Vector4':
+    def __isub__(self, other: Union['Vector4', Seq]) -> 'Vector4':
         other = _vec4(other) if not isinstance(other, Vector4) else other
         self.x -= other.x
         self.y -= other.y
         self.z -= other.z
         return self
 
-    def __itruediv__(self, other: Union[Vector4, Seq]) -> 'Vector4':
+    def __itruediv__(self, other: Union['Vector4', Seq]) -> 'Vector4':
         if isinstance(other, (int, float)):
             self.x /= other
             self.y /= other
@@ -1426,7 +1485,7 @@ class Vector4(Structure):
             self.z /= other.z
         return self
 
-    def __ifloordiv__(self, other: Union[Vector4, Seq]) -> 'Vector4':
+    def __ifloordiv__(self, other: Union['Vector4', Seq]) -> 'Vector4':
         if isinstance(other, (int, float)):
             self.x = float(self.x // other)
             self.y = float(self.y // other)
@@ -1438,7 +1497,7 @@ class Vector4(Structure):
             self.z = float(self.z // other.z)
         return self
 
-    def __imod__(self, other: Union[Vector4, Seq]) -> 'Vector4':
+    def __imod__(self, other: Union['Vector4', Seq]) -> 'Vector4':
         if isinstance(other, (int, float)):
             self.x %= other
             self.y %= other
@@ -1450,7 +1509,7 @@ class Vector4(Structure):
             self.z %= other.z
         return self
 
-    def __imul__(self, other: Union[Vector4, Seq]) -> 'Vector4':
+    def __imul__(self, other: Union['Vector4', Seq]) -> 'Vector4':
         if isinstance(other, (int, float)):
             self.x *= other
             self.y *= other
@@ -1517,10 +1576,10 @@ class Color(Structure):
     def __repr__(self) -> str:
         return "{}({}, {}, {}, {})".format(self.__class__.__qualname__, self.r, self.g, self.b, self.a)
 
-    def __getitem__(self, key: str) -> Color:
+    def __getitem__(self, key: str) -> 'Color':
         assert isinstance(key, str), "key must be a str of 4 characters."
-        assert len(key) = 4, "key must have 4 characters (between 'r', 'g', 'b' and 'a')."
-        comps = [self.r, self.g, self.b, self.1]
+        assert len(key) == 4, "key must have 4 characters (between 'r', 'g', 'b' and 'a')."
+        comps = [self.r, self.g, self.b, self.a]
         values = []
         for i, axis in enumerate(key):
             values.append({
@@ -1712,7 +1771,7 @@ class BoundingBox(Structure):
 
     def __str__(self) -> str:
         return "(BOUNDINGBOX: min: {}, max: {})".format(
-            self.min self.max
+            self.min, self.max
         )
 
 
@@ -2059,64 +2118,6 @@ HMD_SONY_PSVR = 5
 
 
 # -----------------------------------------------------------------------------------
-# Package utility functions and types
-# ----------------------------------------------------------------------------------
-
-Number = Union[int, float]
-Seq = Sequence[Number]
-
-def _float(value) -> float:
-    return float(value) if isinstance(value, int) else value
-
-
-def _int(value) -> int:
-    return int(value) if isinstance(value, float) else value
-
-
-def _str_in(value: bytes) -> str:
-    return value.encode('utf-8', 'ignore') if isinstance(value, str) else value
-
-
-def _str_out(value: str) -> bytes:
-    return value.decode('utf-8', 'ignore') if isinstance(value, bytes) else value
-
-
-def _vec2(seq: Sequence[Number]) -> Vector2:
-    if isinstance(seq, Vector2):
-        return seq
-    x, y = seq
-    return Vector2(_float(x), _float(y))
-
-
-def _vec3(seq: Sequence[Number]) -> Vector3:
-    if isinstance(seq, Vector3):
-        return seq
-    x, y, z = seq
-    return Vector3(_float(x), _float(y), _float(z))
-
-
-def _vec4(seq: Sequence[Number]) -> Vector3:
-    if isinstance(seq, Vector4):
-        return seq
-    x, y, z, w = seq
-    return Vector4(_float(x), _float(y), _float(z), _float(w))
-
-
-def _rect(seq: Sequence[Number]) -> Rectangle:
-    if isinstance(seq, Rectangle):
-        return seq
-    x, y, w, h = seq
-    return Rectangle(_float(x), _float(y), _float(w), _float(h))
-
-
-def _color(seq: Sequence[Number]) -> Color:
-    if isinstance(seq, Color):
-        return seq
-    r, g, b, q = seq
-    return Color(_float(r), _float(r), _float(b), _float(q))
-
-
-# -----------------------------------------------------------------------------------
 # Window and Graphics Device Functions (Module: core)
 # ----------------------------------------------------------------------------------
 
@@ -2183,7 +2184,7 @@ def set_window_position(x: int, y: int) -> None:
     """Set window position on screen (only PLATFORM_DESKTOP)"""
     return _rl.SetWindowPosition(_int(x), _int(y))
 
-def set_window_position_v(pos: Union[Vector2, Seq) -> None:
+def set_window_position_v(pos: Union[Vector2, Seq]) -> None:
     """Set window position on screen (only PLATFORM_DESKTOP)"""
     return _rl.SetWindowPosition(_vec2(pos))
 
@@ -4255,8 +4256,7 @@ _rl.LoadWave.argtypes = [CharPtr]
 _rl.LoadWave.restype = Wave
 def load_wave(file_name: CharPtr) -> Wave:
     """Load wave data from file"""
-    return _rl.LoadWave(_str_in(file_name))_int(
-)
+    return _rl.LoadWave(_str_in(file_name))
 
 _rl.LoadWaveEx.argtypes = [VoidPtr, Int, Int, Int, Int]
 _rl.LoadWaveEx.restype = Wave
