@@ -9,7 +9,7 @@ def main() -> int:
     screen_width: int = 800
     screen_height: int = 450
 
-    init_window(screen_width, screen_height, b"raylib [core] example - 3d picking")
+    init_window(screen_width, screen_height, "raylib [core] example - 3d picking")
 
     # Define the camera to look into our 3d world
     camera: Camera = Camera()
@@ -80,10 +80,10 @@ def main() -> int:
 
         end_mode3d()
 
-        draw_text(b"Try Selecting the box with mouse!", 240, 10, 20, DARKGRAY)
+        draw_text("Try Selecting the box with mouse!", 240, 10, 20, DARKGRAY)
 
         if collision:
-            draw_text(b"BOX SELECTED", (screen_width - measure_text(b"BOX SELECTED", 30)) // 2, int(screen_height * .1), 30, GREEN)
+            draw_text("BOX SELECTED", (screen_width - measure_text("BOX SELECTED", 30)) // 2, int(screen_height * .1), 30, GREEN)
 
         end_drawing()
         # ---------------------------------------------------------------------------------

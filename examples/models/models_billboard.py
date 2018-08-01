@@ -1,4 +1,4 @@
-# core_dropped_files.py
+# models_billboard.py
 
 from raylibpy import *
 
@@ -9,9 +9,21 @@ def main() -> int:
     screen_width: int = 800
     screen_height: int = 450
 
-    init_window(screen_width, screen_height, "raylibpy [core] example - drop files")
+    init_window(screen_width, screen_height, "raylibpy [models] example - drawing billboard")
 
-    dropped_files: list = []
+    # Define the camera to look into our 3d world
+    camera: Camera = Camera()
+    camera.position = Vector3(5., 4., 5.)
+    camera.target = Vector3(0., 2., 0.)
+    camera.up = Vector3(0., 1., 0.)
+    camera.fovy = 45.0
+    camera.type = CAMERA_PERSPECTIVE
+
+
+    bill: Texture2D = load_texture("resources/billboard.png")
+    bill_position = Vector3(0., 2., 0.)
+
+    set_camera_mode(camera, CAMERA_ORBITAL)
 
     set_target_fps(60)
 
@@ -19,8 +31,7 @@ def main() -> int:
     while not window_should_close():
         # Update
         # ---------------------------------------------------------------------------------
-        if is_file_dropped():
-            dropped_files = get_dropped_files()
+        update_camera(byref(camera))
         # ----------------------------------------------------------------------------------
 
         # Draw
@@ -29,26 +40,23 @@ def main() -> int:
 
         clear_background(RAYWHITE)
 
-        if len(dropped_files) == 0:
-            draw_text("Drop your files to this window!", 100, 40, 20, DARKGRAY)
-        else:
-            draw_text("Dropped files:", 100, 40, 20, DARKGRAY)
+        begin_mode3d(camera)
 
-            for i, drop_file in enumerate(dropped_files):
-                if i % 2 == 0:
-                    draw_rectangle(0, 85 + 40 * i, screen_width, 40, fade(LIGHTGRAY, .5))
-                else:
-                    draw_rectangle(0, 85 + 40 * i, screen_width, 40, fade(LIGHTGRAY, .3))
+        draw_billboard(camera, bill, bill_position, 2., WHITE)
+        
+        draw_grid(10, 1.0)
 
-                draw_text(drop_file, 120, 100 + 40 * i, 10, GRAY)
+        end_mode3d()
 
-            draw_text("Drop new files...", 100, 110 + 40 * len(dropped_files), 20, DARKGRAY)
+        draw_fps(10, 10)
 
         end_drawing()
         # ---------------------------------------------------------------------------------
 
     # De-Initialization
     # -------------------------------------------------------------------------------------
+    unload_texture(bill)
+
     close_window()
     # -------------------------------------------------------------------------------------
 

@@ -2126,7 +2126,7 @@ _rl.InitWindow.argtypes = [Int, Int, CharPtr]
 _rl.InitWindow.restype = None
 def init_window(width: int, height: int, title: AnyStr) -> None:
     """Initialize window and OpenGL context"""
-    return _rl.InitWindow(_int(width), _int(width), _str_in(title))
+    return _rl.InitWindow(_int(width), _int(height), _str_in(title))
 
 
 _rl.CloseWindow.argtypes = _NOARGS

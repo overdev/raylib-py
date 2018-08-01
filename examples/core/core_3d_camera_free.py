@@ -13,7 +13,7 @@ def main():
     screen_width = 800
     screen_height = 450
 
-    rl.init_window(screen_width, screen_height, b"raylib [core] example - 3d camera free")
+    rl.init_window(screen_width, screen_height, "raylib [core] example - 3d camera free")
 
     # Define the camera to look into our 3d world
     camera = rl.Camera(
@@ -59,12 +59,12 @@ def main():
         rl.draw_rectangle(10, 10, 320, 133, rl.fade(rl.SKYBLUE, 0.5))
         rl.draw_rectangle_lines(10, 10, 320, 133, rl.BLUE)
         
-        rl.draw_text(b"Free camera default controls:", 20, 20, 10, rl.BLACK)
-        rl.draw_text(b"- Mouse Wheel to Zoom in-out", 40, 40, 10, rl.DARKGRAY)
-        rl.draw_text(b"- Mouse Wheel Pressed to Pan", 40, 60, 10, rl.DARKGRAY)
-        rl.draw_text(b"- Alt + Mouse Wheel Pressed to Rotate", 40, 80, 10, rl.DARKGRAY)
-        rl.draw_text(b"- Alt + Ctrl + Mouse Wheel Pressed for Smooth Zoom", 40, 100, 10, rl.DARKGRAY)
-        rl.draw_text(b"- Z to Zoom to (0, 0, 0)", 40, 120, 10, rl.DARKGRAY)
+        rl.draw_text("Free camera default controls:", 20, 20, 10, rl.BLACK)
+        rl.draw_text("- Mouse Wheel to Zoom in-out", 40, 40, 10, rl.DARKGRAY)
+        rl.draw_text("- Mouse Wheel Pressed to Pan", 40, 60, 10, rl.DARKGRAY)
+        rl.draw_text("- Alt + Mouse Wheel Pressed to Rotate", 40, 80, 10, rl.DARKGRAY)
+        rl.draw_text("- Alt + Ctrl + Mouse Wheel Pressed for Smooth Zoom", 40, 100, 10, rl.DARKGRAY)
+        rl.draw_text("- Z to Zoom to (0, 0, 0)", 40, 120, 10, rl.DARKGRAY)
 
         rl.end_drawing()
         # -----------------------------------------------------------

@@ -4,7 +4,7 @@ import raylibpy as rl
 
 def main():
 
-    rl.init_window(800, 450, b"raylib [core] example - basic window")
+    rl.init_window(800, 450, "raylib [core] example - basic window")
 
     rl.set_target_fps(60)
 
@@ -12,7 +12,7 @@ def main():
 
         rl.begin_drawing()
         rl.clear_background(rl.RAYWHITE)
-        rl.draw_text(b"Congrats! You created your first window!", 190, 200, 20, rl.LIGHTGRAY)
+        rl.draw_text("Congrats! You created your first window!", 190, 200, 20, rl.LIGHTGRAY)
         rl.end_drawing()
 
     rl.close_window()

@@ -1,12 +1,7 @@
 # core_2d_camera.py
 
 from raylibpy import *
-# from raylibpy.structures import *
-# from raylibpy.constants import *
-# from raylibpy.colors import *
-# from raylibpy.core import *
-# from raylibpy.text import *
-# from raylibpy.shapes import *
+
 
 MAX_BUILDINGS = 100
 
@@ -17,7 +12,7 @@ def main():
     screen_width = 800
     screen_height = 450
 
-    init_window(screen_width, screen_height, b"raylib [core] example - 2d camera")
+    init_window(screen_width, screen_height, "raylib [core] example - 2d camera")
 
     player = Rectangle(400, 280, 40, 40)
     buildings = []
@@ -111,7 +106,7 @@ def main():
 
         end_mode2d()
 
-        draw_text(b"SCREEN AREA", 640, 10, 20, RED)
+        draw_text("SCREEN AREA", 640, 10, 20, RED)
 
         draw_rectangle(0, 0, screen_width, 5, RED)
         draw_rectangle(0, 5, 5, screen_height - 10, RED)
@@ -121,11 +116,11 @@ def main():
         draw_rectangle( 10, 10, 250, 113, fade(SKYBLUE, 0.5))
         draw_rectangle_lines( 10, 10, 250, 113, BLUE)
 
-        draw_text(b"Free 2d camera controls:", 20, 20, 10, BLACK)
-        draw_text(b"- Right/Left to move Offset", 40, 40, 10, DARKGRAY)
-        draw_text(b"- Mouse Wheel to Zoom in-out", 40, 60, 10, DARKGRAY)
-        draw_text(b"- A / S to Rotate", 40, 80, 10, DARKGRAY)
-        draw_text(b"- R to reset Zoom and Rotation", 40, 100, 10, DARKGRAY)
+        draw_text("Free 2d camera controls:", 20, 20, 10, BLACK)
+        draw_text("- Right/Left to move Offset", 40, 40, 10, DARKGRAY)
+        draw_text("- Mouse Wheel to Zoom in-out", 40, 60, 10, DARKGRAY)
+        draw_text("- A / S to Rotate", 40, 80, 10, DARKGRAY)
+        draw_text("- R to reset Zoom and Rotation", 40, 100, 10, DARKGRAY)
 
         end_drawing()
         # -----------------------------------------------------------

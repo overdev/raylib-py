@@ -13,7 +13,7 @@ def main():
     screen_width = 800
     screen_height = 450
 
-    rl.init_window(screen_width, screen_height, b"raylib [core] example - 3d camera 1st person")
+    rl.init_window(screen_width, screen_height, "raylib [core] example - 3d camera 1st person")
 
     # Define the camera to look into our 3d world (position, target, up vector)
     camera = rl.Camera(
@@ -76,8 +76,8 @@ def main():
             rl.draw_cube(position, 2.0, heights[i], 2.0, colors[i])
             rl.draw_cube_wires(position, 2.0, heights[i], 2.0, rl.MAROON)
 
-        rl.draw_rectangle(int(camera.target.x), int(-500), 1, screen_height * 4, rl.GREEN)
-        rl.draw_rectangle(int(-500), int(camera.target.y), screen_width * 4, 1, rl.GREEN)
+        rl.draw_rectangle(camera.target.x, -500, 1, screen_height * 4, rl.GREEN)
+        rl.draw_rectangle(-500, camera.target.y, screen_width * 4, 1, rl.GREEN)
 
         rl.end_mode3d()
 
@@ -86,9 +86,9 @@ def main():
         rl.draw_rectangle(10, 10, 220, 70, rl.fade(rl.SKYBLUE, 0.5))
         rl.draw_rectangle_lines(10, 10, 220, 70, rl.BLUE)
         
-        rl.draw_text(b"First person camera default controls:", 20, 20, 10, rl.BLACK)
-        rl.draw_text(b"- Move with keys: W, A, S, D", 40, 40, 10, rl.DARKGRAY)
-        rl.draw_text(b"- Mouse move to look around", 40, 60, 10, rl.DARKGRAY)
+        rl.draw_text("First person camera default controls:", 20, 20, 10, rl.BLACK)
+        rl.draw_text("- Move with keys: W, A, S, D", 40, 40, 10, rl.DARKGRAY)
+        rl.draw_text("- Mouse move to look around", 40, 60, 10, rl.DARKGRAY)
 
         rl.end_drawing()
         # -----------------------------------------------------------
