@@ -6,6 +6,11 @@
 *.pyc
 build/
 dist/
+_unused
+test.py
+templates/
+libraylib_shared_no9patch.dll
+libraylib_shared_pre9patch.dll
 *.egg-info/
 *.egg
 *.py[cod]

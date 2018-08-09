@@ -17,16 +17,18 @@ def main():
     color_rects: List[Rectangle] = []
 
     for i in range(21):
+        y, x = divmod(i, 7)
         rect = Rectangle(
-            20 + 100 * (i % 7) + 10 * (i % 7),
-            60 + 100 * (i / 7) + 10 * (i / 7),
+            20 + 110 * x,
+            60 + 110 * y,
             100,
             100
         )
+        print(rect)
         color_rects.append(rect)
 
     selected: List[bool] = [False for i in range(21)]
-    mouse_point: Vector2.zero()
+    mouse_point: Vector2
 
     set_target_fps(60)
 

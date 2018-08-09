@@ -1,21 +1,22 @@
 # core_basic_window.py
-import raylibpy as rl
+
+from raylibpy import *
 
 
 def main():
 
-    rl.init_window(800, 450, "raylib [core] example - basic window")
+    init_window(800, 450, "raylib [core] example - basic window")
 
-    rl.set_target_fps(60)
+    set_target_fps(60)
 
-    while not rl.window_should_close():
+    while not window_should_close():
 
-        rl.begin_drawing()
-        rl.clear_background(rl.RAYWHITE)
-        rl.draw_text("Congrats! You created your first window!", 190, 200, 20, rl.LIGHTGRAY)
-        rl.end_drawing()
+        begin_drawing()
+        clear_background(RAYWHITE)
+        draw_text("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY)
+        end_drawing()
 
-    rl.close_window()
+    close_window()
 
 
 if __name__ == '__main__':

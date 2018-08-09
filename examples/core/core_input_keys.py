@@ -18,9 +18,9 @@ def main():
         if is_key_down(KEY_RIGHT):
             ball_position.x += 2.0
         if is_key_down(KEY_LEFT):
-            ball_position.x += 2.0
+            ball_position.x -= 2.0
         if is_key_down(KEY_UP):
-            ball_position.y += 2.0
+            ball_position.y -= 2.0
         if is_key_down(KEY_DOWN):
             ball_position.y += 2.0
 

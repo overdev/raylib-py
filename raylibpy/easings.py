@@ -53,14 +53,7 @@
 #   OF THE POSSIBILITY OF SUCH DAMAGE.
 #   ---------------------------------------------------------------------------------
 
-from math import (
-    sin,
-    cos,
-    sqrt,
-    asin,
-    pi
-)
-
+from math import asin, cos, pi, sin, sqrt
 
 __all__ = [
     'ease_linear_none',

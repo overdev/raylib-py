@@ -19,6 +19,8 @@ def main() -> int:
     camera.fovy = 45.0
     camera.type = CAMERA_PERSPECTIVE
 
+    print(camera)
+
 
     bill: Texture2D = load_texture("resources/billboard.png")
     bill_position = Vector3(0., 2., 0.)

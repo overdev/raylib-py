@@ -1,5 +1,6 @@
 import sys
 import os
+from math import modf
 from typing import Tuple, Union, Sequence, AnyStr
 from ctypes import (
     c_bool,
@@ -48,13 +49,13 @@ else:
     elif os.path.exists(os.path.join(second_path, _lib_filename[_platform])):
         RAYLIB_BIN_PATH = second_path
     else:
-        print(f"'{_lib_filename[_platform]}' is expected to be located\n"
-            f"in the directory specified by the environment variable\n"
-            f"RAYLIB_BIN_PATH, in the program's entry point (__main__)\n"
-            f"directory, or in the raylibpy package __init__ directory.\n"
-            f"The library file is not in any of these locations."
-        )
-        raise RuntimeError(f"Unable to find raylib library ('{_lib_filename[_platform]}').")
+        s = ("'{}' is expected to be located\n"
+            "in the directory specified by the environment variable\n"
+            "RAYLIB_BIN_PATH, in the program's entry point (__main__)\n"
+            "directory, or in the raylibpy package __init__ directory.\n"
+            "The library file is not in any of these locations.")
+        print(s.format(_lib_filename[_platform]))
+        raise RuntimeError("Unable to find raylib library ('{}').".format(_lib_filename[_platform]))
 
 if RAYLIB_BIN_PATH:
     _rl = CDLL(os.path.join(RAYLIB_BIN_PATH, _lib_filename[_platform]))
@@ -316,6 +317,9 @@ __all__ = [
     'HMD_OCULUS_GO',
     'HMD_VALVE_HTC_VIVE',
     'HMD_SONY_PSVR',
+    'NPT_9PATCH',
+    'NPT_3PATCH_VERTICAL',
+    'NPT_3PATCH_HORIZONTAL',
 
     # raylib types
     'AudioStream',
@@ -346,6 +350,7 @@ __all__ = [
     'Rectangle',
     'RenderTexture',
     'RenderTexture2D',
+    'NPatch',
     'Shader',
     'Sound',
     'SpriteFont',
@@ -583,6 +588,7 @@ __all__ = [
     'draw_texture_ex',
     'draw_texture_rec',
     'draw_texture_pro',
+    'draw_npatch',
 
     # Module: TEXT
     'get_font_default',
@@ -1063,8 +1069,8 @@ class Vector2(Structure):
             values.append({
                 'x': self.x,
                 'y': self.y,
-                'X': -self.x,
-                'Y': -self.y,
+                'X': -self.x if self.x > 0 else +self.x,
+                'Y': -self.y if self.y > 0 else +self.y,
                 '0': 0.,
                 '1': 1.,
                 '/': comps[i] / 2.,
@@ -1075,6 +1081,8 @@ class Vector2(Structure):
                 '?': 1. if comps[i] != 0. else 0.,
                 '>': max(self.x, self.y),
                 '<': min(self.x, self.y),
+                '#': modf(comps[i])[0],
+                '%': modf(comps[i])[1],
             }[axis])
         return {
             1: values[0],
@@ -1221,9 +1229,9 @@ class Vector3(Structure):
                 'x': self.x,
                 'y': self.y,
                 'z': self.z,
-                'X': -self.x,
-                'Y': -self.y,
-                'Z': -self.z,
+                'X': -self.x if self.x > 0. else +self.x,
+                'Y': -self.y if self.y > 0. else +self.y,
+                'Z': -self.z if self.z > 0. else +self.z,
                 '0': 0.,
                 '1': 1.,
                 '/': comps[i] / 2.,
@@ -1234,12 +1242,14 @@ class Vector3(Structure):
                 '?': 1. if comps[i] != 0. else 0.,
                 '>': max(self.x, self.y, self.z),
                 '<': min(self.x, self.y, self.z),
+                '#': modf(comps[i])[0],
+                '%': modf(comps[i])[1],
             }[axis])
         return {
             1: values[0],
-            2: Vector2(*values),
-            3: Vector3(*values),
-            4: Vector4(*values),
+            2: Vector2(values[0], values[1]),
+            3: Vector3(values[0], values[1], values[2]),
+            4: Vector4(values[0], values[1], values[2], 1.),
         }[len(values)]
 
     def __pos__(self) -> 'Vector3':
@@ -1394,9 +1404,11 @@ class Vector4(Structure):
                 'x': self.x,
                 'y': self.y,
                 'z': self.z,
-                'X': -self.x,
-                'Y': -self.y,
-                'Z': -self.z,
+                'w': self.w,
+                'X': -self.x if self.x > 0 else +self.x,
+                'Y': -self.y if self.y > 0 else +self.y,
+                'Z': -self.z if self.z > 0 else +self.z,
+                'W': -self.w if self.w > 0 else +self.w,
                 '0': 0.,
                 '1': 1.,
                 '/': comps[i] / 2.,
@@ -1407,12 +1419,14 @@ class Vector4(Structure):
                 '?': 1. if comps[i] != 0. else 0.,
                 '>': max(self.x, self.y, self.z),
                 '<': min(self.x, self.y, self.z),
+                '#': modf(comps[i])[0],
+                '%': modf(comps[i])[1],
             }[axis])
         return {
             1: values[0],
-            2: Vector2(*values),
-            3: Vector3(*values),
-            4: Vector4(*values),
+            2: Vector2(values[0], values[1]),
+            3: Vector3(values[0], values[1], values[2]),
+            4: Vector4(values[0], values[1], values[2], values[3]),
         }[len(values)]
 
     def __pos__(self) -> 'Vector4':
@@ -1694,6 +1708,23 @@ class RenderTexture(Structure):
 
     def __str__(self) -> str:
         return "(RENDERTEXTURE: {}w, {}h, texture: {}, depth: {})".format(self.width, self.height, self.texture, self.depth)
+
+
+class NPatch(Structure):
+    _fields_ = [
+        ('texture', Texture2D),
+        ('sourceRec', Rectangle),
+        ('minSize', Vector2),
+        ('borderWidth', c_float * 4),
+        ('padding', c_int * 4),
+        ('type', c_int),
+    ]
+
+    def set_border_width(self, a: float, b: float, c: float, d: float):
+        self.borderWidth = (c_float * 4)(_float(a), _float(b), _float(c), _float(d))
+
+    def set_padding(self, a: int, b: int, c: int, d: int):
+        self.padding = (c_int * 4)(_int(a), _int(b), _int(c), _int(d))
 
 
 class CharInfo(Structure):
@@ -2115,6 +2146,11 @@ HMD_OCULUS_RIFT_CV1 = 2
 HMD_OCULUS_GO = 3
 HMD_VALVE_HTC_VIVE = 4
 HMD_SONY_PSVR = 5
+
+
+NPT_9PATCH = 0
+NPT_3PATCH_VERTICAL = 1
+NPT_3PATCH_HORIZONTAL = 2
 
 
 # -----------------------------------------------------------------------------------
@@ -3511,6 +3547,12 @@ _rl.DrawTexturePro.restype = None
 def draw_texture_pro(texture: Texture2D, source_rec: Union[Rectangle, Seq], dest_rec: Union[Rectangle, Seq], origin: Union[Vector2, Seq], rotation: float, tint: Union[Color, Seq]) -> None:
     """Draw a part of a texture defined by a rectangle with 'pro' parameters"""
     return _rl.DrawTexturePro(texture, _rect(source_rec), _rect(dest_rec), _vec2(origin), _float(rotation), _color(tint))
+
+_rl.DrawNPatch.argtypes = [NPatch, Rectangle, Bool, Vector2, Float, Color]
+_rl.DrawNPatch.restype = None
+def draw_npatch(npatch: NPatch, dest_rec: Union[Rectangle, Seq], use_padding: bool, origin: Union[Vector2, Seq], rotation: float, tint: Union[Color, Seq]) -> None:
+    """Draw a part of a texture defined by a rectangle with 'pro' parameters"""
+    return _rl.DrawNPatch(npatch, _rect(dest_rec), use_padding, _vec2(origin), _float(rotation), _color(tint))
 
 
 # -----------------------------------------------------------------------------------
