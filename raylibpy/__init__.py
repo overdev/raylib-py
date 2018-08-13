@@ -1,7 +1,7 @@
 import sys
 import os
 from math import modf
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 from typing import Tuple, Union, Sequence, AnyStr
 from ctypes import (
     c_bool,
@@ -2225,7 +2225,7 @@ BLEND_ALPHA = BlendMode.BLEND_ALPHA
 BLEND_ADDITIVE = BlendMode.BLEND_ADDITIVE
 BLEND_MULTIPLIED = BlendMode.BLEND_MULTIPLIED
 
-class Gestures(IntEnum):
+class Gestures(IntFlag):
     GESTURE_NONE = 0
     GESTURE_TAP = 1
     GESTURE_DOUBLETAP = 2
@@ -2940,7 +2940,7 @@ def get_touch_position(index: int) -> Vector2:
 # -----------------------------------------------------------------------------------
 _rl.SetGesturesEnabled.argtypes = [UInt]
 _rl.SetGesturesEnabled.restype = None
-def set_gestures_enabled(gesture_flags: int) -> None:
+def set_gestures_enabled(gesture_flags: Union[int, Gestures]) -> None:
     """Enable a set of gestures using flags"""
     return _rl.SetGesturesEnabled(_int(gesture_flags))
 
@@ -3006,7 +3006,7 @@ def get_gesture_pinch_angle() -> float:
 # -----------------------------------------------------------------------------------
 _rl.SetCameraMode.argtypes = [Camera, Int]
 _rl.SetCameraMode.restype = None
-def set_camera_mode(camera: Camera, mode: int) -> None:
+def set_camera_mode(camera: Camera, mode: Union[int, CameraMode]) -> None:
     """Set camera mode (multiple camera modes available)"""
     return _rl.SetCameraMode(camera, _int(mode))
 
@@ -3291,14 +3291,14 @@ def load_image_ex(pixels: ColorPtr, width: int, height: int) -> Image:
 
 _rl.LoadImagePro.argtypes = [VoidPtr, Int, Int, Int]
 _rl.LoadImagePro.restype = Image
-def load_image_pro(data: Union[VoidPtr, bytes], width: int, height: int, img_format: int) -> Image:
+def load_image_pro(data: Union[VoidPtr, bytes], width: int, height: int, img_format: Union[int, PixelFormat]) -> Image:
     """Load image from raw data with parameters"""
     return _rl.LoadImagePro(data, _int(width), _int(height), _int(img_format))
 
 
 _rl.LoadImageRaw.argtypes = [CharPtr, Int, Int, Int, Int]
 _rl.LoadImageRaw.restype = Image
-def load_image_raw(file_name: AnyStr, width: int, height: int, img_format: int, header_size: int) -> Image:
+def load_image_raw(file_name: AnyStr, width: int, height: int, img_format: Union[int, PixelFormat], header_size: int) -> Image:
     """Load image from RAW file data"""
     return _rl.LoadImageRaw(_str_in(file_name), _int(width), _int(height), _int(img_format), _int(header_size))
 
@@ -3368,7 +3368,7 @@ def get_image_data_normalized(image: Image) -> Vector4Ptr:
 
 _rl.GetPixelDataSize.argtypes = [Int, Int, Int]
 _rl.GetPixelDataSize.restype = Int
-def get_pixel_data_size(width: int, height: int, pxl_format: int) -> int:
+def get_pixel_data_size(width: int, height: int, pxl_format: Union[int, PixelFormat]) -> int:
     """Get pixel data size in bytes (image or texture)"""
     return _rl.GetPixelDataSize(_int(width), _int(height), _int(pxl_format))
 
@@ -3404,7 +3404,7 @@ def image_to_pot(image: Image, fill_color: Union[Color, Seq]) -> None:
 
 _rl.ImageFormat.argtypes = [ImagePtr, Int]
 _rl.ImageFormat.restype = None
-def image_format(image: Image, new_format: int) -> None:
+def image_format(image: Image, new_format: Union[int, PixelFormat]) -> None:
     """Convert image data to desired format"""
     return _rl.ImageFormat(image, _int(new_format))
 
@@ -4338,7 +4338,7 @@ def end_shader_mode() -> None:
 
 _rl.BeginBlendMode.argtypes = [Int]
 _rl.BeginBlendMode.restype = None
-def begin_blend_mode(mode: int) -> None:
+def begin_blend_mode(mode: Union[int, BlendMode]) -> None:
     """Begin blending mode (alpha, additive, multiplied)"""
     return _rl.BeginBlendMode(_int(mode))
 
@@ -4353,7 +4353,7 @@ def end_blend_mode() -> None:
 # VR control functions
 _rl.GetVrDeviceInfo.argtypes = [Int]
 _rl.GetVrDeviceInfo.restype = VrDeviceInfo
-def get_vr_device_info(vr_device_type: int):
+def get_vr_device_info(vr_device_type: Union[int, VrDeviceType]):
     """Get VR device information for some standard devices"""
     return _rl.GetVrDeviceInfo(_int(vr_device_type))
 
