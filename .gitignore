@@ -19,6 +19,7 @@ __pycache__/
 pylint.html
 .idea/
 .vs/
+.vscode/
 env
 venv/
 .pytest_cache/
