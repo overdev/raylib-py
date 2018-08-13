@@ -2313,6 +2313,12 @@ def init_window(width: int, height: int, title: AnyStr) -> None:
     return _rl.InitWindow(_int(width), _int(height), _str_in(title))
 
 
+def init_window_v(size: Union[Vector, Seq], title: AnyStr) -> None:
+    """Initialize window (with a sequence type as size) and OpenGL context"""
+    size = _vec2(size)
+    init_window(size.x, size.y, title)
+
+
 _rl.CloseWindow.argtypes = _NOARGS
 _rl.CloseWindow.restype = None
 def close_window() -> None:
