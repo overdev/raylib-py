@@ -1,5 +1,8 @@
 # core_2d_camera.py
 
+# import os
+# os.environ['RAYLIB_BIN_PATH'] = "C:/raylib/raylib/release/libs/win32/mingw32/"
+
 from raylibpy import *
 
 
@@ -101,8 +104,10 @@ def main():
 
         draw_rectangle_rec(player, RED)
 
+        begin_clip_rec((0, 0, 400, 450))
         draw_rectangle(int(camera.target.x), int(-500), 1, screen_height * 4, GREEN)
         draw_rectangle(int(-500), int(camera.target.y), screen_width * 4, 1, GREEN)
+        end_clip_rec()
 
         end_mode2d()
 

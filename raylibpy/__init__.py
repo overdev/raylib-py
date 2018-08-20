@@ -40,7 +40,7 @@ if "RAYLIB_BIN_PATH" in os.environ:
         RAYLIB_BIN_PATH = os.path.dirname(sys.modules['__main__'].__file__)
     elif env_path == '__file__':
         RAYLIB_BIN_PATH = os.path.abspath(os.path.dirname(__file__))
-    elif os.path.exists(env_path) and os.path.isfile(env_path):
+    elif os.path.exists(env_path) and os.path.isdir(env_path):
         RAYLIB_BIN_PATH = env_path
 else:
     first_path = os.path.abspath(os.path.dirname(__file__))
@@ -297,7 +297,7 @@ __all__ = [
     'WRAP_REPEAT',
     'WRAP_CLAMP',
     'WRAP_MIRROR',
-    'TextureBlendMode',
+    'BlendMode',
     'BLEND_ALPHA',
     'BLEND_ADDITIVE',
     'BLEND_MULTIPLIED',
@@ -329,7 +329,7 @@ __all__ = [
     'HMD_OCULUS_GO',
     'HMD_VALVE_HTC_VIVE',
     'HMD_SONY_PSVR',
-    'NPatchInfo',
+    'NPatchType',
     'NPT_9PATCH',
     'NPT_3PATCH_VERTICAL',
     'NPT_3PATCH_HORIZONTAL',
@@ -363,7 +363,7 @@ __all__ = [
     'Rectangle',
     'RenderTexture',
     'RenderTexture2D',
-    'NPatch',
+    'NPatchInfo',
     'Shader',
     'Sound',
     'SpriteFont',
@@ -601,7 +601,7 @@ __all__ = [
     'draw_texture_ex',
     'draw_texture_rec',
     'draw_texture_pro',
-    'draw_npatch',
+    'draw_texture_npatch',
 
     # Module: TEXT
     'get_font_default',
@@ -694,6 +694,8 @@ __all__ = [
     'begin_shader_mode',
     'end_shader_mode',
     'begin_blend_mode',
+    'begin_clip_rec',
+    'end_clip_rec',
     'end_blend_mode',
     'get_vr_device_info',
     'init_vr_simulator',
@@ -1723,13 +1725,13 @@ class RenderTexture(Structure):
         return "(RENDERTEXTURE: {}w, {}h, texture: {}, depth: {})".format(self.width, self.height, self.texture, self.depth)
 
 
-class NPatch(Structure):
+class NPatchInfo(Structure):
     _fields_ = [
-        ('texture', Texture2D),
         ('sourceRec', Rectangle),
-        ('minSize', Vector2),
-        ('borderWidth', c_float * 4),
-        ('padding', c_int * 4),
+        ('left', c_int),
+        ('top', c_int),
+        ('right', c_int),
+        ('bottom', c_int),
         ('type', c_int),
     ]
 
@@ -2271,8 +2273,8 @@ class CameraType(IntEnum):
     CAMERA_ORTHOGRAPHIC = 1
 
 
-CAMERA_PERSPECTIVE = CameraMode.CAMERA_PERSPECTIVE
-CAMERA_ORTHOGRAPHIC = CameraMode.CAMERA_ORTHOGRAPHIC
+CAMERA_PERSPECTIVE = CameraType.CAMERA_PERSPECTIVE
+CAMERA_ORTHOGRAPHIC = CameraType.CAMERA_ORTHOGRAPHIC
 
 
 class VrDeviceType(IntEnum):
@@ -2313,7 +2315,7 @@ def init_window(width: int, height: int, title: AnyStr) -> None:
     return _rl.InitWindow(_int(width), _int(height), _str_in(title))
 
 
-def init_window_v(size: Union[Vector, Seq], title: AnyStr) -> None:
+def init_window_v(size: Union[Vector2, Seq], title: AnyStr) -> None:
     """Initialize window (with a sequence type as size) and OpenGL context"""
     size = _vec2(size)
     init_window(size.x, size.y, title)
@@ -3702,11 +3704,11 @@ def draw_texture_pro(texture: Texture2D, source_rec: Union[Rectangle, Seq], dest
     """Draw a part of a texture defined by a rectangle with 'pro' parameters"""
     return _rl.DrawTexturePro(texture, _rect(source_rec), _rect(dest_rec), _vec2(origin), _float(rotation), _color(tint))
 
-_rl.DrawNPatch.argtypes = [NPatch, Rectangle, Bool, Vector2, Float, Color]
-_rl.DrawNPatch.restype = None
-def draw_npatch(npatch: NPatch, dest_rec: Union[Rectangle, Seq], use_padding: bool, origin: Union[Vector2, Seq], rotation: float, tint: Union[Color, Seq]) -> None:
+_rl.DrawTextureNPatch.argtypes = [Texture2D, NPatchInfo, Rectangle, Vector2, Float, Color]
+_rl.DrawTextureNPatch.restype = None
+def draw_texture_npatch(texture: Texture2D, npatch_info: NPatchInfo, dest_rec: Union[Rectangle, Seq], origin: Union[Vector2, Seq], rotation: float, tint: Union[Color, Seq]) -> None:
     """Draw a part of a texture defined by a rectangle with 'pro' parameters"""
-    return _rl.DrawNPatch(npatch, _rect(dest_rec), use_padding, _vec2(origin), _float(rotation), _color(tint))
+    return _rl.DrawNPatch(texture, npatch_info, _rect(dest_rec), _vec2(origin), _float(rotation), _color(tint))
 
 
 # -----------------------------------------------------------------------------------
@@ -4349,6 +4351,20 @@ def end_blend_mode() -> None:
     """End blending mode (reset to default: alpha blending)"""
     return _rl.EndBlendMode()
 
+_rl.BeginClipRec.argtypes = [Rectangle]
+_rl.BeginClipRec.restype = None
+def begin_clip_rec(rec: Rectangle) -> None:
+    """Drawing functions change only pixels inside rec.
+
+    Can be nested.
+    """
+    _rl.BeginClipRec(_rect(rec))
+
+_rl.EndClipRec.argtypes = _NOARGS
+_rl.EndClipRec.restype = None
+def end_clip_rec() -> None:
+    """Restore previous clip rec."""
+    _rl.EndClipRec()
 
 # VR control functions
 _rl.GetVrDeviceInfo.argtypes = [Int]

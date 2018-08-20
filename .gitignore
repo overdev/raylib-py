@@ -8,6 +8,7 @@ build/
 dist/
 _unused
 test.py
+rayguipy.py
 templates/
 libraylib_shared_no9patch.dll
 libraylib_shared_pre9patch.dll
