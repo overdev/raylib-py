@@ -50,9 +50,8 @@ More information on how to build raylib can be found in the [raylib wiki pages](
 
 ### Constant values
 
-All C `#define`s and `enum`s got translated to Python 'constants'. Enums may, in the future,
-be converted to Python [enums](https://docs.python.org/3/library/enum.html), if
-`ctypes` allows it.
+All C `#define`s got translated to Python 'constants'. Enums got translated to
+Python [enums](https://docs.python.org/3/library/enum.html).
 
 ### Structures
 
@@ -201,3 +200,8 @@ though that these operators apply in positional fashion):
 "(0.0, 0.5, 0.840)"
 ```
 
+## extras
+
+raylibpy has the extra module [`easings`](https://github.com/overdev/raylibpy/blob/master/raylibpy/easings.py) for animations.
+
+The current plan it to translate [rayGui](https://github.com/raysan5/raygui) and add it too.
