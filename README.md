@@ -25,9 +25,8 @@ and/or [website](https://www.raylib.com).
 ## binaries
 
 raylibpy comes by default with 32bit binaries for Windows (`libraylib_shared.dll`, mingw),
-Linux (`libraylib.so.2.0.0`, i386) and MacOS (`libraylib.2.0.0.dylib`), but raylib have
-other [binary releases](https://github.com/raisan5/raylib/releases) (win64, mingw or
-msvc15 and linux amd64).
+Linux (`libraylib.so.2.0.0`, i386) and MacOS (`libraylib.2.0.0.dylib`), but you can find other
+[binary releases](https://github.com/raisan5/raylib/releases) for 64bit Windows, Linux or OSX.
 
 raylibpy will look for the respective binary in 3 locations:
 * In the `RAYLIB_BIN_PATH` environment variable;
@@ -59,9 +58,7 @@ Python [enums](https://docs.python.org/3/library/enum.html).
 
 ### Structures
 
-#### In general
-
-All structures inherit from `ctypes.Structure` class. At the moment, constructors
+In general, all structures inherit from `ctypes.Structure` class. At the moment, constructors
 (except for vectors) require the exact argument types, so `int`s can't be passed
 where `float`s are expected (although the argument can be omitted).
 
@@ -107,7 +104,6 @@ vec3 = Vector3(123.0, 467.0, 789.0)
 vec2 = vec3.uv       # x and y respectively as u and v
 vec3 = vec3.bgr      # x, y and z respectively as r, g and b ( rgb is not available in Vector 2)
 vec4 = vec2.rrrg     # for attribute reading, is ok to repeat components
-
 
 # Writing (__setattr__)
 vec3 = Vector3(123.0, 467.0, 789.0)
@@ -155,7 +151,7 @@ vec = Vector4(0., 1., 2., 3.)
 print(len(vec))     # outputs 4
 
 # __iter__()
-for comp in v:
+for comp in vec:
     print(comp)     # iterates on Vector4 components
 
 # __getitem__()
