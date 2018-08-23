@@ -1,5 +1,6 @@
 import sys
 import os
+import colorsys
 from math import modf
 from enum import IntEnum, IntFlag
 from typing import Tuple, List, Union, Sequence, AnyStr, Optional, Iterator, Type
@@ -1729,7 +1730,7 @@ class Matrix(Structure):
         )
 
 
-class Color(Structure):
+class _Color(Structure):
     _fields_ = [
         ('r', c_ubyte),
         ('g', c_ubyte),
@@ -1737,13 +1738,23 @@ class Color(Structure):
         ('a', c_ubyte),
     ]
 
+
+class Color(_Color):
+
     @classmethod
     def zero(cls) -> 'Color':
-        return cls(0., 0., 0., 1.)
+        return cls(0, 0, 0, 255)
 
     @classmethod
     def one(cls) -> 'Color':
-        return cls(1., 1., 1., 1.)
+        return cls(255, 255, 255, 255)
+
+    def __init__(self, *args) -> None:
+        """Constructor."""
+        result = _flatten((int, float), *args, map_to=int)
+        if len(result) != 4:
+            raise ValueError("Too many or too few initializers ({} instead of 2).".format(len(result)))
+        super(Color, self).__init__(*result)
 
     def __str__(self) -> str:
         return "({}, {}, {}, {})".format(self.r, self.g, self.b, self.a)
@@ -1783,6 +1794,63 @@ class Color(Structure):
             3: Vector3(*values),
             4: Vector4(*values),
         }[len(values)]
+
+    @property
+    def normalized(self) -> 'Vector4':
+        """Gets or sets a normalized Vector4 color."""
+        return Vector4(
+            self.r / 255.0,
+            self.g / 255.0,
+            self.b / 255.0,
+            self.a / 255.0
+        )
+
+    @normalized.setter
+    def normalized(self, value: Union[Seq, Vector4, Vector3]) -> None:
+        value = _flatten((int, float), *value, map_to=float)
+        if len(result) not in (3, 4):
+            raise ValueError("Too many or too few values (expected 3 or 4, not {})".format(len(result)))
+            self.r = int(value[0] * 255.0)
+            self.g = int(value[1] * 255.0)
+            self.b = int(value[2] * 255.0)
+            if len(value) == 4:
+                self.a = int(value[3] * 255.0)
+
+    @property
+    def hsv(self) -> 'Vector4':
+        """Gets a normalized color in HSV colorspace."""
+        return Vector4(*colorsys.rgb_to_hsv(*self.normalized[:3]), self.a / 255.)
+
+    @hsv.setter
+    def hsv(self, value: Union[Seq, Vector4, Vector3]) -> None:
+        result = _flatten((int, float), *value, map_to=float)
+        if len(result) not in (3, 4):
+            raise ValueError("Too many or too few values (expected 3 or 4, not {})".format(len(result)))
+        self.normalized = colorsys.hsv_to_rgb(result[:3])
+
+    @property
+    def hls(self) -> 'Vector4':
+        """Gets a normalized color in HLS colorspace."""
+        return Vector4(*colorsys.rgb_to_hls(*self.normalized[:3]), self.a / 255.)
+
+    @hls.setter
+    def hls(self, value: Union[Seq, Vector4, Vector3]) -> None:
+        result = _flatten((int, float), *value, map_to=float)
+        if len(result) not in (3, 4):
+            raise ValueError("Too many or too few values (expected 3 or 4, not {})".format(len(result)))
+        self.normalized = colorsys.hls_to_rgb(result[:3])
+
+    @property
+    def yiq(self) -> 'Vector4':
+        """Gets or sets a normalized color in YIQ colorspace."""
+        return Vector4(*colorsys.rgb_to_yiq(*self.normalized[:3]), self.a / 255.)
+
+    @yiq.setter
+    def yiq(self, value: Union[Seq, Vector4, Vector3]) -> None:
+        result = _flatten((int, float), *value, map_to=float)
+        if len(result) not in (3, 4):
+            raise ValueError("Too many or too few values (expected 3 or 4, not {})".format(len(result)))
+        self.normalized = colorsys.yiq_to_rgb(result[:3])
 
 
 ColorPtr = POINTER(Color)
