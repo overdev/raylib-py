@@ -48,6 +48,10 @@ More information on how to build raylib can be found in the [raylib wiki pages](
 
 ## raylib vs raylibpy
 
+Below are the differences in usage between raylib and raylibpy. Note, though that these
+differences are being worked to make raylibpy as pythonic as possible, so changes may
+occur without notification.
+
 ### Constant values
 
 All C `#define`s got translated to Python 'constants'. Enums got translated to
@@ -57,19 +61,9 @@ Python [enums](https://docs.python.org/3/library/enum.html).
 
 #### In general
 
-All structures inherit from `ctypes.Structure` class. Unlike functions, constructors require
-the exact argument types, so `int`s can't be passed where `float`s are expected (although the
-argument can be omitted):
-
-```python
-# ways of creating a Vector3 instance:
-vec_a = Vector3()
-vec_b = Vector3(0., 1., 0.)
-vec_c = Vector3.one()
-
-# the following will raise an exception:
-vec_d = Vector3(10, 0, 100)
-```
+All structures inherit from `ctypes.Structure` class. At the moment, constructors
+(except for vectors) require the exact argument types, so `int`s can't be passed
+where `float`s are expected (although the argument can be omitted).
 
 All structures have `__str__()` implemented, so they have a very basic textual representation:
 ```python
@@ -95,109 +89,84 @@ assignment is also supported; the right hand side operand can be any sequence of
 number of components:
 
 ```python
->>> vec_a = Vector3(3., 5., 7.)
->>> vec_b = Vector3(4., 2., 0.)
->>> vec_a * vec_b
-"(12.0, 10.0, 0.0)"
->>> vec_a + (8, 100, -1)
-"(11.0, 105.0, 6.0)"
->>> vec_a %= 2
->>> vec_a
-"(1.0, 1.0, 1.0)"
+vec_a = Vector3(3., 5., 7.)
+vec_b = Vector3(4., 2., 0.)
+vec_a * vec_b           # outputs (12.0, 10.0, 0.0)
+vec_a + (8, 100, -1)    # outputs (11.0, 105.0, 6.0)
+vec_a %= 2              # augmented assignment (modulo)
+vec_a                   # outputs (1.0, 1.0, 0.0)
 ```
 
-Vectors have also a feature that tries to emulate the GLSL vector swizzling, but
-its done through subscription:
+Vectors also support GLSL vector swizzling. Also, `x`, `y`, `z` and `w` coordinates maps to
+normalized color values (`r`, `g`, `b` and `a`; only for `Vector3` and `Vector4`) and
+texture coordinates (`u` and `v`):
+
 ```python
->>> vec_a = Vector4(10.0, 20.0, 50.0, 1.0)
->>> # create a Vector2 from it:
-...
->>> vec_b = vec_a['xy']
->>> vec_b
-"(10.0, 20.0)"
->>> # create a Vector3 from it, setting 1.0 to the z axis:
-...
->>> vec_c = vec_b['xy1']
->>> vec_c
-"(10.0, 20.0, 0.0)"
->>> # another Vector2, perpendicular to vec_b:
-...
->>> vec_d = vec_b['Yx']
->>> vec_d
-"(-20.0, 10.0)"
->>> # a Vector4 from the y axis:
-...
->>> vec_e = vec_b['yyyy']
->>> # vec_d with signs flipped:
-...
->>> vec_d['XY']
-"(20.0, -10.0)"
->>> # moving vec_a in the y axis by one:
-...
->>> vec_a += vec_a['0010']
+# Reading (__getattr__)
+vec3 = Vector3(123.0, 467.0, 789.0)
+vec2 = vec3.uv      # x and y respectively as u and v
+vec3 = vec3.bgr     # x, y and z respectively as r, g and b ( rgb is not available in Vector 2)
+vec4 = vec2.rrrg     # for attribute reading, is ok to repeat components
+
+
+# Writing (__setattr__)
+vec3 = Vector3(123.0, 467.0, 789.0)
+vec4.yxwz = 10, 0, -1, vec3.z         # sequences of ints and/or floats are accepted as value
+vec2.vu = vec3.xy                       # x and y respectively as u and v
+vec3.bgr = 12, vec4.x                 # x, y and z respectively as r, g and b ( rgb is not available in Vector 2)
+
+# the following raises an exception:
+vec3.rrr = vec4.yxw     # for attribute writing, is _not_ ok to repeat components
+vec2.br = vec4.uv       # r, g and b is not available in Vector2
+vec4.brxy = (0., 0., vec2.x, vec3.z)       # can't mix component name groups (rgba, xywz and uv)
 ```
-That's not all! Other component-wise operations (or tricks) can be made this way (note,
-though that these operators apply in positional fashion):
+
+Constructors and swizzled attributes now accept any combination of numbers,
+vectors and sequences, as long as the total number of arguments are preserved:
 ```python
->>> vec_a = Vector3(-10.0, 20.5, 15.840)
->>> # divide all components by 2:
-...
->>> vec_a['///']
-"(-5.0, 10.25, 7.920)"
->>>
->>>
->>> # multiply all components by 2:
-...
->>> vec_a['***']
-"(-20.0, 41.0, 31.680)"
->>>
->>>
->>> # all components raised to the power of 2:
-...
->>> vec_a['^^^']
-"(-1e-10, 7.779544182561597e+26, 1.0095364584490473e+19)"
->>>
->>>
->>> # inverse of all components (1/x):
-...
->>> vec_a['...']
-"(-0.1, 0.04878048780487805, 0.06313131313131314)"
->>>
->>>
->>> # sign of components (-1 if < 0, 1 if > 0, 0 otherwise):
-...
->>> vec_a['+++']
-"(-1.0, 1.0, 1.0)"
->>>
->>>
->>> # nonzero components (1 if != 0, 0 otherwise):
-...
->>> vec_a['???']
-"(1.0, 1.0, 1.0)"
->>>
->>>
->>> # the component of vec_a with largest value:
-...
->>> vec_a['>>>']
-"(15.840, 15.840, 15.840)"
->>>
->>>
->>> # the component of vec_a with smallest value:
-...
->>> vec_a['<<<']
-"(-10.0, -10.0, -10.0)"
->>>
->>>
->>> # component values rounded:
-...
->>> vec_a['###']
-"(-10.0, 20.0, 15.0)"
->>>
->>>
->>> # fractional part of component values:
-...
->>> vec_a['%%%']
-"(0.0, 0.5, 0.840)"
+# all these results in the same Vector4
+a = Vector4(3, 4, 5, 6)
+b = Vector4(a.xy, 5, 6)
+c = Vector4(b.x, b.yz, b.w)
+d = Vector4(c.x, c.y, c.zw)
+e = Vector4(d.xy, d.zw)
+f = Vector4(e.xyz, 6)
+g = Vector4(f.x, f.yzw)
+h = Vector4(g)
+```
+
+Setting attributes also works:
+
+```python
+a = Vector4(Vector2(10, 0), 100, 20)
+b = Vector4.zero()
+b.rgba = 0.0, vec4.rg, 1.0
+a.xyzw = (10, b.uv), 1.0
+```
+
+This became available by dropping a previous feature wich allowed for a very basic
+swizzling emulation. A feature more similas to GLSL vectors is implemented on
+top of Python container emulation magic functions:
+
+```python
+vec = Vector4(0., 1., 2., 3.)
+
+# __len__()
+print(len(vec))     # outputs 4
+
+# __iter__()
+for comp in v:
+    print(comp)     # iterates on Vector4 components
+
+# __getitem__()
+x = vec[0]      # key as int
+y = vec['y']    # key as str
+zw = vec[2:]    # key as slice; returns a List[float]
+
+# __setitem__()
+vec[0] = 10
+vec['y'] = 20
+# vec[2:] = zw      # <--- not supported; will raise TypeError
 ```
 
 ## extras
