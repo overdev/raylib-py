@@ -2,7 +2,7 @@ import sys
 import os
 from math import modf
 from enum import IntEnum, IntFlag
-from typing import Tuple, Union, Sequence, AnyStr
+from typing import Tuple, Union, Sequence, AnyStr, Optional
 from ctypes import (
     c_bool,
     c_char_p,
@@ -810,7 +810,7 @@ Double = c_double
 
 Number = Union[int, float]
 Seq = Sequence[Number]
-
+VectorN = Union[Seq, 'Vector4', 'Vector3', 'Vector2']
 
 def _float(value) -> float:
     return float(value) if isinstance(value, int) else value
@@ -862,6 +862,81 @@ def _color(seq: Sequence[Number]) -> 'Color':
     r, g, b, q = seq
     return Color(_float(r), _float(r), _float(b), _float(q))
 
+
+def _attr_swizzle(attr: str, size: int, write: bool=False) -> Tuple[bool, str]:
+    if len(attr) not in (1, 2, 3, 4):
+        return False, "Wrong number of components to swizzle (must be 1, 2, 3 or 4; not {}).".format(len(attr))
+    if size not in (2, 3, 4):
+        return False, "Wrong vector size (must be 2, 3 or 4; not {}).".format(size)
+
+    groups = ['xyzw', 'uv', 'rgba']
+    if size == 3:
+        groups = ['xyz', 'uv', 'rgb']
+    elif size == 2:
+        groups = ['xy', 'uv', '']
+
+    if attr[0] in groups[0]:
+        group = 0
+    elif attr[0] in groups[1]:
+        group = 1
+    elif attr[0] in groups[2]:
+        group = 2
+    else:
+        return False, "Invalid component '{}' in swizzled Vector{} attribute.".format(attr[0], size)
+
+    already_set = []
+    result = ''
+    for i, c in enumerate(attr):
+        if c not in groups[group]:
+            return False, "Invalid component '{}' in swizzled attribute.".format(c)
+        if write and c in already_set:
+            return False, "Component '{}' in swizzled attribute is set more than once.".format(c)
+        if write:
+            already_set.append(c)
+        result += groups[0][groups[group].index(c)]
+    return True, result
+
+
+def _values(size, *args) -> Tuple[bool, tuple]:
+    if size not in (2, 3, 4):
+        return False, ("Wrong vector size (must be 2, 3 or 4; not {}).".format(size),)
+    # if len(values) > size:
+    #     return False, ("Too many values ({} instead of {}).".format(size + abs(n_args), size),)
+
+    n_args = 0
+    result = []
+    for arg in args:
+        if isinstance(arg, (int, float)):
+            n_args += 1
+            result.append(arg)
+        elif isinstance(arg, Vector2):
+            n_args += 2
+            result.append(arg.x)
+            result.append(arg.y)
+        elif isinstance(arg, Vector3):
+            n_args += 3
+            result.append(arg.x)
+            result.append(arg.y)
+            result.append(arg.z)
+        elif isinstance(arg, Vector4):
+            n_args += 4
+            result.append(arg.x)
+            result.append(arg.y)
+            result.append(arg.z)
+            result.append(arg.w)
+        elif arg is None:
+            break
+        else:
+            try:
+                for v in arg:
+                    result.append(v)
+                    n_args += 1
+            except (TypeError, ValueError):
+                return False, ("{} is not iterable".format(arg.__class__.__name__),)
+    if n_args != size:
+        return False, ("Too many or too few values ({} instead of {}).".format(n_args, size),)
+
+    return True, tuple(result)
 
 
 _NOARGS = []
@@ -1047,7 +1122,7 @@ MAX_MATERIAL_MAPS = 12
 # STRUCTURES DEFINITIONS
 # -------------------------------------------------------------------
 
-class Vector2(Structure):
+class _Vector2(Structure):
     """
     Wrapper for raylib Vector2 struct:
     
@@ -1061,6 +1136,9 @@ class Vector2(Structure):
         ('y', c_float)
     ]
 
+
+class Vector2(_Vector2):
+
     @classmethod
     def zero(cls) -> 'Vector2':
         return Vector2(0., 0.)
@@ -1069,17 +1147,54 @@ class Vector2(Structure):
     def one(cls) -> 'Vector2':
         return Vector2(1., 1.)
 
+    def __init__(self, *args) -> None:
+        is_ok, result = _values(2, *args)
+        if not is_ok:
+            raise ValueError(result[0])
+        super(Vector2, self).__init__(*result)
+
     def __str__(self) -> str:
         return "({}, {})".format(self.x, self.y)
 
     def __repr__(self) -> str:
         return "{}({}, {})".format(self.__class__.__qualname__, self.x, self.y)
 
+    def __getattr__(self, name: str) -> Union[float, 'Vector2', 'Vector3', 'Vector4']:
+        is_valid, result = _attr_swizzle(name, 2)
+        if is_valid:
+            comps = {'x': self.x, 'y': self.y, 'z': 0.0, 'w': 0.0}
+            n = len(result)
+            v = [comps[comp] for comp in result]
+            if n == 2:
+                return Vector2(*v)
+            if n == 3:
+                return Vector3(*v)
+            if n == 4:
+                return Vector4(*v)
+
+        raise AttributeError(result)
+
+    def __setattr__(self, name: str, value: Union[float, 'Vector2', 'Vector3', 'Vector4']) -> None:
+        is_valid, result = _attr_swizzle(name, 2, True)  # True for setattr, so components can't be set more than once.
+        if is_valid:
+            if len(name) == 1:
+                v = float(value)
+                super(Vector2, self).__setattr__(result, v)
+            else:
+                v =  _vec2(value)
+                for c in result:
+                    super(Vector2, self).__setattr__(c, getattr(v, c))
+        else:
+            raise AttributeError(result)
+
     def __getitem__(self, key: str) -> Union[float, 'Vector2', 'Vector3', 'Vector4']:
-        assert isinstance(key, str), "key must be a str of 1 to 4 characters ('x' or 'y')."
-        assert 0 < len(key) < 5, "key must have between 1 and 4 characters ('x' or 'y')."
-        comps = [self.x, self.y, 0., 0.]
-        values = []
+        assert isinstance(key, str, int), "key must be a str or int."
+        comps = [self.x, self.y, 0.0, 0.0]
+        if isinstance(key, int):
+            assert 0 <= key < 2, "key must be an int in range [0..1]"
+            return comps[key]
+        else:
+            assert 0 < len(key) < 5, "key must have between 1 and 4 characters ('x', 'y', 'z' or 'w')."
         for i, axis in enumerate(key):
             values.append({
                 'x': self.x,
@@ -1204,7 +1319,7 @@ class Vector2(Structure):
 Vector2Ptr = POINTER(Vector2)
 
 
-class Vector3(Structure):
+class _Vector3(Structure):
     """
     Wrapper for raylib Vector3 struct:
     
@@ -1220,6 +1335,9 @@ class Vector3(Structure):
         ('z', c_float),
     ]
 
+
+class Vector3(_Vector3):
+
     @classmethod
     def zero(cls) -> 'Vector3':
         return Vector3(0., 0., 0.)
@@ -1228,16 +1346,54 @@ class Vector3(Structure):
     def one(cls) -> 'Vector3':
         return Vector3(1., 1., 1.)
 
+    def __init__(self, *args) -> None:
+        is_ok, result = _values(3, *args)
+        if not is_ok:
+            raise ValueError(result[0])
+        super(Vector3, self).__init__(*result)
+
     def __str__(self) -> str:
         return "({}, {}, {})".format(self.x, self.y, self.z)
 
     def __repr__(self) -> str:
         return "{}({}, {}, {})".format(self.__class__.__qualname__, self.x, self.y, self.z)
 
+    def __getattr__(self, name: str) -> Union[float, 'Vector2', 'Vector3', 'Vector4']:
+        is_valid, result = _attr_swizzle(name, 3)
+        if is_valid:
+            comps = {'x': self.x, 'y': self.y, 'z': self.z, 'w': 0.0}
+            n = len(result)
+            v = [comps[comp] for comp in result]
+            if n == 2:
+                return Vector2(*v)
+            if n == 3:
+                return Vector3(*v)
+            if n == 4:
+                return Vector4(*v)
+
+        raise AttributeError(result)
+
+    def __setattr__(self, name: str, value: Union[float, 'Vector2', 'Vector3', 'Vector4']) -> None:
+        is_valid, result = _attr_swizzle(name, 3, True)  # True for setattr, so components can't be set more than once.
+        if is_valid:
+            if len(name) == 1:
+                v = float(value)
+                super(Vector3, self).__setattr__(result, v)
+            else:
+                v =  _vec3(value)
+                for c in result:
+                    super(Vector3, self).__setattr__(c, getattr(v, c))
+        else:
+            raise AttributeError(result)
+
     def __getitem__(self, key: str) -> Union[float, 'Vector2', 'Vector3', 'Vector4']:
-        assert isinstance(key, str), "key must be a str of 1 to 4 characters ('x', 'y', or 'z')."
-        assert 0 < len(key) < 5, "key must have between 1 and 4 characters ('x', 'y', or 'z')."
-        comps = [self.x, self.y, self.z, 0.]
+        assert isinstance(key, str, int), "key must be a str or int."
+        comps = [self.x, self.y, self.z, 0.0]
+        if isinstance(key, int):
+            assert 0 <= key < 3, "key must be an int in range [0..2]"
+            return comps[key]
+        else:
+            assert 0 < len(key) < 5, "key must have between 1 and 3 characters ('x', 'y' or 'z')."
         values = []
         for i, axis in enumerate(key):
             values.append({
@@ -1377,7 +1533,7 @@ class Vector3(Structure):
 Vector3Ptr = POINTER(Vector3)
 
 
-class Vector4(Structure):
+class _Vector4(Structure):
     """
     Wrapper for raylib Vector4 struct:
     
@@ -1395,13 +1551,21 @@ class Vector4(Structure):
         ('w', c_float),
     ]
 
+class Vector4(_Vector4):
+
     @classmethod
     def zero(cls) -> 'Vector4':
-        return Vector2(0., 0., 0., 1.)
+        return Vector4(0., 0., 0., 1.)
 
     @classmethod
     def one(cls) -> 'Vector4':
         return Vector2(1., 1., 1., 1.)
+
+    def __init__(self, *args) -> None:
+        is_ok, result = _values(4, *args)
+        if not is_ok:
+            raise ValueError(result[0])
+        super(Vector4, self).__init__(*result)
 
     def __str__(self) -> str:
         return "({}, {}, {}, {})".format(self.x, self.y, self.z, self.w)
@@ -1409,10 +1573,46 @@ class Vector4(Structure):
     def __repr__(self) -> str:
         return "{}({}, {}, {}, {})".format(self.__class__.__qualname__, self.x, self.y, self.z, self.w)
 
+    def __getattr__(self, name: str) -> Union[float, 'Vector2', 'Vector3', 'Vector4']:
+        is_valid, result = _attr_swizzle(name, 4)
+        if is_valid:
+            comps = {'x': self.x, 'y': self.y, 'z': self.z, 'w': self.w}
+            n = len(result)
+            v = [comps[comp] for comp in result]
+            if n == 2:
+                return Vector2(*v)
+            if n == 3:
+                return Vector3(*v)
+            if n == 4:
+                return Vector4(*v)
+
+        raise AttributeError(result)
+
+    def __setattr__(self, name: str, value: Union[float, 'Vector2', 'Vector3', 'Vector4']) -> None:
+        is_valid, result = _attr_swizzle(name, 4, True)  # True for setattr, so components can't be set more than once.
+        if is_valid:
+            if len(name) == 1:
+                v = float(value)
+                super(Vector4, self).__setattr__(result, v)
+            else:
+                is_valid, v =  _values(len(name), *value)
+                print('::', value)
+                if is_valid:
+                    for i, c in enumerate(result):
+                        super(Vector4, self).__setattr__(c, v[i])
+                else:
+                    raise ValueError(v[0])   # thisline
+        else:
+            raise AttributeError(result)
+
     def __getitem__(self, key: str) -> Union[float, 'Vector2', 'Vector3', 'Vector4']:
-        assert isinstance(key, str), "key must be a str of 1 to 4 characters ('x', 'y', 'z' or 'w')."
-        assert 0 < len(key) < 5, "key must have between 1 and 4 characters ('x', 'y', 'z' or 'w')."
+        assert isinstance(key, str, int), "key must be a str or int."
         comps = [self.x, self.y, self.z, self.w]
+        if isinstance(key, int):
+            assert 0 <= key < 4, "key must be an int in range [0..3]"
+            return comps[key]
+        else:
+            assert 0 < len(key) < 5, "key must have between 1 and 4 characters ('x', 'y', 'z' or 'w')."
         values = []
         for i, axis in enumerate(key):
             values.append({
@@ -4758,3 +4958,8 @@ _rl.SetAudioStreamPitch.restype = None
 def set_audio_stream_pitch(stream: AudioStream, pitch: float) -> None:
     """Set pitch for audio stream (1.0 is base level)"""
     return _rl.SetAudioStreamPitch(stream, _float(pitch))
+
+a = Vector4(Vector2(10, 0), 100, 20)
+b = Vector4.zero()
+b.rgba = 0.0, a.rg, 1.0
+a.xyzw = (10, (20, 40)), 1.0
