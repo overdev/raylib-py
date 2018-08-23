@@ -31,14 +31,14 @@ msvc15 and linux amd64).
 
 raylibpy will look for the respective binary in 3 locations:
 * In the `RAYLIB_BIN_PATH` environment variable;
-* in the directory where the `__main__` module is located, and
+* in the directory where the `"__main__"` module is located, and
 * in the raylibpy package directory.
 
-`RAYLIB_LIB_PATH` accepts as value: `__main__`, as the entry point module directory; 
-`__file__` as the package directory or another specific directory.
+`RAYLIB_LIB_PATH` accepts as value: `"__main__"`, as the entry point module directory; 
+`"__file__"` as the package directory or another specific directory.
 
 if `RAYLIB_BIN_PATH` is not set, it will look in the package directory first,
-then in the `__main__` module location. Note though that `__main__` refers the module selected to
+then in the `__main__` module location. Note though that `"__main__"` refers the module selected to
 start the Python interpreter, not the `__main__.py` file, although it might be the case.
 
 The binaries made available by raylib are all OpenGL 3.3. For OpenGL 1.1 or 2.1,
@@ -91,10 +91,10 @@ number of components:
 ```python
 vec_a = Vector3(3., 5., 7.)
 vec_b = Vector3(4., 2., 0.)
-vec_a * vec_b           # outputs (12.0, 10.0, 0.0)
-vec_a + (8, 100, -1)    # outputs (11.0, 105.0, 6.0)
-vec_a %= 2              # augmented assignment (modulo)
-vec_a                   # outputs (1.0, 1.0, 0.0)
+vec_a * vec_b                   # outputs (12.0, 10.0, 0.0)
+vec_a + (8, 100, -1)            # outputs (11.0, 105.0, 6.0)
+vec_a %= 2                      # augmented assignment (modulo)
+vec_a                           # outputs (1.0, 1.0, 0.0)
 ```
 
 Vectors also support GLSL vector swizzling. Also, `x`, `y`, `z` and `w` coordinates maps to
@@ -104,21 +104,21 @@ texture coordinates (`u` and `v`):
 ```python
 # Reading (__getattr__)
 vec3 = Vector3(123.0, 467.0, 789.0)
-vec2 = vec3.uv      # x and y respectively as u and v
-vec3 = vec3.bgr     # x, y and z respectively as r, g and b ( rgb is not available in Vector 2)
+vec2 = vec3.uv       # x and y respectively as u and v
+vec3 = vec3.bgr      # x, y and z respectively as r, g and b ( rgb is not available in Vector 2)
 vec4 = vec2.rrrg     # for attribute reading, is ok to repeat components
 
 
 # Writing (__setattr__)
 vec3 = Vector3(123.0, 467.0, 789.0)
-vec4.yxwz = 10, 0, -1, vec3.z         # sequences of ints and/or floats are accepted as value
+vec4.yxwz = 10, 0, -1, vec3.z           # sequences of ints and/or floats are accepted as value
 vec2.vu = vec3.xy                       # x and y respectively as u and v
-vec3.bgr = 12, vec4.x                 # x, y and z respectively as r, g and b ( rgb is not available in Vector 2)
+vec3.bgr = 12, vec4.x                   # x, y and z respectively as r, g and b ( rgb is not available in Vector 2)
 
 # the following raises an exception:
-vec3.rrr = vec4.yxw     # for attribute writing, is _not_ ok to repeat components
-vec2.br = vec4.uv       # r, g and b is not available in Vector2
-vec4.brxy = (0., 0., vec2.x, vec3.z)       # can't mix component name groups (rgba, xywz and uv)
+vec3.rrr = vec4.yxw                         # for attribute writing, is _not_ ok to repeat components
+vec2.br = vec4.uv                           # r, g and b is not available in Vector2
+vec4.brxy = (0., 0., vec2.x, vec3.z)        # can't mix component name groups (rgba, xywz and uv)
 ```
 
 Constructors and swizzled attributes now accept any combination of numbers,
@@ -127,11 +127,11 @@ vectors and sequences, as long as the total number of arguments are preserved:
 # all these results in the same Vector4
 a = Vector4(3, 4, 5, 6)
 b = Vector4(a.xy, 5, 6)
-c = Vector4(b.x, b.yz, b.w)
-d = Vector4(c.x, c.y, c.zw)
-e = Vector4(d.xy, d.zw)
+c = Vector4(b.x, b.yz, 6)
+d = Vector4(3, c.y, c.zw)
+e = Vector4(d.xy, (5, 6))
 f = Vector4(e.xyz, 6)
-g = Vector4(f.x, f.yzw)
+g = Vector4(3, f.yzw)
 h = Vector4(g)
 ```
 
