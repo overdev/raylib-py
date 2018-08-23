@@ -2,7 +2,7 @@ import sys
 import os
 from math import modf
 from enum import IntEnum, IntFlag
-from typing import Tuple, Union, Sequence, AnyStr, Optional
+from typing import Tuple, List, Union, Sequence, AnyStr, Optional, Iterator, Type
 from ctypes import (
     c_bool,
     c_char_p,
@@ -896,47 +896,14 @@ def _attr_swizzle(attr: str, size: int, write: bool=False) -> Tuple[bool, str]:
         result += groups[0][groups[group].index(c)]
     return True, result
 
-
-def _values(size, *args) -> Tuple[bool, tuple]:
-    if size not in (2, 3, 4):
-        return False, ("Wrong vector size (must be 2, 3 or 4; not {}).".format(size),)
-    # if len(values) > size:
-    #     return False, ("Too many values ({} instead of {}).".format(size + abs(n_args), size),)
-
-    n_args = 0
+def _flatten(filter_types: List[Type], *values, map_to: Optional[Type]=None) -> list:
     result = []
-    for arg in args:
-        if isinstance(arg, (int, float)):
-            n_args += 1
-            result.append(arg)
-        elif isinstance(arg, Vector2):
-            n_args += 2
-            result.append(arg.x)
-            result.append(arg.y)
-        elif isinstance(arg, Vector3):
-            n_args += 3
-            result.append(arg.x)
-            result.append(arg.y)
-            result.append(arg.z)
-        elif isinstance(arg, Vector4):
-            n_args += 4
-            result.append(arg.x)
-            result.append(arg.y)
-            result.append(arg.z)
-            result.append(arg.w)
-        elif arg is None:
-            break
+    for v in values:
+        if isinstance(v, filter_types):
+            result.append(map_to(v) if map_to is not None else v)
         else:
-            try:
-                for v in arg:
-                    result.append(v)
-                    n_args += 1
-            except (TypeError, ValueError):
-                return False, ("{} is not iterable".format(arg.__class__.__name__),)
-    if n_args != size:
-        return False, ("Too many or too few values ({} instead of {}).".format(n_args, size),)
-
-    return True, tuple(result)
+            result.extend(_flatten(filter_types, *v, map_to=map_to))
+    return result
 
 
 _NOARGS = []
@@ -1148,9 +1115,9 @@ class Vector2(_Vector2):
         return Vector2(1., 1.)
 
     def __init__(self, *args) -> None:
-        is_ok, result = _values(2, *args)
-        if not is_ok:
-            raise ValueError(result[0])
+        result = _flatten((int, float), *args, map_to=float)
+        if len(result) != 2:
+            raise ValueError("Too many or too few initializers ({} instead of 2).".format(len(result)))
         super(Vector2, self).__init__(*result)
 
     def __str__(self) -> str:
@@ -1181,45 +1148,42 @@ class Vector2(_Vector2):
                 v = float(value)
                 super(Vector2, self).__setattr__(result, v)
             else:
-                v =  _vec2(value)
-                for c in result:
-                    super(Vector2, self).__setattr__(c, getattr(v, c))
+                values = _flatten((int, float), *value, map_to=float)
+                if len(name) != len(values):
+                    raise ValueError("Too many or too few values ({} instead of {}".format(
+                        len(values), len(name)
+                    ))
+                for i, c in enumerate(result):
+                    super(Vector2, self).__setattr__(c, float(values[i]))
         else:
             raise AttributeError(result)
 
-    def __getitem__(self, key: str) -> Union[float, 'Vector2', 'Vector3', 'Vector4']:
-        assert isinstance(key, str, int), "key must be a str or int."
-        comps = [self.x, self.y, 0.0, 0.0]
+    def __len__(self) -> int:
+        return 2
+
+    def __iter__(self) -> Iterator[float]:
+        return (self.x, self.y).__iter__()
+
+    def __getitem__(self, key: Union[str, int, slice]) -> Union[float, Seq]:
+        assert isinstance(key, (str, int, slice)), "KeyTypeError: {} not supported as subscription key.".format(key.__class__.__name__)
+
+        if isinstance(key, (int, slice)):
+            return [self.x, self.y][key]
+        elif isinstance(key, str):
+            return {'x': self.x, 'y': self.y}[key]
+
+    def __setitem__(self, key: Union[str, int], value: Number) -> None:
+        assert isinstance(key, (str, int)), "KeyTypeError: {} not supported as subscription key.".format(key.__class__.__name__)
+
         if isinstance(key, int):
-            assert 0 <= key < 2, "key must be an int in range [0..1]"
-            return comps[key]
-        else:
-            assert 0 < len(key) < 5, "key must have between 1 and 4 characters ('x', 'y', 'z' or 'w')."
-        for i, axis in enumerate(key):
-            values.append({
-                'x': self.x,
-                'y': self.y,
-                'X': -self.x if self.x > 0 else +self.x,
-                'Y': -self.y if self.y > 0 else +self.y,
-                '0': 0.,
-                '1': 1.,
-                '/': comps[i] / 2.,
-                '*': comps[i] * 2.,
-                '^': comps[i] ** 2.,
-                '.': 1. / comps[i],
-                '+': 1. if comps[i] > 0 else (0. if comps[i] == 0. else -1.),
-                '?': 1. if comps[i] != 0. else 0.,
-                '>': max(self.x, self.y),
-                '<': min(self.x, self.y),
-                '#': modf(comps[i])[0],
-                '%': modf(comps[i])[1],
-            }[axis])
-        return {
-            1: values[0],
-            2: Vector2(*values),
-            3: Vector3(*values),
-            4: Vector4(*values),
-        }[len(values)]
+            a = [self.x, self.y]
+            a[key] = value
+            self.x, self.y = a
+        elif isinstance(key, str):
+            a = {'x': self.x, 'y': self.y}
+            assert key in a, "KeyError: invalid key '{}'.".format(key)
+            a[key] = value
+            self.x, self.y = tuple(a.values())
 
     def __pos__(self) -> 'Vector2':
         return Vector2(+self.x, +self.y)
@@ -1347,9 +1311,9 @@ class Vector3(_Vector3):
         return Vector3(1., 1., 1.)
 
     def __init__(self, *args) -> None:
-        is_ok, result = _values(3, *args)
-        if not is_ok:
-            raise ValueError(result[0])
+        result = _flatten((int, float), *args, map_to=float)
+        if len(result) != 3:
+            raise ValueError("Too many or too few initializers ({} instead of 3).".format(len(result)))
         super(Vector3, self).__init__(*result)
 
     def __str__(self) -> str:
@@ -1380,48 +1344,42 @@ class Vector3(_Vector3):
                 v = float(value)
                 super(Vector3, self).__setattr__(result, v)
             else:
-                v =  _vec3(value)
-                for c in result:
-                    super(Vector3, self).__setattr__(c, getattr(v, c))
+                values = _flatten((int, float), *value, map_to=float)
+                if len(name) != len(values):
+                    raise ValueError("Too many or too few values ({} instead of {}".format(
+                        len(values), len(name)
+                    ))
+                for i, c in enumerate(result):
+                    super(Vector3, self).__setattr__(c, float(values[i]))
         else:
             raise AttributeError(result)
 
-    def __getitem__(self, key: str) -> Union[float, 'Vector2', 'Vector3', 'Vector4']:
-        assert isinstance(key, str, int), "key must be a str or int."
-        comps = [self.x, self.y, self.z, 0.0]
+    def __len__(self) -> int:
+        return 3
+
+    def __iter__(self) -> Iterator[float]:
+        return (self.x, self.y, self.w).__iter__()
+
+    def __getitem__(self, key: Union[str, int, slice]) -> Union[float, Seq]:
+        assert isinstance(key, (str, int, slice)), "KeyTypeError: {} not supported as subscription key.".format(key.__class__.__name__)
+
+        if isinstance(key, (int, slice)):
+            return [self.x, self.y, self.z][key]
+        elif isinstance(key, str):
+            return {'x': self.x, 'y': self.y, 'z': self.z}[key]
+
+    def __setitem__(self, key: Union[str, int], value: Number) -> None:
+        assert isinstance(key, (str, int)), "KeyTypeError: {} not supported as subscription key.".format(key.__class__.__name__)
+
         if isinstance(key, int):
-            assert 0 <= key < 3, "key must be an int in range [0..2]"
-            return comps[key]
-        else:
-            assert 0 < len(key) < 5, "key must have between 1 and 3 characters ('x', 'y' or 'z')."
-        values = []
-        for i, axis in enumerate(key):
-            values.append({
-                'x': self.x,
-                'y': self.y,
-                'z': self.z,
-                'X': -self.x if self.x > 0. else +self.x,
-                'Y': -self.y if self.y > 0. else +self.y,
-                'Z': -self.z if self.z > 0. else +self.z,
-                '0': 0.,
-                '1': 1.,
-                '/': comps[i] / 2.,
-                '*': comps[i] * 2.,
-                '^': comps[i] ** 2.,
-                '.': 1. / comps[i],
-                '+': 1. if comps[i] > 0 else (0. if comps[i] == 0. else -1.),
-                '?': 1. if comps[i] != 0. else 0.,
-                '>': max(self.x, self.y, self.z),
-                '<': min(self.x, self.y, self.z),
-                '#': modf(comps[i])[0],
-                '%': modf(comps[i])[1],
-            }[axis])
-        return {
-            1: values[0],
-            2: Vector2(values[0], values[1]),
-            3: Vector3(values[0], values[1], values[2]),
-            4: Vector4(values[0], values[1], values[2], 1.),
-        }[len(values)]
+            a = [self.x, self.y, self.z]
+            a[key] = value
+            self.x, self.y, self.z = a
+        elif isinstance(key, str):
+            a = {'x': self.x, 'y': self.y, 'z': self.z}
+            assert key in a, "KeyError: invalid key '{}'.".format(key)
+            a[key] = value
+            self.x, self.y, self.z = tuple(a.values())
 
     def __pos__(self) -> 'Vector3':
         return Vector3(+self.x, +self.y, -self.z)
@@ -1559,12 +1517,12 @@ class Vector4(_Vector4):
 
     @classmethod
     def one(cls) -> 'Vector4':
-        return Vector2(1., 1., 1., 1.)
+        return Vector4(1., 1., 1., 1.)
 
     def __init__(self, *args) -> None:
-        is_ok, result = _values(4, *args)
-        if not is_ok:
-            raise ValueError(result[0])
+        result = _flatten((int, float), *args, map_to=float)
+        if len(result) != 4:
+            raise ValueError("Too many or too few initializers ({} instead of 4).".format(len(result)))
         super(Vector4, self).__init__(*result)
 
     def __str__(self) -> str:
@@ -1595,54 +1553,42 @@ class Vector4(_Vector4):
                 v = float(value)
                 super(Vector4, self).__setattr__(result, v)
             else:
-                is_valid, v =  _values(len(name), *value)
-                print('::', value)
-                if is_valid:
-                    for i, c in enumerate(result):
-                        super(Vector4, self).__setattr__(c, v[i])
-                else:
-                    raise ValueError(v[0])   # thisline
+                values = _flatten((int, float), *value, map_to=float)
+                if len(name) != len(values):
+                    raise ValueError("Too many or too few values ({} instead of {}".format(
+                        len(values), len(name)
+                    ))
+                for i, c in enumerate(result):
+                    super(Vector4, self).__setattr__(c, float(values[i]))
         else:
             raise AttributeError(result)
 
-    def __getitem__(self, key: str) -> Union[float, 'Vector2', 'Vector3', 'Vector4']:
-        assert isinstance(key, str, int), "key must be a str or int."
-        comps = [self.x, self.y, self.z, self.w]
+    def __len__(self) -> int:
+        return 4
+
+    def __iter__(self) -> Iterator[float]:
+        return (self.x, self.y, self.w, self.z).__iter__()
+
+    def __getitem__(self, key: Union[str, int, slice]) -> Union[float, Seq]:
+        assert isinstance(key, (str, int, slice)), "KeyTypeError: {} not supported as subscription key.".format(key.__class__.__name__)
+
+        if isinstance(key, (int, slice)):
+            return [self.x, self.y, self.z, self.w][key]
+        elif isinstance(key, str):
+            return {'x': self.x, 'y': self.y, 'z': self.z, 'w': self.w}[key]
+
+    def __setitem__(self, key: Union[str, int], value: Number) -> None:
+        assert isinstance(key, (str, int)), "KeyTypeError: {} not supported as subscription key.".format(key.__class__.__name__)
+
         if isinstance(key, int):
-            assert 0 <= key < 4, "key must be an int in range [0..3]"
-            return comps[key]
-        else:
-            assert 0 < len(key) < 5, "key must have between 1 and 4 characters ('x', 'y', 'z' or 'w')."
-        values = []
-        for i, axis in enumerate(key):
-            values.append({
-                'x': self.x,
-                'y': self.y,
-                'z': self.z,
-                'w': self.w,
-                'X': -self.x if self.x > 0 else +self.x,
-                'Y': -self.y if self.y > 0 else +self.y,
-                'Z': -self.z if self.z > 0 else +self.z,
-                'W': -self.w if self.w > 0 else +self.w,
-                '0': 0.,
-                '1': 1.,
-                '/': comps[i] / 2.,
-                '*': comps[i] * 2.,
-                '^': comps[i] ** 2.,
-                '.': 1. / comps[i],
-                '+': 1. if comps[i] > 0 else (0. if comps[i] == 0. else -1.),
-                '?': 1. if comps[i] != 0. else 0.,
-                '>': max(self.x, self.y, self.z),
-                '<': min(self.x, self.y, self.z),
-                '#': modf(comps[i])[0],
-                '%': modf(comps[i])[1],
-            }[axis])
-        return {
-            1: values[0],
-            2: Vector2(values[0], values[1]),
-            3: Vector3(values[0], values[1], values[2]),
-            4: Vector4(values[0], values[1], values[2], values[3]),
-        }[len(values)]
+            a = [self.x, self.y, self.z, self.w]
+            a[key] = value
+            self.x, self.y, self.z, self.w = a
+        elif isinstance(key, str):
+            a = {'x': self.x, 'y': self.y, 'z': self.z, 'w': self.w}
+            assert key in a, "KeyError: invalid key '{}'.".format(key)
+            a[key] = value
+            self.x, self.y, self.z, self.w = tuple(a.values())
 
     def __pos__(self) -> 'Vector4':
         return Vector4(+self.x, +self.y, -self.z, 1.)
@@ -4958,8 +4904,3 @@ _rl.SetAudioStreamPitch.restype = None
 def set_audio_stream_pitch(stream: AudioStream, pitch: float) -> None:
     """Set pitch for audio stream (1.0 is base level)"""
     return _rl.SetAudioStreamPitch(stream, _float(pitch))
-
-a = Vector4(Vector2(10, 0), 100, 20)
-b = Vector4.zero()
-b.rgba = 0.0, a.rg, 1.0
-a.xyzw = (10, (20, 40)), 1.0
