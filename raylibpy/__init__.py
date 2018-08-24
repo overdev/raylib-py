@@ -1908,7 +1908,7 @@ class Color(_Color):
 ColorPtr = POINTER(Color)
 
 
-class Rectangle(Structure):
+class _Rectangle(Structure):
     _fields_ = [
         ('x', c_float),
         ('y', c_float),
@@ -1916,11 +1916,82 @@ class Rectangle(Structure):
         ('height', c_float),
     ]
 
+
+class Rectangle(_Rectangle):
+
+    @classmethod
+    def from_ltrb(cls, *args) -> 'Rectangle':
+        """Alternate constructor."""
+        result = _flatten((int, float), *args, map_to=float)
+        if len(result) != 4:
+            raise ValueError("Too many or too few initializers ({} instead of 4).".format(len(result)))
+
+        l, t, r, b = result
+        return cls(l, t, r - l, t - b)
+
+    def __init__(self, *args) -> None:
+        """Constructor."""
+        result = _flatten((int, float), *args, map_to=float)
+        if len(result) != 4:
+            raise ValueError("Too many or too few initializers ({} instead of 4).".format(len(result)))
+        super(Rectangle, self).__init__(*result)
+
     def __str__(self) -> str:
         return "({}, {}, {}, {})".format(self.x, self.y, self.width, self.height)
 
     def __repr__(self) -> str:
         return "{}({}, {}, {}, {})".format(self.__class__.__qualname__, self.x, self.y, self.width, self.height)
+
+    @property
+    def empty(self) -> bool:
+        """Returns whether the rec's width or height is below or equal zero."""
+        return self.width <= 0 or self.height <= 0
+
+    @property
+    def r(self) -> float:
+        """Gets or sets the right-most rect coordinate."""
+        return self.x + self.width
+    
+    @r.setter
+    def r(self, value: float) -> None:
+        self.x = float(value) - self.width
+
+    @property
+    def b(self) -> float:
+        """Gets or sets the bottom-most rect coordinate."""
+        return self.y + self.height
+    
+    @b.setter
+    def b(self, value: float) -> None:
+        self.y = float(value) - self.height
+
+    @property
+    def center(self) -> Vector2:
+        """Gets or sets the rec position relative to its center."""
+        return Vector2(self.x + self.width * 0.5,
+                       self.y + self.height * 0.5)
+
+    @center.setter
+    def center(self, value: Union[Seq, Vector2]) -> None:
+        self.pos = _vec2(value) - self.size * 0.5
+
+    @property
+    def pos(self) -> Vector2:
+        """Gets or sets the rec top-left coordinate."""
+        return Vector2(self.x, self.y)
+
+    @pos.setter
+    def pos(self, value: Union[Seq, Vector2]) -> None:
+        self.x, self.y = map(float, value)
+
+    @property
+    def size(self) -> Vector2:
+        """Gets or sets the rec dimensions."""
+        return Vector2(self.width, self.height)
+
+    @size.setter
+    def size(self, value: Union[Seq, Vector2]) -> None:
+        self.width, self.height = map(float, value)
 
 
 class Image(Structure):
@@ -1991,7 +2062,7 @@ class RenderTexture(Structure):
         return "(RENDERTEXTURE: {}w, {}h, texture: {}, depth: {})".format(self.width, self.height, self.texture, self.depth)
 
 
-class NPatchInfo(Structure):
+class _NPatchInfo(Structure):
     _fields_ = [
         ('sourceRec', Rectangle),
         ('left', c_int),
@@ -2001,11 +2072,36 @@ class NPatchInfo(Structure):
         ('type', c_int),
     ]
 
-    def set_border_width(self, a: float, b: float, c: float, d: float):
-        self.borderWidth = (c_float * 4)(_float(a), _float(b), _float(c), _float(d))
 
-    def set_padding(self, a: int, b: int, c: int, d: int):
-        self.padding = (c_int * 4)(_int(a), _int(b), _int(c), _int(d))
+class NPatchInfo(_NPatchInfo):
+
+    def __init__(self, source_rec: 'Rectangle', left: int=1, top:int=1, right: int=1, bottom: int=1, npatch_type: Union[int, 'NPatchType']=0) -> None:
+        if npatch_type not in NPatchType:
+            npatch_type = {
+                0: NPT_9PATCH,
+                1: NPT_3PATCH_VERTICAL,
+                2: NPT_3PATCH_VERTICAL
+            }.get(npatch_type, NPT_9PATCH)
+
+        super(NPatchInfo, self).__init__(source_rec, left, top, right, bottom, npatch_type)
+
+    def __str__(self) -> str:
+        """Textual representation."""
+        npt = {
+            0: NPT_9PATCH,
+            1: NPT_3PATCH_VERTICAL,
+            2: NPT_3PATCH_VERTICAL
+        }.get(self.type, NPT_9PATCH).name
+        return "(NPATCHINFO: rec: {0.sourceRec}, ltrb: [{0.left}, {0.top}, {0.right}, {0.bottom}], type: {1})".format(self, npt)
+
+    def __repr__(self) -> str:
+        rc = repr(self.sourceRec)
+        npt = {
+            0: NPT_9PATCH,
+            1: NPT_3PATCH_VERTICAL,
+            2: NPT_3PATCH_VERTICAL
+        }.get(self.type, NPT_9PATCH).name
+        return "{0.__class__.__qualname__}({1}, {0.left}, {0.top}, {0.right}, {0.bottom}, {2})".format(self, rc, npt)
 
 
 class CharInfo(Structure):
@@ -5024,3 +5120,7 @@ _rl.SetAudioStreamPitch.restype = None
 def set_audio_stream_pitch(stream: AudioStream, pitch: float) -> None:
     """Set pitch for audio stream (1.0 is base level)"""
     return _rl.SetAudioStreamPitch(stream, _float(pitch))
+
+np = NPatchInfo(Rectangle(5, 5, 10, 10), 1, 1, 1, 1, 0)
+print(repr(np))
+print(np)
