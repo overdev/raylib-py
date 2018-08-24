@@ -1800,8 +1800,10 @@ class Color(_Color):
             comps = {'r': self.r, 'g': self.g, 'b': self.b, 'a': self.a}
             n = len(result)
             v = [comps[comp] for comp in result]
+            if n == 2:
+                return v[:2]
             if n == 3:
-                return Color(*v, 255)
+                return v[:3]
             if n == 4:
                 return Color(*v)
 
@@ -1820,7 +1822,7 @@ class Color(_Color):
                         len(values), len(name)
                     ))
                 for i, c in enumerate(result):
-                    super(Color, self).__setattr__(c, float(values[i]))
+                    super(Color, self).__setattr__(c, int(values[i]))
         else:
             raise AttributeError(result)
 
