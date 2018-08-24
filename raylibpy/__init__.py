@@ -1778,12 +1778,23 @@ class Color(_Color):
     def one(cls) -> 'Color':
         return cls(255, 255, 255, 255)
 
+    @classmethod
+    def from_int(cls, value: int) -> 'Color':
+        return get_color(max(0, value))
+
     def __init__(self, *args) -> None:
         """Constructor."""
         result = _flatten((int, float), *args, map_to=int)
         if len(result) != 4:
             raise ValueError("Too many or too few initializers ({} instead of 2).".format(len(result)))
         super(Color, self).__init__(*result)
+
+    def __int__(self) -> int:
+        """Packs the color into an integer."""
+        return color_to_int(self)
+
+    def __bytes__(self) -> bytes:
+        return bytes(bytearray(self))
 
     def __str__(self) -> str:
         return "({}, {}, {}, {})".format(self.r, self.g, self.b, self.a)
