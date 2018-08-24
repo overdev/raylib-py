@@ -897,6 +897,35 @@ def _attr_swizzle(attr: str, size: int, write: bool=False) -> Tuple[bool, str]:
         result += groups[0][groups[group].index(c)]
     return True, result
 
+
+def _color_swizzle(attr: str, size: int, write: bool=False) -> Tuple[bool, str]:
+    if len(attr) not in (1, 2, 3, 4):
+        return False, "Wrong number of components to swizzle (must be 1, 2, 3 or 4; not {}).".format(len(attr))
+    if size not in (3, 4):
+        return False, "Wrong vector size (must be 3 or 4; not {}).".format(size)
+
+    groups = ['rgba']
+    if size == 3:
+        groups = ['rgb']
+
+    if attr[0] in groups[0]:
+        group = 0
+    else:
+        return False, "Invalid component '{}' in swizzled Color attribute.".format(attr[0])
+
+    already_set = []
+    result = ''
+    for i, c in enumerate(attr):
+        if c not in groups[group]:
+            return False, "Invalid component '{}' in swizzled attribute.".format(c)
+        if write and c in already_set:
+            return False, "Component '{}' in swizzled attribute is set more than once.".format(c)
+        if write:
+            already_set.append(c)
+        result += groups[0][groups[group].index(c)]
+    return True, result
+
+
 def _flatten(filter_types: List[Type], *values, map_to: Optional[Type]=None) -> list:
     result = []
     for v in values:
@@ -1762,38 +1791,59 @@ class Color(_Color):
     def __repr__(self) -> str:
         return "{}({}, {}, {}, {})".format(self.__class__.__qualname__, self.r, self.g, self.b, self.a)
 
-    def __getitem__(self, key: str) -> 'Color':
-        assert isinstance(key, str), "key must be a str of 4 characters."
-        assert len(key) == 4, "key must have 4 characters (between 'r', 'g', 'b' and 'a')."
-        comps = [self.r, self.g, self.b, self.a]
-        values = []
-        for i, axis in enumerate(key):
-            values.append({
-                'r': self.r,
-                'g': self.g,
-                'b': self.b,
-                'a': self.a,
-                'R': 255 - self.r,
-                'G': 255 - self.g,
-                'B': 255 - self.b,
-                'A': 255 - self.a,
-                '0': 0,
-                '1': 255,
-                '/': max(0, min(comps[i] // 2, 255)),
-                '*': max(0, min(comps[i] * 2, 255)),
-                '^': max(0, min(comps[i] ** 2, 255)),
-                '.': comps[i],
-                '+': comps[i],
-                '?': 255 if comps[i] != 0 else 0,
-                '>': max(self.r, self.g, self.b),
-                '<': min(self.r, self.g, self.b),
-            }[axis])
-        return {
-            1: values[0],
-            2: Vector2(*values),
-            3: Vector3(*values),
-            4: Vector4(*values),
-        }[len(values)]
+    def __len__(self) -> int:
+        return 4
+
+    def __getattr__(self, name: str) -> Union[int, 'Color']:
+        is_valid, result = _color_swizzle(name, 4)
+        if is_valid:
+            comps = {'r': self.r, 'g': self.g, 'b': self.b, 'a': self.a}
+            n = len(result)
+            v = [comps[comp] for comp in result]
+            if n == 3:
+                return Color(*v, 255)
+            if n == 4:
+                return Color(*v)
+
+        raise AttributeError(result)
+
+    def __setattr__(self, name: str, value: Union[int, Seq, 'Color']) -> None:
+        is_valid, result = _color_swizzle(name, 4, True)  # True for setattr, so components can't be set more than once.
+        if is_valid:
+            if len(name) == 1:
+                v = int(value)
+                super(Color, self).__setattr__(result, v)
+            else:
+                values = _flatten((int, float), *value, map_to=int)
+                if len(name) != len(values):
+                    raise ValueError("Too many or too few values ({} instead of {}".format(
+                        len(values), len(name)
+                    ))
+                for i, c in enumerate(result):
+                    super(Color, self).__setattr__(c, float(values[i]))
+        else:
+            raise AttributeError(result)
+
+    def __getitem__(self, key: Union[str, int, slice]) -> Union[float, Seq]:
+        assert isinstance(key, (str, int, slice)), "KeyTypeError: {} not supported as subscription key.".format(key.__class__.__name__)
+
+        if isinstance(key, (int, slice)):
+            return [self.r, self.g, self.b, self.a][key]
+        elif isinstance(key, str):
+            return {'r': self.r, 'g': self.g, 'b': self.b, 'a': self.a}[key]
+
+    def __setitem__(self, key: Union[str, int], value: Number) -> None:
+        assert isinstance(key, (str, int)), "KeyTypeError: {} not supported as subscription key.".format(key.__class__.__name__)
+
+        if isinstance(key, int):
+            a = [self.r, self.g, self.b, self.a]
+            a[key] = value
+            self.r, self.g, self.b, self.a = a
+        elif isinstance(key, str):
+            a = {'r': self.r, 'g': self.g, 'b': self.b, 'a': self.a}
+            assert key in a, "KeyError: invalid key '{}'.".format(key)
+            a[key] = value
+            self.r, self.g, self.b, self.a = tuple(a.values())
 
     @property
     def normalized(self) -> 'Vector4':
