@@ -5120,7 +5120,3 @@ _rl.SetAudioStreamPitch.restype = None
 def set_audio_stream_pitch(stream: AudioStream, pitch: float) -> None:
     """Set pitch for audio stream (1.0 is base level)"""
     return _rl.SetAudioStreamPitch(stream, _float(pitch))
-
-np = NPatchInfo(Rectangle(5, 5, 10, 10), 1, 1, 1, 1, 0)
-print(repr(np))
-print(np)
