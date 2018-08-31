@@ -1,55 +1,106 @@
-raylibpy
-========
+# raylib-py
 
-**raylib is a simple and easy-to-use library to learn videogames programming. raylibpy
-brings the all the strengths of this great library to Python, via ctypes binding.**
+A python binding for the great _C_ library **[raylib](https://github.com/raisan5/raylib)**.
 
-More about raylib can be found at its [repository](https://github.com/raisan5/raylib)
-and/or [website](https://www.raylib.com).
+## Getting Started
+<!--
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+-->
+### Prerequisites
 
+_raylib-py_ uses type [annotations](https://www.python.org/dev/peps/pep-3107/#id30) in its source, so a Python version that supports it is required.
 
-## features
-* **NO external dependencies**, all required libraries included with raylib.
-* Multiple platforms supported: **Window, MacOS, Android... and many more!**
-* Hardware accelerated with OpenGL (**1.1, 2.1, 3.3 or ES 2.0**)
-* **Unique OpenGL abstraction layer** (usable as standalone module): rlgl
-* Multiple Font formats supported (XNA fonts, AngelCode fonts, TTF)
-* Outstanding texture formats support, including compressed formats (DXT, ETC, ASTC)
-* **Full 3d support** for 3d Shapes, Models, Billboards, Heightmaps and more!
-* Flexible Materials system, supports classic maps and **PBR maps**
-* Shaders support, including Model shaders and Postprocessing shaders
-* Audio loading and playing with streamming support (WAV, OGG, MP3, FLAC, XM, MOD)
-* **VR stereo rendering** support with configurable HMD device parameters
+Some Python versions may not have [enum](https://pypi.org/project/enum/) and/or [typings](https://pypi.org/project/typing/) modules as part of the standard library, wich are required. These are installed automatically by pip.
 
+### Installing
 
-## binaries
+The easiest way to install _raylib-py_ is by the pip install command:
 
-raylibpy comes by default with 32bit binaries for Windows (`libraylib_shared.dll`, mingw),
-Linux (`libraylib.so.2.0.0`, i386) and MacOS (`libraylib.2.0.0.dylib`), but you can find other
-[binary releases](https://github.com/raisan5/raylib/releases) for 64bit Windows, Linux or OSX.
+Depending on you system and python version(s) installed, the command might be:
 
-raylibpy will look for the respective binary in 3 locations:
-* In the `RAYLIB_BIN_PATH` environment variable;
-* in the directory where the `"__main__"` module is located, and
-* in the raylibpy package directory.
+```
+pip install raylib-py
+```
 
-`RAYLIB_LIB_PATH` accepts as value: `"__main__"`, as the entry point module directory; 
-`"__file__"` as the package directory or another specific directory.
+or
 
-if `RAYLIB_BIN_PATH` is not set, it will look in the package directory first,
-then in the `__main__` module location. Note though that `"__main__"` refers the module selected to
-start the Python interpreter, not the `__main__.py` file, although it might be the case.
+```
+python -m pip install raylip-py
+```
 
-The binaries made available by raylib are all OpenGL 3.3. For OpenGL 1.1 or 2.1,
-you can download the raylib source and build with the necessary changes in the Makefile.
-More information on how to build raylib can be found in the [raylib wiki pages](https://github.com/raisan5/raylib/wiki).
+or (with Python3.7 launcher with multiple versions installed)
 
+```
+py-3.x-32 -m pip install raylib-py
+```
 
-## raylib vs raylibpy
+> Note that the minimum Python version tested is 3.4. Please, let me know if you're able to run it in Python33.
 
-Below are the differences in usage between raylib and raylibpy. Note, though that these
-differences are being worked to make raylibpy as pythonic as possible, so changes may
-occur without notification.
+_raylib-py_ comes with 32bit binaries for Windows, Mac and Linux, but you're not required to use these. If you have a custom _raylib_ _**dll**_, _**dylib**_ or _**so**_ binary, make sure to set a PATH indicating the directory it is located:
+
+```python
+import os
+
+# set the path before raylib is imported.
+os.environ[RAYLIB_LIB_PATH] = "path/to/the/binary"
+
+import raylibpy
+
+# let the fun begin.
+```
+
+You can set `"__file__"` as value to `RAYLIB_LIB_PATH` and _raylib-py_ will search for the binary in the package dir:
+
+```python
+# bynary file is wherever the package is located.
+os.environ[RAYLIB_LIB_PATH] = "__file__"
+```
+
+`"__main__"` can also be set to look for the binary in the project's directory where the starting script is located:
+
+```python
+# binary file is in the same dir as this py file.
+os.environ[RAYLIB_LIB_PATH] = "__main__"
+
+# ...
+
+if __name__ == "__main__":
+    # run the game
+    # ...
+```
+
+> Make sure the bin file name for the respective platform is `libraylib_shared.dll`, `libraylib.2.0.0.dylib` or `libraylib.so.2.0.0`.
+
+## Tests
+
+_raylib-py_ does not have test code, but you can run the examples in the [examples directory](https://github.com/overdev/raylibpy/tree/master/examples).
+
+<!--
+### Break down into end to end tests
+
+Explain what these tests test and why
+
+```
+Give an example
+```
+
+### And coding style tests
+
+Explain what these tests test and why
+
+```
+Give an example
+```
+
+## Deployment
+
+Add additional notes about how to deploy this on a live system
+
+-->
+
+## _raylib_ vs _raylib-py_
+
+Below are the differences in usage between raylib and raylibpy. Note, though that these differences are being worked to make raylibpy as pythonic as possible, so changes may occur without notification.
 
 ### Constant values
 
@@ -141,7 +192,7 @@ a.xyzw = (10, b.uv), 1.0
 ```
 
 This became available by dropping a previous feature wich allowed for a very basic
-swizzling emulation. A feature more similas to GLSL vectors is implemented on
+swizzling emulation. A feature more similar to GLSL vectors is implemented on
 top of Python container emulation magic functions:
 
 ```python
@@ -165,8 +216,30 @@ vec['y'] = 20
 # vec[2:] = zw      # <--- not supported; will raise TypeError
 ```
 
-## extras
+## Building _raylib_ from source
 
-raylibpy has the extra module [`easings`](https://github.com/overdev/raylibpy/blob/master/raylibpy/easings.py) for animations.
+_raylib_ wiki pages contains information on how to build it on [Windows](https://github.com/raysan5/raylib/wiki/Working-on-Windows), [Mac](https://github.com/raysan5/raylib/wiki/Working-on-macOS), [Linux](https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux) and other platforms.
 
-The current plan it to translate [rayGui](https://github.com/raysan5/raygui) and add it too.
+## Contributing
+
+Please, let me know if you find any strange or unexpected behavior while using _raylib-py_. If you want to [request features](https://github.com/raysan5/raylib/pulls) or [report bugs](https://github.com/raysan5/raylib/issues) related to the library (in contrast to this binding), please refer to the [author's project repo](https://github.com/raysan5/raylib).
+
+## Authors
+
+* **Ramon Santamaria** - *raylib's author* - [raysan5](https://github.com/raysan5)
+* **Jorge A. Gomes** - *python binding code* - [overdev](https://github.com/overdev)
+
+See also the list of [contributors](https://github.com/raysan5/raylib/graphs/contributors) who participated in this project.
+
+## License
+
+_raylib-py_ (and _raylib_) is licensed under an unmodified zlib/libpng license, which is an OSI-certified, BSD-like license that allows static linking with closed source software.
+
+<!--
+## Acknowledgments
+
+* Hat tip to anyone whose code was used
+* Inspiration
+* etc
+-->
+
