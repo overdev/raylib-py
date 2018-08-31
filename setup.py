@@ -5,10 +5,24 @@ from setuptools import setup, find_packages
 from os import path
 
 here = path.abspath(path.dirname(__file__))
+platform = sys.platform
 
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
+
+# install only the system's corresponding lib
+if platform == 'win32':
+    package_data = ['libraylib_shared.dll']
+elif platform == 'darwin':
+    package_data = ['libraylib.2.0.0.dylib']
+elif platform.startswith('linux') or platform == 'linux':
+    package_data = ['libraylib.so.2.0.0']
+else:
+    # or install all if the above fails
+    package_data = ['libraylib_shared.dll',
+                     'libraylib.so.2.0.0',
+                     'libraylib.2.0.0.dylib']
 
 py_ver = sys.version_info
 requirements = []
@@ -32,7 +46,7 @@ setup(
     # There are some restrictions on what makes a valid project name
     # specification here:
     # https://packaging.python.org/specifications/core-metadata/#name
-    name='raylibpy',  # Required
+    name='raylib-py',  # Required
 
     # Versions should comply with PEP 440:
     # https://www.python.org/dev/peps/pep-0440/
@@ -40,7 +54,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1.0b',  # Required
+    version='0.1.0',  # Required
 
     python_requires='>=3.3, <4',
 
@@ -93,7 +107,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
@@ -142,9 +156,7 @@ setup(
     # If using Python 2.6 or earlier, then these have to be included in
     # MANIFEST.in as well.
     package_data={  # Optional
-        'raylibpy': ['libraylib_shared.dll',
-                     'libraylib.so.2.0.0',
-                     'libraylib.2.0.0.dylib'],
+        'raylibpy': package_data,
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
