@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
 ## Tests
 
-_raylib-py_ does not have test code, but you can run the examples in the [examples directory](https://github.com/overdev/raylibpy/tree/master/examples).
+_raylib-py_ does not have test code, but you can run the examples in the [examples directory](https://github.com/overdev/raylib-py/tree/master/examples).
 
 <!--
 ### Break down into end to end tests
