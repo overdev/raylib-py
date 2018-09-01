@@ -4,6 +4,11 @@
 *.wpr
 *.wpu
 *.pyc
+*.c
+*.cpp
+*.h
+*.hpp
+*.pypirc
 build/
 dist/
 _unused
