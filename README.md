@@ -100,7 +100,7 @@ Add additional notes about how to deploy this on a live system
 
 ## _raylib_ vs _raylib-py_
 
-Below are the differences in usage between raylib and raylibpy. Note, though that these differences are being worked to make raylibpy as pythonic as possible, so changes may occur without notification.
+Below are the differences in usage between _raylib_ and _raylib-py_. Note, though that these differences are being worked to make _raylib-py_ as pythonic as possible, so changes may occur without notification.
 
 ### Constant values
 
