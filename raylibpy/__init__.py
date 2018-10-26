@@ -33,6 +33,14 @@ _lib_filename = {
 }
 _platform = sys.platform
 
+ENABLE_V2_0_0_FEATURE_DRAWTEXTURENPATCH = False
+ENABLE_V2_0_0_FEATURE_CLIPRECT = False
+
+if "ENABLE_V2_0_0_FEATURE_DRAWTEXTURENPATCH" in os.environ:
+    ENABLE_V2_0_0_FEATURE_DRAWTEXTURENPATCH = True
+
+if "ENABLE_V2_0_0_FEATURE_CLIPRECT" in os.environ:
+    ENABLE_V2_0_0_FEATURE_CLIPRECT = True
 
 RAYLIB_BIN_PATH = None
 if "RAYLIB_BIN_PATH" in os.environ:
@@ -4077,12 +4085,15 @@ def draw_texture_pro(texture: Texture2D, source_rec: Union[Rectangle, Seq], dest
     """Draw a part of a texture defined by a rectangle with 'pro' parameters"""
     return _rl.DrawTexturePro(texture, _rect(source_rec), _rect(dest_rec), _vec2(origin), _float(rotation), _color(tint))
 
-_rl.DrawTextureNPatch.argtypes = [Texture2D, NPatchInfo, Rectangle, Vector2, Float, Color]
-_rl.DrawTextureNPatch.restype = None
-def draw_texture_npatch(texture: Texture2D, npatch_info: NPatchInfo, dest_rec: Union[Rectangle, Seq], origin: Union[Vector2, Seq], rotation: float, tint: Union[Color, Seq]) -> None:
-    """Draw a part of a texture defined by a rectangle with 'pro' parameters"""
-    return _rl.DrawNPatch(texture, npatch_info, _rect(dest_rec), _vec2(origin), _float(rotation), _color(tint))
-
+if ENABLE_V2_0_0_FEATURE_DRAWTEXTURENPATCH:
+    _rl.DrawTextureNPatch.argtypes = [Texture2D, NPatchInfo, Rectangle, Vector2, Float, Color]
+    _rl.DrawTextureNPatch.restype = None
+    def draw_texture_npatch(texture: Texture2D, npatch_info: NPatchInfo, dest_rec: Union[Rectangle, Seq], origin: Union[Vector2, Seq], rotation: float, tint: Union[Color, Seq]) -> None:
+        """Draw a part of a texture defined by a rectangle with 'pro' parameters"""
+        return _rl.DrawNPatch(texture, npatch_info, _rect(dest_rec), _vec2(origin), _float(rotation), _color(tint))
+else:
+    def draw_texture_npatch(*args, **kwargs) -> None:
+        pass
 
 # -----------------------------------------------------------------------------------
 # Font Loading and Text Drawing Functions (Module: text)
@@ -4724,20 +4735,29 @@ def end_blend_mode() -> None:
     """End blending mode (reset to default: alpha blending)"""
     return _rl.EndBlendMode()
 
-_rl.BeginClipRec.argtypes = [Rectangle]
-_rl.BeginClipRec.restype = None
-def begin_clip_rec(rec: Rectangle) -> None:
-    """Drawing functions change only pixels inside rec.
+if ENABLE_V2_0_0_FEATURE_CLIPRECT:
+    _rl.BeginClipRec.argtypes = [Rectangle]
+    _rl.BeginClipRec.restype = None
+    def begin_clip_rec(rec: Rectangle) -> None:
+        """Drawing functions change only pixels inside rec.
 
-    Can be nested.
-    """
-    _rl.BeginClipRec(_rect(rec))
+        Can be nested.
+        """
+        _rl.BeginClipRec(_rect(rec))
 
-_rl.EndClipRec.argtypes = _NOARGS
-_rl.EndClipRec.restype = None
-def end_clip_rec() -> None:
-    """Restore previous clip rec."""
-    _rl.EndClipRec()
+    _rl.EndClipRec.argtypes = _NOARGS
+    _rl.EndClipRec.restype = None
+    def end_clip_rec() -> None:
+        """Restore previous clip rec."""
+        _rl.EndClipRec()
+else:
+    def begin_clip_rec(rec: Rectangle) -> None:
+        """WARNING: THIS FUNCTION HAS NO EFFECT."""
+        pass
+
+    def end_clip_rec() -> None:
+        """WARNING: THIS FUNCTION HAS NO EFFECT."""
+        pass
 
 # VR control functions
 _rl.GetVrDeviceInfo.argtypes = [Int]
