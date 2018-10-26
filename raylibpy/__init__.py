@@ -2081,47 +2081,50 @@ class RenderTexture(Structure):
         return "(RENDERTEXTURE: {}w, {}h, texture: {}, depth: {})".format(self.width, self.height, self.texture, self.depth)
 
 
-class _NPatchInfo(Structure):
-    _fields_ = [
-        ('sourceRec', Rectangle),
-        ('left', c_int),
-        ('top', c_int),
-        ('right', c_int),
-        ('bottom', c_int),
-        ('type', c_int),
-    ]
+if ENABLE_V2_0_0_FEATURE_DRAWTEXTURENPATCH:
+    class _NPatchInfo(Structure):
+        _fields_ = [
+            ('sourceRec', Rectangle),
+            ('left', c_int),
+            ('top', c_int),
+            ('right', c_int),
+            ('bottom', c_int),
+            ('type', c_int),
+        ]
 
+    class NPatchInfo(_NPatchInfo):
 
-class NPatchInfo(_NPatchInfo):
+        def __init__(self, source_rec: 'Rectangle', left: int=1, top:int=1, right: int=1, bottom: int=1, npatch_type: Union[int, 'NPatchType']=0) -> None:
+            if npatch_type not in NPatchType:
+                npatch_type = {
+                    0: NPT_9PATCH,
+                    1: NPT_3PATCH_VERTICAL,
+                    2: NPT_3PATCH_VERTICAL
+                }.get(npatch_type, NPT_9PATCH)
 
-    def __init__(self, source_rec: 'Rectangle', left: int=1, top:int=1, right: int=1, bottom: int=1, npatch_type: Union[int, 'NPatchType']=0) -> None:
-        if npatch_type not in NPatchType:
-            npatch_type = {
+            super(NPatchInfo, self).__init__(source_rec, left, top, right, bottom, npatch_type)
+
+        def __str__(self) -> str:
+            """Textual representation."""
+            npt = {
                 0: NPT_9PATCH,
                 1: NPT_3PATCH_VERTICAL,
                 2: NPT_3PATCH_VERTICAL
-            }.get(npatch_type, NPT_9PATCH)
+            }.get(self.type, NPT_9PATCH).name
+            return "(NPATCHINFO: rec: {0.sourceRec}, ltrb: [{0.left}, {0.top}, {0.right}, {0.bottom}], type: {1})".format(self, npt)
 
-        super(NPatchInfo, self).__init__(source_rec, left, top, right, bottom, npatch_type)
-
-    def __str__(self) -> str:
-        """Textual representation."""
-        npt = {
-            0: NPT_9PATCH,
-            1: NPT_3PATCH_VERTICAL,
-            2: NPT_3PATCH_VERTICAL
-        }.get(self.type, NPT_9PATCH).name
-        return "(NPATCHINFO: rec: {0.sourceRec}, ltrb: [{0.left}, {0.top}, {0.right}, {0.bottom}], type: {1})".format(self, npt)
-
-    def __repr__(self) -> str:
-        rc = repr(self.sourceRec)
-        npt = {
-            0: NPT_9PATCH,
-            1: NPT_3PATCH_VERTICAL,
-            2: NPT_3PATCH_VERTICAL
-        }.get(self.type, NPT_9PATCH).name
-        return "{0.__class__.__qualname__}({1}, {0.left}, {0.top}, {0.right}, {0.bottom}, {2})".format(self, rc, npt)
-
+        def __repr__(self) -> str:
+            rc = repr(self.sourceRec)
+            npt = {
+                0: NPT_9PATCH,
+                1: NPT_3PATCH_VERTICAL,
+                2: NPT_3PATCH_VERTICAL
+            }.get(self.type, NPT_9PATCH).name
+            return "{0.__class__.__qualname__}({1}, {0.left}, {0.top}, {0.right}, {0.bottom}, {2})".format(self, rc, npt)
+else:
+    class NPatchInfo:
+        __slots__ = 'source_rec', 'left', 'top', 'right', 'bottom', 'type'
+        pass
 
 class CharInfo(Structure):
     _fields_ = [
@@ -4089,10 +4092,11 @@ if ENABLE_V2_0_0_FEATURE_DRAWTEXTURENPATCH:
     _rl.DrawTextureNPatch.argtypes = [Texture2D, NPatchInfo, Rectangle, Vector2, Float, Color]
     _rl.DrawTextureNPatch.restype = None
     def draw_texture_npatch(texture: Texture2D, npatch_info: NPatchInfo, dest_rec: Union[Rectangle, Seq], origin: Union[Vector2, Seq], rotation: float, tint: Union[Color, Seq]) -> None:
-        """Draw a part of a texture defined by a rectangle with 'pro' parameters"""
+        """Draws a textures that stretches and shrinks nicely."""
         return _rl.DrawNPatch(texture, npatch_info, _rect(dest_rec), _vec2(origin), _float(rotation), _color(tint))
 else:
     def draw_texture_npatch(*args, **kwargs) -> None:
+        """WARNING: THIS FUNCTION HAS NO EFFECT!"""
         pass
 
 # -----------------------------------------------------------------------------------

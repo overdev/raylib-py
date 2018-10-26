@@ -216,6 +216,28 @@ vec['y'] = 20
 # vec[2:] = zw      # <--- not supported; will raise TypeError
 ```
 
+## Additional (feature) draw function: `draw_texture_npatch`
+
+The custom DLL installed by _raylib-py_ includes an not yet official drawing function and
+corresponding `NPatchInfo` helper structure:
+
+```python
+# draws an 3-patch (vertical, or horizontal) or 9-patch textured that stretches and
+# shrinks nicely.
+# Seq means any sequence type
+def draw_texture_npatch(texture: Texture2D, npatch_info: NPatchInfo,
+                        dest_rec: Union[Rectangle, Seq], origin: Union[Vector2, Seq],
+                        rotation: float, tint: Union[Color, Seq]) -> None:
+```
+
+At the moment (after _raylib_ v2.0.0), only the x86 custom DLL contains this function
+and, to enabled it, an specific `os.environ` key must be set:
+
+```python
+# set this before importing raylibpy (the value does not matter as long is a str type)
+os.environ['ENABLE_V2_0_0_FEATURE_DRAWTEXTURENPATCH'] = '1'
+```
+
 ## Building _raylib_ from source
 
 _raylib_ wiki pages contains information on how to build it on [Windows](https://github.com/raysan5/raylib/wiki/Working-on-Windows), [Mac](https://github.com/raysan5/raylib/wiki/Working-on-macOS), [Linux](https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux) and other platforms.
