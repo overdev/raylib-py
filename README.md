@@ -1,3 +1,5 @@
+<img align="left" src="https://github.com/overdev/raylib-py/blob/master/logo/raylib-py_256x256.png" width=256>
+
 # raylib-py
 
 [![Downloads](https://pepy.tech/badge/raylib-py)](https://pepy.tech/project/raylib-py)
