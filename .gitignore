@@ -15,6 +15,7 @@ _unused
 test.py
 rayguipy.py
 templates/
+logo/
 libraylib_shared_no9patch.dll
 libraylib_shared_pre9patch.dll
 *.egg-info/
