@@ -1,6 +1,7 @@
 import sys
 import os
 import colorsys
+from pathlib import Path
 from math import modf
 from enum import IntEnum, IntFlag
 from typing import Tuple, List, Union, Sequence, AnyStr, Optional, Iterator, Type
@@ -42,34 +43,32 @@ if "ENABLE_V2_0_0_FEATURE_DRAWTEXTURENPATCH" in os.environ:
 if "ENABLE_V2_0_0_FEATURE_CLIPRECT" in os.environ:
     ENABLE_V2_0_0_FEATURE_CLIPRECT = True
 
-RAYLIB_BIN_PATH = None
-if "RAYLIB_BIN_PATH" in os.environ:
-    env_path = os.environ['RAYLIB_BIN_PATH']
-    if env_path == '__main__':
-        RAYLIB_BIN_PATH = os.path.dirname(sys.modules['__main__'].__file__)
-    elif env_path == '__file__':
-        RAYLIB_BIN_PATH = os.path.abspath(os.path.dirname(__file__))
-    elif os.path.exists(env_path) and os.path.isdir(env_path):
-        RAYLIB_BIN_PATH = env_path
+lib_name = _lib_filename[_platform]
+main_mod = sys.modules['__main__']
+running_from_repl = '__file__' not in dir(main_mod)
+
+env_path = Path(os.environ['RAYLIB_BIN_PATH']) if 'RAYLIB_BIN_PATH' in os.environ else None
+file_path = Path(__file__).parent
+main_path = Path(main_mod.__file__).parent if not running_from_repl else Path('REPL')
+
+if env_path and env_path.exists():
+    RAYLIB_BIN_PATH = env_path
+
+elif (file_path / lib_name).exists():
+    RAYLIB_BIN_PATH = file_path
+
+elif (main_path / lib_name).exists():
+    RAYLIB_BIN_PATH = main_path
 else:
-    first_path = os.path.abspath(os.path.dirname(__file__))
-    second_path = os.path.dirname(sys.modules['__main__'].__file__)
-    if os.path.exists(os.path.join(first_path, _lib_filename[_platform])):
-        RAYLIB_BIN_PATH = first_path
-    elif os.path.exists(os.path.join(second_path, _lib_filename[_platform])):
-        RAYLIB_BIN_PATH = second_path
-    else:
-        s = ("'{}' is expected to be located\n"
-            "in the directory specified by the environment variable\n"
-            "RAYLIB_BIN_PATH, in the program's entry point (__main__)\n"
-            "directory, or in the raylibpy package __init__ directory.\n"
-            "The library file is not in any of these locations.")
-        print(s.format(_lib_filename[_platform]))
-        raise RuntimeError("Unable to find raylib library ('{}').".format(_lib_filename[_platform]))
+    raise Exception(
+        f'Cannot find "{lib_name}" in these search paths:\n'
+        f'__file__ folder: "{str(file_path)}"\n'
+        f'__main__ folder: "{str(main_path)}"\n'
+        f'os.environ["RAYLIB_BIN_PATH"] -> "{str(env_path) if env_path else "NOT SET"}"'
+    )
 
-if RAYLIB_BIN_PATH:
-    _rl = CDLL(os.path.join(RAYLIB_BIN_PATH, _lib_filename[_platform]))
-
+print(f'INFO: Found "{lib_name}" in "{str(RAYLIB_BIN_PATH)}"')
+_rl = CDLL(str(RAYLIB_BIN_PATH / lib_name))
 
 __all__ = [
     # CONSTANTS
