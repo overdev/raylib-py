@@ -74,7 +74,7 @@ else:
 		)
 	)
 
-print('INFO: Found "{}" in "{}"', lib_name, str(RAYLIB_BIN_PATH))
+print('INFO: Found "{}" in "{}"'.format(lib_name, str(RAYLIB_BIN_PATH)))
 _rl = CDLL(str(RAYLIB_BIN_PATH / lib_name))
 
 __all__ = [
