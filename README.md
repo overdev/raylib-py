@@ -46,25 +46,25 @@ _raylib-py_ comes with 32bit binaries for Windows, Mac and Linux, but you're not
 import os
 
 # set the path before raylib is imported.
-os.environ[RAYLIB_LIB_PATH] = "path/to/the/binary"
+os.environ["RAYLIB_BIN_PATH"] = "path/to/the/binary"
 
 import raylibpy
 
 # let the fun begin.
 ```
 
-You can set `"__file__"` as value to `RAYLIB_LIB_PATH` and _raylib-py_ will search for the binary in the package dir:
+You can set `"__file__"` as value to `"RAYLIB_BIN_PATH"` and _raylib-py_ will search for the binary in the package dir:
 
 ```python
 # bynary file is wherever the package is located.
-os.environ[RAYLIB_LIB_PATH] = "__file__"
+os.environ["RAYLIB_BIN_PATH"] = "__file__"
 ```
 
 `"__main__"` can also be set to look for the binary in the project's directory where the starting script is located:
 
 ```python
 # binary file is in the same dir as this py file.
-os.environ[RAYLIB_LIB_PATH] = "__main__"
+os.environ["RAYLIB_BIN_PATH"] = "__main__"
 
 # ...
 
