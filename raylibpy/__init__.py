@@ -3091,7 +3091,7 @@ def get_dropped_files() -> Tuple[str, ...]:
 	"""Get dropped files names"""
 	count = Int(0)
 	result = _rl.GetDroppedFiles(byref(count))
-	files: list = []
+	files = []
 	for i in range(count.value):
 		files.append(result[i].decode('utf-8'))
 	return tuple(files)
