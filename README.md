@@ -29,7 +29,7 @@ pip install raylib-py
 or
 
 ```
-python -m pip install raylip-py
+python -m pip install raylib-py
 ```
 
 or (with Python3.7 launcher with multiple versions installed)
