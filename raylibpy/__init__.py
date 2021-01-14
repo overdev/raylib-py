@@ -3477,7 +3477,7 @@ _rl.DrawLineEx.argtypes = [Vector2, Vector2, Float, Color]
 _rl.DrawLineEx.restype = None
 def draw_line_ex(start_pos: Union[Vector2, Seq], end_pos: Union[Vector2, Seq], thick: float, color: Union[Color, Seq]) -> None:
 	"""Draw a line defining thickness"""
-	return _rl.DrawLineEx(_vec2(start_pos), _vec2(end_pos), _float(_vec2(thick)), _color(color))
+	return _rl.DrawLineEx(_vec2(start_pos), _vec2(end_pos), _float(thick), _color(color))
 
 
 _rl.DrawLineBezier.argtypes = [Vector2, Vector2, Float, Color]
