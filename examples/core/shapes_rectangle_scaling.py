@@ -14,10 +14,12 @@ def main():
 
     while not window_should_close():
         mouse_position = get_mouse_position()
-        if check_collision_point_rec(mouse_position, rec) and (mouse_position,
-                                                               Rectangle(rec.x + rec.width - mouse_scale_mark_size,
-                                                                         rec.y + rec.height - mouse_scale_mark_size,
-                                                                         mouse_scale_mark_size, mouse_scale_mark_size)):
+        if check_collision_point_rec(mouse_position, rec) and check_collision_point_rec(mouse_position,
+                                                                                        Rectangle(
+                                                                                            rec.x + rec.width - mouse_scale_mark_size,
+                                                                                            rec.y + rec.height - mouse_scale_mark_size,
+                                                                                            mouse_scale_mark_size,
+                                                                                            mouse_scale_mark_size)):
             mouse_scale_ready = True
             if is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
                 mouse_scale_mode = True
