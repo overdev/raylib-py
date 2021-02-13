@@ -42,7 +42,6 @@ def main():
 
         if mouse_scale_ready:
             draw_rectangle_lines_ex(rec, 1, RED)
-            triangle = ()
             draw_triangle(Vector2(rec.x + rec.width - mouse_scale_mark_size, rec.y + rec.height),
                           Vector2(rec.x + rec.width, rec.y + rec.height),
                           Vector2(rec.x + rec.width, rec.y + rec.height - mouse_scale_mark_size),
