@@ -859,7 +859,7 @@ def _vec3(seq: Sequence[Number]) -> 'Vector3':
 	return Vector3(_float(x), _float(y), _float(z))
 
 
-def _vec4(seq: Sequence[Number]) -> 'Vector3':
+def _vec4(seq: Sequence[Number]) -> 'Vector4':
 	if isinstance(seq, Vector4):
 		return seq
 	x, y, z, w = seq
