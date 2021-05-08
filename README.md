@@ -1,3 +1,5 @@
+> # WIP: Updating raylib-py to the latest raylib release, version 3.7
+
 <img align="left" src="https://github.com/overdev/raylib-py/blob/master/logo/raylib-py_256x256.png" width=256>
 
 # raylib-py
