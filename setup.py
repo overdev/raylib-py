@@ -12,17 +12,18 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 # install only the system's corresponding lib
-if platform == 'win32':
-    package_data = ['libraylib_shared.dll']
-elif platform == 'darwin':
-    package_data = ['libraylib.2.0.0.dylib']
-elif platform.startswith('linux') or platform == 'linux':
-    package_data = ['libraylib.so.2.0.0']
-else:
-    # or install all if the above fails
-    package_data = ['libraylib_shared.dll',
-                     'libraylib.so.2.0.0',
-                     'libraylib.2.0.0.dylib']
+# if platform == 'win32':
+#     package_data = ['bin/raylib.dll']
+# elif platform == 'darwin':
+#     package_data = ['bin/libraylib.3.7.0.dylib']
+# elif platform.startswith('linux') or platform == 'linux':
+#     package_data = ['bin/libraylib.so.3.7.0']
+# else:
+# or install all if the above fails
+package_data = ['bin/raylib.dll',
+                'bin/libraylib.so.3.7.0',
+                'bin/libraylib.3.7.0.dylib',
+                'bin/raylib.h']
 
 py_ver = sys.version_info
 requirements = []
@@ -54,7 +55,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1.1',  # Required
+    version='0.2.0',  # Required
 
     python_requires='>=3.3, <4',
 
@@ -107,7 +108,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta',
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
@@ -123,6 +124,8 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
 
     # This field adds keywords for your project which will appear on the

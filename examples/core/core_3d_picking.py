@@ -1,9 +1,11 @@
 # core_3d_picking.py
 
-from raylibpy import *
+from raylibpy.colors import *
+from raylibpy.spartan import *
+from raylibpy.consts import *
+
 
 def main() -> int:
-
     # Initialization
     # -------------------------------------------------------------------------------------
     screen_width: int = 800
@@ -35,9 +37,9 @@ def main() -> int:
     while not window_should_close():
         # Update
         # ---------------------------------------------------------------------------------
-        update_camera(byref(camera))
+        update_camera(camera)
 
-        if (is_mouse_button_pressed(MOUSE_LEFT_BUTTON)):
+        if is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
             ray = get_mouse_ray(get_mouse_position(), camera)
 
             #
@@ -60,32 +62,34 @@ def main() -> int:
 
         # Draw
         # ---------------------------------------------------------------------------------
-        begin_drawing()
+        with begin_drawing():
 
-        clear_background(RAYWHITE)
+            clear_background(RAYWHITE)
 
-        begin_mode3d(camera)
+            with begin_mode3d(camera):
 
-        if collision:
-            draw_cube(cube_position, cube_size.x, cube_size.y, cube_size.z, RED)
-            draw_cube_wires(cube_position, cube_size.x, cube_size.y, cube_size.z, MAROON)
+                if collision:
+                    draw_cube(cube_position, cube_size.x, cube_size.y, cube_size.z, RED)
+                    draw_cube_wires(cube_position, cube_size.x, cube_size.y, cube_size.z, MAROON)
 
-            draw_cube_wires(cube_position, cube_size.x + .2, cube_size.y + .2, cube_size.z + .2, GREEN)
-        else:
-            draw_cube(cube_position, cube_size.x, cube_size.y, cube_size.z, GRAY)
-            draw_cube_wires(cube_position, cube_size.x, cube_size.y, cube_size.z, DARKGRAY)
+                    draw_cube_wires(cube_position, cube_size.x + .2, cube_size.y + .2, cube_size.z + .2, GREEN)
+                else:
+                    draw_cube(cube_position, cube_size.x, cube_size.y, cube_size.z, GRAY)
+                    draw_cube_wires(cube_position, cube_size.x, cube_size.y, cube_size.z, DARKGRAY)
 
-        draw_ray(ray, MAROON)
-        draw_grid(10, 1.0)
+                draw_ray(ray, MAROON)
+                draw_grid(10, 1.0)
 
-        end_mode3d()
+                # end_mode3d()
 
-        draw_text("Try Selecting the box with mouse!", 240, 10, 20, DARKGRAY)
+            draw_text("Try Selecting the box with mouse!", 240, 10, 20, DARKGRAY)
 
-        if collision:
-            draw_text("BOX SELECTED", (screen_width - measure_text("BOX SELECTED", 30)) // 2, int(screen_height * .1), 30, GREEN)
+            if collision:
+                draw_text("BOX SELECTED",
+                          (screen_width - measure_text("BOX SELECTED", 30)) // 2,
+                          int(screen_height * .1), 30, GREEN)
 
-        end_drawing()
+            # end_drawing()
         # ---------------------------------------------------------------------------------
 
     # De-Initialization

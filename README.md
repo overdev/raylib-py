@@ -1,6 +1,6 @@
 > # WIP: Updating raylib-py to the latest raylib release, version 3.7
 
-<img align="left" src="https://github.com/overdev/raylib-py/blob/master/logo/raylib-py_256x256.png" width=256>
+<img align="left" src="logo/raylib-py_256x256.png" width=256>
 
 # raylib-py
 
@@ -9,14 +9,25 @@
 A python binding for the great _C_ library **[raylib](https://github.com/raysan5/raylib)**.
 
 ## Getting Started
+
 <!--
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 -->
+
+### About this version
+
+If you were using the previous version of _raylib-py_, that code might not work with this version before some tweaks are
+made. The previous version wraps raylib 2.0; this one wraps version 3.7. There is a lot of new things and changes in the
+API.
+
 ### Prerequisites
 
-_raylib-py_ uses type [annotations](https://www.python.org/dev/peps/pep-3107/#id30) in its source, so a Python version that supports it is required.
+_raylib-py_ uses type [annotations](https://www.python.org/dev/peps/pep-3107/#id30) in its source, so a Python version
+that supports it is required.
 
-Some Python versions may not have [enum](https://pypi.org/project/enum/) and/or [typings](https://pypi.org/project/typing/) modules as part of the standard library, wich are required. These are installed automatically by pip.
+Some Python versions may not have [enum](https://pypi.org/project/enum/)
+and/or [typings](https://pypi.org/project/typing/) modules as part of the standard library, wich are required. These are
+installed automatically by pip.
 
 ### Installing
 
@@ -34,48 +45,13 @@ or
 python -m pip install raylip-py
 ```
 
-or (with Python3.7 launcher with multiple versions installed)
+or (with Python3.7+ launcher with multiple versions installed)
 
 ```
 py-3.x-32 -m pip install raylib-py
 ```
 
 > Note that the minimum Python version tested is 3.4. Please, let me know if you're able to run it in Python33.
-
-_raylib-py_ comes with 32bit binaries for Windows, Mac and Linux, but you're not required to use these. If you have a custom _raylib_ _**dll**_, _**dylib**_ or _**so**_ binary, make sure to set a PATH indicating the directory it is located:
-
-```python
-import os
-
-# set the path before raylib is imported.
-os.environ["RAYLIB_BIN_PATH"] = "path/to/the/binary"
-
-import raylibpy
-
-# let the fun begin.
-```
-
-You can set `"__file__"` as value to `"RAYLIB_BIN_PATH"` and _raylib-py_ will search for the binary in the package dir:
-
-```python
-# bynary file is wherever the package is located.
-os.environ["RAYLIB_BIN_PATH"] = "__file__"
-```
-
-`"__main__"` can also be set to look for the binary in the project's directory where the starting script is located:
-
-```python
-# binary file is in the same dir as this py file.
-os.environ["RAYLIB_BIN_PATH"] = "__main__"
-
-# ...
-
-if __name__ == "__main__":
-    # run the game
-    # ...
-```
-
-> Make sure the bin file name for the respective platform is `libraylib_shared.dll`, `libraylib.2.0.0.dylib` or `libraylib.so.2.0.0`.
 
 ## Tests
 
@@ -113,13 +89,9 @@ Below are the differences in usage between _raylib_ and _raylib-py_. Note, thoug
 All C `#define`s got translated to Python 'constants'. Enums got translated to
 Python [enums](https://docs.python.org/3/library/enum.html).
 
-### Structures
+### Classes
 
-In general, all structures inherit from `ctypes.Structure` class. At the moment, constructors
-(except for vectors) require the exact argument types, so `int`s can't be passed
-where `float`s are expected (although the argument can be omitted).
-
-All structures have `__str__()` implemented, so they have a very basic textual representation:
+All classes have `__str__()` implemented, so they have a very basic textual representation:
 ```python
 # Define the camera to look into our 3d world
 >>> camera = Camera()
@@ -137,10 +109,10 @@ vertex and triangle count attributes.
 
 #### Vectors
 
-Vector2, Vector3 and Vector4 support basic aritmetic operations: addiction, subtraction,
-multiplication (incluiding scalar multiplication), division and modulo. Augmented
-assignment is also supported; the right hand side operand can be any sequence of same
-number of components:
+Vector2, Vector3 and Vector4 support the operators `==`, `!=` (both componet-wise length and value comparisson), `+`
+, `-` (negation and subtraction), `*`, `/`, `//`, `%` for vectors and scalars. They can also be `abs()`*ed*
+and `round()`*ed*. Augmented assignment and inverse order is also supported; the other operand can be any sequence of
+length:
 
 ```python
 vec_a = Vector3(3., 5., 7.)
@@ -148,34 +120,32 @@ vec_b = Vector3(4., 2., 0.)
 vec_a * vec_b                   # outputs (12.0, 10.0, 0.0)
 vec_a + (8, 100, -1)            # outputs (11.0, 105.0, 6.0)
 vec_a %= 2                      # augmented assignment (modulo)
-vec_a                           # outputs (1.0, 1.0, 0.0)
+vec_a  # outputs (1.0, 1.0, 0.0)
+vec_a == (1.0, 1.0, 0.0)  # outputs True
 ```
 
-Vectors also support GLSL vector swizzling. Also, `x`, `y`, `z` and `w` coordinates maps to
-normalized color values (`r`, `g`, `b` and `a`; only for `Vector3` and `Vector4`) and
-texture coordinates (`u` and `v`):
+Vectors also support GLSL vector swizzling. Also, `Vector3` and `Vector4` coordinates
+`x`, `y`, `z` and `w` coordinates maps to normalized color values (`r`, `g`, `b` and `a`):
 
 ```python
 # Reading (__getattr__)
 vec3 = Vector3(123.0, 467.0, 789.0)
-vec2 = vec3.uv       # x and y respectively as u and v
 vec3 = vec3.bgr      # x, y and z respectively as r, g and b ( rgb is not available in Vector 2)
 vec4 = vec2.rrrg     # for attribute reading, is ok to repeat components
 
 # Writing (__setattr__)
 vec3 = Vector3(123.0, 467.0, 789.0)
 vec4.yxwz = 10, 0, -1, vec3.z           # sequences of ints and/or floats are accepted as value
-vec2.vu = vec3.xy                       # x and y respectively as u and v
 vec3.bgr = 12, vec4.x                   # x, y and z respectively as r, g and b ( rgb is not available in Vector 2)
 
 # the following raises an exception:
 vec3.rrr = vec4.yxw                         # for attribute writing, is _not_ ok to repeat components
-vec2.br = vec4.uv                           # r, g and b is not available in Vector2
 vec4.brxy = (0., 0., vec2.x, vec3.z)        # can't mix component name groups (rgba, xywz and uv)
 ```
 
 Constructors and swizzled attributes now accept any combination of numbers,
 vectors and sequences, as long as the total number of arguments are preserved:
+> Currently, this feature for constructors is yet to be implemented.
 ```python
 # all these results in the same Vector4
 a = Vector4(3, 4, 5, 6)
@@ -193,13 +163,12 @@ Setting attributes also works:
 ```python
 a = Vector4(Vector2(10, 0), 100, 20)
 b = Vector4.zero()
+
 b.rgba = 0.0, vec4.rg, 1.0
 a.xyzw = (10, b.uv), 1.0
 ```
 
-This became available by dropping a previous feature wich allowed for a very basic
-swizzling emulation. A feature more similar to GLSL vectors is implemented on
-top of Python container emulation magic functions:
+Vectors can be used as sequences:
 
 ```python
 vec = Vector4(0., 1., 2., 3.)
@@ -212,9 +181,7 @@ for comp in vec:
     print(comp)     # iterates on Vector4 components
 
 # __getitem__()
-x = vec[0]      # key as int
-y = vec['y']    # key as str
-zw = vec[2:]    # key as slice; returns a List[float]
+x = vec[0]  # key as int only
 
 # __setitem__()
 vec[0] = 10
@@ -222,35 +189,85 @@ vec['y'] = 20
 # vec[2:] = zw      # <--- not supported; will raise TypeError
 ```
 
-## Additional (feature) draw function: `draw_texture_npatch`
+### _Pythonic_ and _Spartan_ "flavors"
 
-The custom DLL installed by _raylib-py_ includes an not yet official drawing function and
-corresponding `NPatchInfo` helper structure:
+In raylib-py a more OOP wrapper was added, so some classes have methods that wraps functions, like Image, for example.
+This is the `raylibpy.pythonic` module.
 
-```python
-# draws an 3-patch (vertical, or horizontal) or 9-patch textured that stretches and
-# shrinks nicely.
-# Seq means any sequence type
-def draw_texture_npatch(texture: Texture2D, npatch_info: NPatchInfo,
-                        dest_rec: Union[Rectangle, Seq], origin: Union[Vector2, Seq],
-                        rotation: float, tint: Union[Color, Seq]) -> None:
-```
-
-At the moment (after _raylib_ v2.0.0), only the x86 custom DLL contains this function
-and, to enabled it, an specific `os.environ` key must be set:
+> It is recommended to import either the spartan or pythonic to avoid unexpected
+> behavior between classes of both modules (`spartan.Image is pythonic.Image`
+> evaluates to `False`).
 
 ```python
-# set this before importing raylibpy (the value does not matter as long is a str type)
-os.environ['ENABLE_V2_0_0_FEATURE_DRAWTEXTURENPATCH'] = '1'
+from raylibpy.spartan import *
+from raylibpy.colors import *
+from raylibpy.consts import *
 ```
+
+The `raylibpy.spartan` module follows the _C_ raylib style (structs, functions, callbacks and constants).
+
+### Context Managers
+
+Some raylib functions are called in pairs to begin and end some specific modes. A context manager version of these
+functions are provided for a more practical entering/leaving of these modes:
+
+```python
+# Draw
+# ---------------------------------------------------------------------------------
+with drawing():
+    clear_background(RAYWHITE)
+
+    with mode3d(camera):
+        if collision:
+    # ...
+```
+
+Better than:
+
+```python
+# Draw
+# ---------------------------------------------------------------------------------
+begin_drawing()
+clear_background(RAYWHITE)
+
+begin_mode3d(camera)
+if collision:
+# ...
+
+end_mode3d()
+end_drawing()
+```
+
+In `raylibpy.pythonic`, some classes are also context managers:
+
+```python
+# Draw
+# ---------------------------------------------------------------------------------
+with drawing():
+    clear_background(RAYWHITE)
+
+    with camera:
+        if collision:
+    # ...
+
+```
+
+> `raylib.pythonic` is a work in progress. Currently, only `raylibpy.spartan` is
+> fully wrapped.
 
 ## Building _raylib_ from source
 
-_raylib_ wiki pages contains information on how to build it on [Windows](https://github.com/raysan5/raylib/wiki/Working-on-Windows), [Mac](https://github.com/raysan5/raylib/wiki/Working-on-macOS), [Linux](https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux) and other platforms.
+_raylib_ wiki pages contains information on how to build it
+on [Windows](https://github.com/raysan5/raylib/wiki/Working-on-Windows)
+, [Mac](https://github.com/raysan5/raylib/wiki/Working-on-macOS)
+, [Linux](https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux) and other platforms.
 
 ## Contributing
 
-Please, let me know if you find any strange or unexpected behavior while using _raylib-py_. If you want to [request features](https://github.com/raysan5/raylib/pulls) or [report bugs](https://github.com/raysan5/raylib/issues) related to the library (in contrast to this binding), please refer to the [author's project repo](https://github.com/raysan5/raylib).
+Please, let me know if you find any strange or unexpected behavior while using _raylib-py_. If you want
+to [request features](https://github.com/raysan5/raylib/pulls)
+or [report bugs](https://github.com/raysan5/raylib/issues) related to the library (in contrast to this binding), please
+refer to the [author's project repo](https://github.com/raysan5/raylib).
 
 ## Authors
 
