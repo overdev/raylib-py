@@ -4,10 +4,12 @@ from typing import Sequence, Tuple, Union
 import raylibpy.core as core
 from raylibpy import _rl
 from raylibpy._types import *
-from raylibpy._headers import _init
+from raylibpy.wrapper import _init
 from raylibpy.core import *
 
+
 __all__ = [
+    'clamp',
     'init_window',
     'window_should_close',
     'close_window',
@@ -491,6 +493,10 @@ __all__ = [
 _init()
 
 
+def clamp(value: float, min_: float, max_: float) -> float:
+    return _rl.Clamp(float(value), float(min_), float(max_))
+
+
 def init_window(width: int, height: int, title: str) -> None:
     """Initialize window and OpenGL context"""
     return _rl.InitWindow(int(width), int(height), _str_in(title))
@@ -847,7 +853,7 @@ def scissor_mode(x: int, y: int, width: int, height: int):
     _rl.EndScissorMode()
 
 
-def begin_vr_stereo_mode(config: _VrStereoConfig) -> None:
+def begin_vr_stereo_mode(config: VrStereoConfig) -> None:
     """Begin stereo rendering (requires VR simulator)"""
     _rl.BeginVrStereoMode(config)
 
@@ -858,19 +864,19 @@ def end_vr_stereo_mode() -> None:
 
 
 @contextmanager
-def vr_stereo_mode(config: _VrStereoConfig):
+def vr_stereo_mode(config: VrStereoConfig):
     """Context of stereo rendering (requires VR simulator)"""
     _rl.BeginVrStereoMode(config)
     yield
     _rl.EndVrStereoMode()
 
 
-def load_vr_stereo_config(device: _VrDeviceInfo) -> _VrStereoConfig:
+def load_vr_stereo_config(device: VrDeviceInfo) -> VrStereoConfig:
     """Load VR stereo config for VR simulator device parameters"""
     return _rl.LoadVrStereoConfig(device)
 
 
-def unload_vr_stereo_config(config: _VrStereoConfig) -> None:
+def unload_vr_stereo_config(config: VrStereoConfig) -> None:
     """Unload VR stereo config"""
     return _rl.UnloadVrStereoConfig(config)
 
@@ -1237,7 +1243,7 @@ def is_gamepad_name(gamepad: int, name: str) -> bool:
 
 def get_gamepad_name(gamepad: int) -> str:
     """Return gamepad internal name id"""
-    return _rl.GetGamepadName(int(gamepad))
+    return _str_out(_rl.GetGamepadName(int(gamepad)))
 
 
 def is_gamepad_button_pressed(gamepad: int, button: int) -> bool:
@@ -1433,7 +1439,11 @@ def set_camera_move_controls(key_front: int, key_back: int, key_right: int, key_
 
 
 def set_shapes_texture(texture: Texture2D, source: AnyRect) -> None:
-    """"""
+    """Set texture and rectangle to be used on shapes drawing
+
+    It can be useful when using basic shapes and one single font,
+    defining a font char white rectangle would allow drawing everything in a single draw call
+    """
     return _rl.SetShapesTexture(texture, _rect(source))
 
 
@@ -2487,9 +2497,9 @@ def unload_model_keep_meshes(model: Model) -> None:
     return _rl.UnloadModelKeepMeshes(model)
 
 
-def upload_mesh(mesh: Sequence[Mesh], dynamic: bool) -> None:
+def upload_mesh(mesh: Mesh, dynamic: bool) -> None:
     """Upload mesh vertex data in GPU and provide VAO/VBO ids"""
-    return _rl.UploadMesh(_arr(Mesh, mesh), bool(dynamic))
+    return _rl.UploadMesh(byref(mesh), bool(dynamic))
 
 
 def update_mesh_buffer(mesh: Mesh, index: int, data: bytes, data_size: int, offset: int) -> None:
@@ -2517,7 +2527,7 @@ def export_mesh(mesh: Mesh, file_name: str) -> bool:
     return _rl.ExportMesh(mesh, _str_in(file_name))
 
 
-def load_materials(file_name: str) -> Tuple[Material, int]:
+def load_materials(file_name: str) -> Tuple[MaterialPtr, int]:
     """Load materials from model file"""
     material_count = IntPtr(0)
     material = _rl.LoadMaterials(_str_in(file_name), material_count)
@@ -2544,7 +2554,7 @@ def set_model_mesh_material(model: Model, mesh_id: int, material_id: int) -> Non
     return _rl.SetModelMeshMaterial(byref(model), int(mesh_id), int(material_id))
 
 
-def load_model_animations(file_name: str) -> Tuple[ModelAnimation, int]:
+def load_model_animations(file_name: str) -> Tuple[ModelAnimationPtr, int]:
     """Load model animations from file"""
     anims_count = IntPtr(0)
     model_anim = _rl.LoadModelAnimations(_str_in(file_name), anims_count)
@@ -2561,9 +2571,9 @@ def unload_model_animation(anim: ModelAnimation) -> None:
     return _rl.UnloadModelAnimation(anim)
 
 
-def unload_model_animations(animations: ModelAnimation, count: int) -> None:
+def unload_model_animations(animations: ModelAnimationPtr, count: int) -> None:
     """Unload animation array data"""
-    return _rl.UnloadModelAnimations(byref(animations), int(count))
+    return _rl.UnloadModelAnimations(animations, int(count))
 
 
 def is_model_animation_valid(model: Model, anim: ModelAnimation) -> bool:
@@ -2626,14 +2636,14 @@ def mesh_bounding_box(mesh: Mesh) -> BoundingBox:
     return _rl.MeshBoundingBox(mesh)
 
 
-def mesh_tangents(mesh: Sequence[Mesh]) -> None:
+def mesh_tangents(mesh: Mesh) -> None:
     """Compute mesh tangents"""
-    return _rl.MeshTangents(_arr(Mesh, mesh))
+    return _rl.MeshTangents(byref(mesh))
 
 
-def mesh_binormals(mesh: Sequence[Mesh]) -> None:
+def mesh_binormals(mesh: Mesh) -> None:
     """Compute mesh binormals"""
-    return _rl.MeshBinormals(_arr(Mesh, mesh))
+    return _rl.MeshBinormals(byref(mesh))
 
 
 def draw_model(model: Model, position: AnyVec3, scale: float, tint: AnyRGB) -> None:

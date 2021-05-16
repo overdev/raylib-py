@@ -102,8 +102,8 @@ if _lib_platform == 'win32':
 
     try:
         _rl = CDLLEx(_lib_fname_abspath, LOAD_WITH_ALTERED_SEARCH_PATH)
-    except OSError:
-        print(f"Unable to load {_lib_fname[_lib_platform]}.")
+    except OSError as err:
+        print(f"Unable to load {_lib_fname[_lib_platform]}.\n\tCause: {err.winerror}")
         _rl = None
 else:
     _rl = CDLL(_lib_fname_abspath)

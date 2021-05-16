@@ -1,9 +1,11 @@
 # core_dropped_files.py
 
-from raylibpy import *
+from raylibpy.colors import *
+from raylibpy.spartan import *
+from raylibpy.consts import *
+
 
 def main() -> int:
-
     # Initialization
     # -------------------------------------------------------------------------------------
     screen_width: int = 800
@@ -11,7 +13,7 @@ def main() -> int:
 
     init_window(screen_width, screen_height, "raylibpy [core] example - drop files")
 
-    dropped_files: list = []
+    dropped_files: Sequence[str] = []
 
     set_target_fps(60)
 

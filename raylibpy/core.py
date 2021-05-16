@@ -56,8 +56,8 @@ __all__ = [
     'AudioStream',
     'Sound',
     'Music',
-    '_VrDeviceInfo',
-    '_VrStereoConfig',
+    'VrDeviceInfo',
+    'VrStereoConfig',
 
     # Pointer Types
     'CharInfoPtr',
@@ -167,7 +167,7 @@ def _str_in2(values: Sequence[Union[str, bytes]]) -> Array[bytes]:
     return _arr(CharPtr, tuple(_str_in(value) for value in values))
 
 
-def _str_out(value: Union[str, bytes]) -> bytes:
+def _str_out(value: Union[str, bytes]) -> str:
     return value.decode('utf-8', 'ignore') if isinstance(value, bytes) else value
 
 
@@ -2338,7 +2338,7 @@ class Music(Structure):
 MusicData = POINTER(Music)
 
 
-class _VrDeviceInfo(Structure):
+class VrDeviceInfo(Structure):
     _fields_ = [
         ('hResolution', c_int),
         ('vResolution', c_int),
@@ -2353,7 +2353,7 @@ class _VrDeviceInfo(Structure):
     ]
 
 
-class _VrStereoConfig(Structure):
+class VrStereoConfig(Structure):
     _fields_ = [
         ('projection', Matrix * 2),
         ('viewOffset', Matrix * 2),

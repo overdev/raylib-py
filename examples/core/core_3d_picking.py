@@ -24,7 +24,7 @@ def main() -> int:
     cube_position: Vector3 = Vector3(0., 1., 0.)
     cube_size: Vector3 = Vector3(2., 2., 2.)
 
-    ray: Ray = Ray(Vector3(0., 0., 0.))
+    ray: Ray = Ray(Vector3(), Vector3())
 
     collision: bool = False
 
@@ -62,11 +62,11 @@ def main() -> int:
 
         # Draw
         # ---------------------------------------------------------------------------------
-        with begin_drawing():
+        with drawing():
 
             clear_background(RAYWHITE)
 
-            with begin_mode3d(camera):
+            with mode3d(camera):
 
                 if collision:
                     draw_cube(cube_position, cube_size.x, cube_size.y, cube_size.z, RED)

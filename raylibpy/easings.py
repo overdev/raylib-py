@@ -208,18 +208,18 @@ def ease_expo_in_out(t: float, b: float, c: float, d: float) -> float:
 def ease_back_in(t: float, b: float, c: float, d: float) -> float:
     s: float = 1.70158
     t = t / d
-    return c * t * t *((s + 1) * t - s) + b
+    return c * t * t * ((s + 1) * t - s) + b
 
 
 def ease_back_out(t: float, b: float, c: float, d: float) -> float:
     s: float = 1.70158
     t = t / d - 1
-    return c * (t * t  * ((s + 1) * t + s) + 1) + b
+    return c * (t * t * ((s + 1) * t + s) + 1) + b
 
 
 def ease_back_in_out(t: float, b: float, c: float, d: float) -> float:
     s: float = 1.70158
-    s = s *1.525
+    s = s * 1.525
     t = t / d * 2
     if t < 1:
         return c / 2 * (t * t * ((s + 1) * t - s)) + b
@@ -288,7 +288,7 @@ def ease_elastic_out(t: float, b: float, c: float, d: float) -> float:
         a = c
         s = p / 4
 
-    return a * (2 ** (-10 * t)) * sin((t * d - s) * (2 * pi ) / p) + c + b
+    return a * (2 ** (-10 * t)) * sin((t * d - s) * (2 * pi) / p) + c + b
 
 
 def ease_elastic_in_out(t: float, b: float, c: float, d: float) -> float:

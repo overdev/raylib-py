@@ -1,8 +1,8 @@
-from ctypes import byref
-from typing import Sequence, Tuple, Union
-from raylibpy import _rl
 import re
-from typing import Any, Dict, Union, Tuple, List, Sequence, TypeVar, Optional
+import contextlib
+from ctypes import byref
+from raylibpy import _rl
+from typing import Any, Dict, Union, Tuple, List, Sequence, TypeVar, Optional, NamedTuple
 from ctypes import (
     Structure,
     c_bool,
@@ -19,6 +19,31 @@ from ctypes import (
 from raylibpy._types import *
 
 __all__ = [
+    'Singleton',
+    'Window',
+    'Clipboard',
+    'Mouse',
+    'Gesture',
+    'Monitor',
+    'Gamepad',
+    'AudioDevice',
+    'Collision3D',
+    'Collision',
+    'Key',
+    'Draw',
+    'PixelData',
+    'Text',
+    'Cursor',
+    'Mem',
+    'TraceLog',
+    'System',
+
+    'TraceLogCallback',
+    'LoadFileDataCallback',
+    'SaveFileDataCallback',
+    'LoadFileTextCallback',
+    'SaveFileTextCallback',
+
     'Vector2',
     'Vector2Ptr',
     'Vector3',
@@ -59,8 +84,8 @@ __all__ = [
     'AudioStream',
     'Sound',
     'Music',
-    '_VrDeviceInfo',
-    '_VrStereoConfig',
+    'VrDeviceInfo',
+    'VrStereoConfig',
 
     # Pointer Types
     'CharInfoPtr',
@@ -168,7 +193,7 @@ def _str_in2(values: Sequence[Union[str, bytes]]) -> Array[bytes]:
     return _arr(CharPtr, tuple(_str_in(value) for value in values))
 
 
-def _str_out(value: Union[str, bytes]) -> bytes:
+def _str_out(value: Union[str, bytes]) -> str:
     return value.decode('utf-8', 'ignore') if isinstance(value, bytes) else value
 
 
@@ -235,6 +260,1526 @@ def _color(seq: AnyRGB) -> 'Color':
 # endregion (functions)
 # ---------------------------------------------------------
 # region CLASSES
+
+
+# region SINGLETONS
+
+
+class Singleton(type):
+    """
+    Define an Instance operation that lets clients access its unique
+    instance.
+    """
+
+    def __init__(cls, name, bases, attrs, **kwargs):
+        super().__init__(name, bases, attrs)
+        cls._instance: Optional[Singleton] = None
+
+    def __call__(cls, *args, **kwargs) -> Optional['Singleton']:
+        if cls._instance is None:
+            cls._instance = super().__call__(*args, **kwargs)
+        return cls._instance
+
+
+class Window(metaclass=Singleton):
+
+    # region CLASSMETHODS
+
+    @staticmethod
+    def set_config_flags(flags: int) -> None:
+        """Setup init configuration flags (view FLAGS)"""
+        return _rl.SetConfigFlags(int(flags))
+
+    # endregion (classmethods)
+
+    def __init__(self, width: int, height: int, title: str):
+        self._ctx: bool = False
+        self._state: Tuple[int, int, str] = width, height, title
+        if not _rl.IsWindowReady():
+            _rl.InitWindow(int(width), int(height), _str_in(title))
+        else:
+            _rl.SetWindowSize(int(width), int(height))
+            _rl.SetWindowTitle(_str_in(title))
+
+    # region REPRESENTATION
+
+    def __str__(self) -> str:
+        pass
+
+    def __repr__(self) -> str:
+        pass
+
+    # endregion (repersentation)
+
+    # region CONTEXT
+
+    def __enter__(self) -> 'Window':
+        if not _rl.IsWindowReady():
+            raise RuntimeError("The window is closed.")
+        elif self._ctx:
+            raise RuntimeError("Window contexts cannot be nested.")
+        else:
+            # reopens the window
+            width, height, title = self._state
+            _rl.SetWindowMinSize(int(width), int(height))
+            _rl.SetWindowTitle(_str_in(title))
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._ctx = False
+        _rl.CloseWindow()
+
+    # endregion (context)
+
+    # region PROPERTIES
+
+    @property
+    def should_close(self) -> bool:
+        """Check if KEY_ESCAPE pressed or Close icon pressed"""
+        return _rl.WindowShouldClose()
+
+    @property
+    def is_ready(self) -> bool:
+        """Check if window has been initialized successfully"""
+        return _rl.IsWindowReady()
+
+    @property
+    def is_fullscreen(self) -> bool:
+        """Check if window is currently fullscreen"""
+        return _rl.IsWindowFullscreen()
+
+    @property
+    def is_hidden(self):
+        """Check if window is currently hidden (only PLATFORM_DESKTOP)"""
+        return _rl.IsWindowHidden()
+
+    @property
+    def is_minimized(self) -> bool:
+        """Check if window is currently minimized (only PLATFORM_DESKTOP)"""
+        return _rl.IsWindowMinimized()
+
+    @property
+    def is_maximized(self) -> bool:
+        """Check if window is currently maximized (only PLATFORM_DESKTOP)"""
+        return _rl.IsWindowMaximized()
+
+    @property
+    def is_focused(self) -> bool:
+        """Check if window is currently focused (only PLATFORM_DESKTOP)"""
+        return _rl.IsWindowFocused()
+
+    @property
+    def is_resized(self) -> bool:
+        """Check if window has been resized last frame"""
+        return _rl.IsWindowResized()
+
+    @property
+    def handle(self) -> int:
+        """Get native window handle"""
+        return _rl.GetWindowHandle().contents[0]
+
+    @property
+    def screen_width(self) -> int:
+        """Get current screen width"""
+        return _rl.GetScreenWidth()
+
+    @property
+    def screen_height(self) -> int:
+        """Get current screen height"""
+        return _rl.GetScreenHeight()
+
+    @property
+    def fps(self) -> int:
+        """Returns current FPS"""
+        return _rl.GetFPS()
+
+    @fps.setter
+    def fps(self, fps: int) -> None:
+        """Set target FPS (maximum)"""
+        _rl.SetTargetFPS(int(fps))
+
+    @property
+    def frame_time(self) -> float:
+        """Returns time in seconds for last frame drawn (delta time)"""
+        return _rl.GetFrameTime()
+
+    @property
+    def time(self) -> float:
+        """Returns elapsed time in seconds since InitWindow()"""
+        return _rl.GetTime()
+
+    # endregion (properties)
+
+    # region METHODS
+
+    @staticmethod
+    def get_random_value(min_: int, max_: int) -> int:
+        """Returns a random value between min and max (both included)"""
+        return _rl.GetRandomValue(int(min_), int(max_))
+
+    @staticmethod
+    def clear_background(color: AnyRGB) -> None:
+        """Set background color (framebuffer clear color)"""
+        return _rl.ClearBackground(_color(color))
+
+    @staticmethod
+    def is_state(flag: int) -> bool:
+        """Check if one specific window flag is enabled"""
+        return _rl.IsWindowState(int(flag))
+
+    @staticmethod
+    def set_state(flags: int) -> None:
+        """Set window configuration state using flags"""
+        return _rl.SetWindowState(int(flags))
+
+    @staticmethod
+    def clear_state(flags: int) -> None:
+        """Clear window configuration state flags"""
+        return _rl.ClearWindowState(int(flags))
+
+    @staticmethod
+    def toggle_fullscreen(self) -> None:
+        """Toggle window state: fullscreen/windowed (only PLATFORM_DESKTOP)"""
+        return _rl.ToggleFullscreen()
+
+    @staticmethod
+    def maximize(self) -> None:
+        """Set window state: maximized, if resizable (only PLATFORM_DESKTOP)"""
+        return _rl.MaximizeWindow()
+
+    @staticmethod
+    def minimize(self) -> None:
+        """Set window state: minimized, if resizable (only PLATFORM_DESKTOP)"""
+        return _rl.MinimizeWindow()
+
+    @staticmethod
+    def restore(self) -> None:
+        """Set window state: not minimized/maximized (only PLATFORM_DESKTOP)"""
+        return _rl.RestoreWindow()
+
+    @staticmethod
+    def set_icon(image: 'Image') -> None:
+        """Set icon for window (only PLATFORM_DESKTOP)"""
+        return _rl.SetWindowIcon(image)
+
+    @staticmethod
+    def set_title(title: str) -> None:
+        """Set title for window (only PLATFORM_DESKTOP)"""
+        return _rl.SetWindowTitle(_str_in(title))
+
+    @staticmethod
+    def set_position(x: int, y: int) -> None:
+        """Set window position on screen (only PLATFORM_DESKTOP)"""
+        return _rl.SetWindowPosition(int(x), int(y))
+
+    @staticmethod
+    def set_monitor(monitor: Union[int, 'Monitor']) -> None:
+        """Set monitor for the current window (fullscreen mode)"""
+        return _rl.SetWindowMonitor(int(monitor.index if isinstance(monitor, Monitor) else monitor))
+
+    @staticmethod
+    def set_min_size(width: int, height: int) -> None:
+        """Set window minimum dimensions (for FLAG_WINDOW_RESIZABLE)"""
+        return _rl.SetWindowMinSize(int(width), int(height))
+
+    @staticmethod
+    def set_size(width: int, height: int) -> None:
+        """Set window dimensions"""
+        return _rl.SetWindowSize(int(width), int(height))
+
+    @staticmethod
+    def take_screenshot(file_name: str) -> None:
+        """Takes a screenshot of current screen (filename extension defines format)"""
+        return _rl.TakeScreenshot(_str_in(file_name))
+
+    # endregion (methods)
+
+
+class Clipboard(metaclass=Singleton):
+
+    def __init__(self, text: str):
+        self.text = text
+
+    @property
+    def text(self) -> str:
+        """Get clipboard text content"""
+        return _rl.GetClipboardText()
+
+    @text.setter
+    def text(self, text: str) -> None:
+        """Set clipboard text content"""
+        _rl.SetClipboardText(_str_in(text))
+
+
+class Mouse(metaclass=Singleton):
+
+    # region PROPERTIES
+
+    @property
+    def mouse_x(self) -> int:
+        """Returns mouse position X"""
+        return _rl.GetMouseX()
+
+    @property
+    def mouse_y(self) -> int:
+        """Returns mouse position Y"""
+        return _rl.GetMouseY()
+
+    @property
+    def mouse_position(self) -> 'Vector2':
+        """Returns mouse position XY"""
+        return _rl.GetMousePosition()
+
+    @mouse_position.setter
+    def mouse_position(self, value: AnyVec2) -> None:
+        """Gets or sets mouse position XY"""
+        _rl.SetMousePosition(int(value[0]), int(value[1]))
+
+    @property
+    def get_mouse_wheel_move(self) -> float:
+        """Returns mouse wheel movement Y"""
+        return _rl.GetMouseWheelMove()
+
+    # endregion (properties)
+
+    # region METHODS
+
+    @staticmethod
+    def set_offset(offset_x: int, offset_y: int) -> None:
+        """Set mouse offset"""
+        return _rl.SetMouseOffset(int(offset_x), int(offset_y))
+
+    @staticmethod
+    def set_scale(scale_x: float, scale_y: float) -> None:
+        """Set mouse scaling"""
+        return _rl.SetMouseScale(float(scale_x), float(scale_y))
+
+    @staticmethod
+    def set_cursor(cursor: int) -> None:
+        """Set mouse cursor"""
+        return _rl.SetMouseCursor(int(cursor))
+
+    @staticmethod
+    def is_button_pressed(button: int) -> bool:
+        """Detect if a mouse button has been pressed once"""
+        return _rl.IsMouseButtonPressed(int(button))
+
+    @staticmethod
+    def is_button_down(button: int) -> bool:
+        """Detect if a mouse button is being pressed"""
+        return _rl.IsMouseButtonDown(int(button))
+
+    @staticmethod
+    def is_button_released(button: int) -> bool:
+        """Detect if a mouse button has been released once"""
+        return _rl.IsMouseButtonReleased(int(button))
+
+    @staticmethod
+    def is_button_up(button: int) -> bool:
+        """Detect if a mouse button is NOT being pressed"""
+        return _rl.IsMouseButtonUp(int(button))
+
+    # endregion (methods)
+
+
+class Gesture(metaclass=Singleton):
+
+    # region PROPERTIES
+
+    @property
+    def touch_x(self) -> int:
+        """Returns touch position X for touch point 0 (relative to screen size)"""
+        return _rl.GetTouchX()
+
+    @property
+    def touch_y(self) -> int:
+        """Returns touch position Y for touch point 0 (relative to screen size)"""
+        return _rl.GetTouchY()
+
+    @property
+    def touch_points_count(self) -> int:
+        """Get touch points count"""
+        return _rl.GetTouchPointsCount()
+
+    @property
+    def detected(self) -> int:
+        """Get latest detected gesture"""
+        return _rl.GetGestureDetected()
+
+    @property
+    def hold_duration(self) -> float:
+        """Get gesture hold time in milliseconds"""
+        return _rl.GetGestureHoldDuration()
+
+    @property
+    def drag_vector(self) -> 'Vector2':
+        """Get gesture drag vector"""
+        return _rl.GetGestureDragVector()
+
+    @property
+    def drag_angle(self) -> float:
+        """Get gesture drag angle"""
+        return _rl.GetGestureDragAngle()
+
+    @property
+    def pinch_vector(self) -> 'Vector2':
+        """Get gesture pinch delta"""
+        return _rl.GetGesturePinchVector()
+
+    @property
+    def pinch_angle(self) -> float:
+        """Get gesture pinch angle"""
+        return _rl.GetGesturePinchAngle()
+
+    # endregion (properties)
+
+    # region METHODS
+
+    @staticmethod
+    def get_touch_position(index: int) -> 'Vector2':
+        """Returns touch position XY for a touch point index (relative to screen size)"""
+        return _rl.GetTouchPosition(int(index))
+
+    @staticmethod
+    def set_enabled(flags: int) -> None:
+        """Enable a set of gestures using flags"""
+        return _rl.SetGesturesEnabled(int(flags))
+
+    @staticmethod
+    def is_detected(gesture: int) -> bool:
+        """Check if a gesture have been detected"""
+        return _rl.IsGestureDetected(int(gesture))
+
+    # endregion (methods)
+
+
+# endregion (singletons)
+
+
+class Monitor(NamedTuple):
+    index: int
+
+    # region CLASSMETHODS
+
+    @staticmethod
+    def get_count() -> int:
+        """Get number of connected monitors"""
+        return _rl.GetMonitorCount()
+
+    @classmethod
+    def get_current(cls) -> 'Monitor':
+        """Get current connected monitor"""
+        return cls(_rl.GetCurrentMonitor())
+
+    # endregion (classmethods)
+
+    # region PROPERTIES
+
+    @property
+    def position(self) -> 'Vector2':
+        """Get specified monitor position"""
+        return _rl.GetMonitorPosition(int(self.index))
+
+    @property
+    def width(self) -> int:
+        """Get specified monitor width (max available by monitor)"""
+        return _rl.GetMonitorWidth(int(self.index))
+
+    @property
+    def height(self) -> int:
+        """Get specified monitor height (max available by monitor)"""
+        return _rl.GetMonitorHeight(int(self.index))
+
+    @property
+    def physical_width(self) -> int:
+        """Get specified monitor physical width in millimetres"""
+        return _rl.GetMonitorPhysicalWidth(int(self.index))
+
+    @property
+    def physical_height(self) -> int:
+        """Get specified monitor physical height in millimetres"""
+        return _rl.GetMonitorPhysicalHeight(int(self.index))
+
+    @property
+    def refresh_rate(self) -> int:
+        """Get specified monitor refresh rate"""
+        return _rl.GetMonitorRefreshRate(int(self.index))
+
+    @property
+    def window_position(self) -> 'Vector2':
+        """Get window position XY on monitor"""
+        return _rl.GetWindowPosition()
+
+    @property
+    def scale_dpi(self) -> 'Vector2':
+        """Get window scale DPI factor"""
+        return _rl.GetWindowScaleDPI()
+
+    @property
+    def name(self) -> str:
+        """Get the human-readable, UTF-8 encoded name of the primary monitor"""
+        return _rl.GetMonitorName(int(self.index))
+
+    # endregion (properties)
+
+
+class Gamepad(NamedTuple):
+    index: int
+
+    # region PROPERTIES
+
+    @property
+    def is_available(self) -> bool:
+        """Detect if a gamepad is available"""
+        return _rl.IsGamepadAvailable(int(self.index))
+
+    @property
+    def button_pressed(self) -> int:
+        """Get the last gamepad button pressed"""
+        return _rl.GetGamepadButtonPressed()
+
+    @property
+    def name(self) -> str:
+        """Return gamepad internal name id"""
+        return _str_out(_rl.GetGamepadName(int(self.index)))
+
+    @property
+    def axis_count(self) -> int:
+        """Return gamepad axis count for a gamepad"""
+        return _rl.GetGamepadAxisCount(int(self.index))
+
+    # endregion (properties)
+
+    # region METHODS
+
+    def is_name(self, name: str) -> bool:
+        """Check gamepad name (if available)"""
+        return _rl.IsGamepadName(int(self.index), _str_in(name))
+
+    def is_pressed(self, button: int) -> bool:
+        """Detect if a gamepad button has been pressed once"""
+        return _rl.IsGamepadButtonPressed(int(self.index), int(button))
+
+    def is_down(self, button: int) -> bool:
+        """Detect if a gamepad button is being pressed"""
+        return _rl.IsGamepadButtonDown(int(self.index), int(button))
+
+    def is_released(self, button: int) -> bool:
+        """Detect if a gamepad button has been released once"""
+        return _rl.IsGamepadButtonReleased(int(self.index), int(button))
+
+    def is_up(self, button: int) -> bool:
+        """Detect if a gamepad button is NOT being pressed"""
+        return _rl.IsGamepadButtonUp(int(self.index), int(button))
+
+    def get_axis_movement(self, axis: int) -> float:
+        """Return axis movement value for a gamepad axis"""
+        return _rl.GetGamepadAxisMovement(int(self.index), int(axis))
+
+    @staticmethod
+    def set_mappings(mappings: str) -> int:
+        """Set internal gamepad mappings (SDL_GameControllerDB)"""
+        return _rl.SetGamepadMappings(_str_in(mappings))
+
+    # endregion (methods)
+
+
+class AudioDevice:
+
+    # region CLASSMETHODS
+
+    @staticmethod
+    def init() -> None:
+        """Initialize audio device and context"""
+        return _rl.InitAudioDevice()
+
+    @staticmethod
+    def close() -> None:
+        """Close the audio device and context"""
+        return _rl.CloseAudioDevice()
+
+    @staticmethod
+    def is_ready() -> bool:
+        """Check if audio device has been initialized successfully"""
+        return _rl.IsAudioDeviceReady()
+
+    @staticmethod
+    def set_master_volume(volume: float) -> None:
+        """Set master volume (listener)"""
+        return _rl.SetMasterVolume(float(volume))
+
+    # endregion (classmethods)
+
+    def __init__(self):
+        raise TypeError("AudioDevice class is not meant to be instantiated.")
+
+
+class Collision3D:
+
+    def __init__(self):
+        raise TypeError("Collision3D class is not meant to be instantiated.")
+
+    # region METHODS
+
+    @staticmethod
+    def check_spheres(center1: AnyVec3, radius1: float, center2: AnyVec3, radius2: float) -> bool:
+        """Detect collision between two spheres"""
+        return _rl.CheckCollisionSpheres(_vec3(center1), float(radius1), _vec3(center2), float(radius2))
+
+    @staticmethod
+    def check_boxes(box1: 'BoundingBox', box2: 'BoundingBox') -> bool:
+        """Detect collision between two bounding boxes"""
+        return _rl.CheckCollisionBoxes(box1, box2)
+
+    @staticmethod
+    def check_box_sphere(box: 'BoundingBox', center: AnyVec3, radius: float) -> bool:
+        """Detect collision between box and sphere"""
+        return _rl.CheckCollisionBoxSphere(box, _vec3(center), float(radius))
+
+    @staticmethod
+    def check_ray_sphere(ray: 'Ray', center: AnyVec3, radius: float) -> bool:
+        """Detect collision between ray and sphere"""
+        return _rl.CheckCollisionRaySphere(ray, _vec3(center), float(radius))
+
+    @staticmethod
+    def check_ray_sphere_ex(ray: 'Ray', center: AnyVec3, radius: float,
+                            collision_point: Sequence['Vector3']) -> bool:
+        """Detect collision between ray and sphere, returns collision point"""
+        return _rl.CheckCollisionRaySphereEx(ray, _vec3(center), float(radius), _arr(Vector3, collision_point))
+
+    @staticmethod
+    def check_ray_box(ray: 'Ray', box: 'BoundingBox') -> bool:
+        """Detect collision between ray and box"""
+        return _rl.CheckCollisionRayBox(ray, box)
+
+    @staticmethod
+    def get_ray_mesh(ray: 'Ray', mesh: 'Mesh', transform: 'Matrix') -> 'RayHitInfo':
+        """Get collision info between ray and mesh"""
+        return _rl.GetCollisionRayMesh(ray, mesh, transform)
+
+    @staticmethod
+    def get_ray_model(ray: 'Ray', model: 'Model') -> 'RayHitInfo':
+        """Get collision info between ray and model"""
+        return _rl.GetCollisionRayModel(ray, model)
+
+    @staticmethod
+    def get_ray_triangle(ray: 'Ray', p1: AnyVec3, p2: AnyVec3, p3: AnyVec3) -> 'RayHitInfo':
+        """Get collision info between ray and triangle"""
+        return _rl.GetCollisionRayTriangle(ray, _vec3(p1), _vec3(p2), _vec3(p3))
+
+    @staticmethod
+    def get_ray_ground(ray: 'Ray', ground_height: float) -> 'RayHitInfo':
+        """Get collision info between ray and ground plane (Y-normal plane)"""
+        return _rl.GetCollisionRayGround(ray, float(ground_height))
+
+    # endregion (methods)
+
+
+class Collision:
+
+    def __init__(self):
+        raise TypeError("Collision class is not meant to be instantiated.")
+
+    # region METHODS
+
+    @staticmethod
+    def check_recs(rec1: AnyRect, rec2: AnyRect) -> bool:
+        """Check collision between two rectangles"""
+        return _rl.CheckCollisionRecs(_rect(rec1), _rect(rec2))
+
+    @staticmethod
+    def check_circles(center1: AnyVec2, radius1: float, center2: AnyVec2, radius2: float) -> bool:
+        """Check collision between two circles"""
+        return _rl.CheckCollisionCircles(_vec2(center1), float(radius1), _vec2(center2), float(radius2))
+
+    @staticmethod
+    def check_circle_rec(center: AnyVec2, radius: float, rec: AnyRect) -> bool:
+        """Check collision between circle and rectangle"""
+        return _rl.CheckCollisionCircleRec(_vec2(center), float(radius), _rect(rec))
+
+    @staticmethod
+    def check_point_rec(point: AnyVec2, rec: AnyRect) -> bool:
+        """Check if point is inside rectangle"""
+        return _rl.CheckCollisionPointRec(_vec2(point), _rect(rec))
+
+    @staticmethod
+    def check_point_circle(point: AnyVec2, center: AnyVec2, radius: float) -> bool:
+        """Check if point is inside circle"""
+        return _rl.CheckCollisionPointCircle(_vec2(point), _vec2(center), float(radius))
+
+    @staticmethod
+    def check_point_triangle(point: AnyVec2, p1: AnyVec2, p2: AnyVec2, p3: AnyVec2) -> bool:
+        """Check if point is inside a triangle"""
+        return _rl.CheckCollisionPointTriangle(_vec2(point), _vec2(p1), _vec2(p2), _vec2(p3))
+
+    @staticmethod
+    def check_lines(start_pos1: AnyVec2, end_pos1: AnyVec2, start_pos2: AnyVec2, end_pos2: AnyVec2,
+                    collision_point: Sequence['Vector2']) -> bool:
+        """Check the collision between two lines defined by two points each, returns collision point by reference"""
+        return _rl.CheckCollisionLines(_vec2(start_pos1), _vec2(end_pos1), _vec2(start_pos2), _vec2(end_pos2),
+                                       _arr(Vector2, collision_point))
+
+    @staticmethod
+    def get_rec(rec1: AnyRect, rec2: AnyRect) -> 'Rectangle':
+        """Get collision rectangle for two rectangles collision"""
+        return _rl.GetCollisionRec(_rect(rec1), _rect(rec2))
+
+    # endregion (methods
+
+
+class Key:
+
+    def __init__(self):
+        raise TypeError("Key class is not meant to be instantiated.")
+
+    # region METHODS
+
+    @staticmethod
+    def is_pressed(key: int) -> bool:
+        """Detect if a key has been pressed once"""
+        return _rl.IsKeyPressed(int(key))
+
+    @staticmethod
+    def is_down(key: int) -> bool:
+        """Detect if a key is being pressed"""
+        return _rl.IsKeyDown(int(key))
+
+    @staticmethod
+    def is_released(key: int) -> bool:
+        """Detect if a key has been released once"""
+        return _rl.IsKeyReleased(int(key))
+
+    @staticmethod
+    def is_up(key: int) -> bool:
+        """Detect if a key is NOT being pressed"""
+        return _rl.IsKeyUp(int(key))
+
+    @staticmethod
+    def set_exit_key(key: int) -> None:
+        """Set a custom key to exit program (default is ESC)"""
+        return _rl.SetExitKey(int(key))
+
+    @staticmethod
+    def get_pressed() -> int:
+        """Get key pressed (keycode), call it multiple times for keys queued"""
+        return _rl.GetKeyPressed()
+
+    @staticmethod
+    def get_char() -> int:
+        """Get char pressed (unicode), call it multiple times for chars queued"""
+        return _rl.GetCharPressed()
+
+    # endregion (methods)
+
+
+class Draw:
+
+    def __init__(self):
+        raise TypeError("Draw class is not meant to be instantiated.")
+
+    # region METHODS
+
+    @staticmethod
+    def set_shapes_texture(texture: 'Texture2D', source: AnyRect) -> None:
+        """Set texture and rectangle to be used on shapes drawing
+
+        It can be useful when using basic shapes and one single font,
+        defining a font char white rectangle would allow drawing everything in a single draw call
+        """
+        return _rl.SetShapesTexture(texture, _rect(source))
+
+    # region DRAWING 2D
+
+    @staticmethod
+    def pixel(pos_x: int, pos_y: int, color: AnyRGB) -> None:
+        """Draw a pixel"""
+        return _rl.DrawPixel(int(pos_x), int(pos_y), _color(color))
+
+    @staticmethod
+    def pixel_v(position: AnyVec2, color: AnyRGB) -> None:
+        """Draw a pixel (Vector version)"""
+        return _rl.DrawPixelV(_vec2(position), _color(color))
+
+    @staticmethod
+    def line(start_pos_x: int, start_pos_y: int, end_pos_x: int, end_pos_y: int, color: AnyRGB) -> None:
+        """Draw a line"""
+        return _rl.DrawLine(int(start_pos_x), int(start_pos_y), int(end_pos_x), int(end_pos_y), _color(color))
+
+    @staticmethod
+    def line_v(start_pos: AnyVec2, end_pos: AnyVec2, color: AnyRGB) -> None:
+        """Draw a line (Vector version)"""
+        return _rl.DrawLineV(_vec2(start_pos), _vec2(end_pos), _color(color))
+
+    @staticmethod
+    def line_ex(start_pos: AnyVec2, end_pos: AnyVec2, thick: float, color: AnyRGB) -> None:
+        """Draw a line defining thickness"""
+        return _rl.DrawLineEx(_vec2(start_pos), _vec2(end_pos), float(thick), _color(color))
+
+    @staticmethod
+    def line_bezier(start_pos: AnyVec2, end_pos: AnyVec2, thick: float, color: AnyRGB) -> None:
+        """Draw a line using cubic-bezier curves in-out"""
+        return _rl.DrawLineBezier(_vec2(start_pos), _vec2(end_pos), float(thick), _color(color))
+
+    @staticmethod
+    def line_bezier_quad(start_pos: AnyVec2, end_pos: AnyVec2, control_pos: AnyVec2, thick: float,
+                         color: AnyRGB) -> None:
+        """Draw line using quadratic bezier curves with a control point"""
+        return _rl.DrawLineBezierQuad(_vec2(start_pos), _vec2(end_pos), _vec2(control_pos), float(thick),
+                                      _color(color))
+
+    @staticmethod
+    def line_strip(points: Sequence['Vector2'], points_count: int, color: AnyRGB) -> None:
+        """Draw lines sequence"""
+        return _rl.DrawLineStrip(_arr(Vector2, points), int(points_count), _color(color))
+
+    @staticmethod
+    def circle(center_x: int, center_y: int, radius: float, color: AnyRGB) -> None:
+        """Draw a color-filled circle"""
+        return _rl.DrawCircle(int(center_x), int(center_y), float(radius), _color(color))
+
+    @staticmethod
+    def circle_sector(center: AnyVec2, radius: float, start_angle: float, end_angle: float,
+                      segments: int, color: AnyRGB) -> None:
+        """Draw a piece of a circle"""
+        return _rl.DrawCircleSector(_vec2(center), float(radius), float(start_angle), float(end_angle), int(segments),
+                                    _color(color))
+
+    @staticmethod
+    def circle_sector_lines(center: AnyVec2, radius: float, start_angle: float, end_angle: float, segments: int,
+                            color: AnyRGB) -> None:
+        """Draw circle sector outline"""
+        return _rl.DrawCircleSectorLines(_vec2(center), float(radius), float(start_angle), float(end_angle),
+                                         int(segments),
+                                         _color(color))
+
+    @staticmethod
+    def circle_gradient(center_x: int, center_y: int, radius: float, color1: AnyRGB, color2: AnyRGB) -> None:
+        """Draw a gradient-filled circle"""
+        return _rl.DrawCircleGradient(int(center_x), int(center_y), float(radius), _color(color1), _color(color2))
+
+    @staticmethod
+    def circle_v(center: AnyVec2, radius: float, color: AnyRGB) -> None:
+        """Draw a color-filled circle (Vector version)"""
+        return _rl.DrawCircleV(_vec2(center), float(radius), _color(color))
+
+    @staticmethod
+    def circle_lines(center_x: int, center_y: int, radius: float, color: AnyRGB) -> None:
+        """Draw circle outline"""
+        return _rl.DrawCircleLines(int(center_x), int(center_y), float(radius), _color(color))
+
+    @staticmethod
+    def ellipse(center_x: int, center_y: int, radius_h: float, radius_v: float, color: AnyRGB) -> None:
+        """Draw ellipse"""
+        return _rl.DrawEllipse(int(center_x), int(center_y), float(radius_h), float(radius_v), _color(color))
+
+    @staticmethod
+    def ellipse_lines(center_x: int, center_y: int, radius_h: float, radius_v: float, color: AnyRGB) -> None:
+        """Draw ellipse outline"""
+        return _rl.DrawEllipseLines(int(center_x), int(center_y), float(radius_h), float(radius_v), _color(color))
+
+    @staticmethod
+    def ring(center: AnyVec2, inner_radius: float, outer_radius: float, start_angle: float, end_angle: float,
+             segments: int, color: AnyRGB) -> None:
+        """Draw ring"""
+        return _rl.DrawRing(_vec2(center), float(inner_radius), float(outer_radius), float(start_angle),
+                            float(end_angle),
+                            int(segments), _color(color))
+
+    @staticmethod
+    def ring_lines(center: AnyVec2, inner_radius: float, outer_radius: float, start_angle: float, end_angle: float,
+                   segments: int, color: AnyRGB) -> None:
+        """Draw ring outline"""
+        _rl.DrawRingLines(_vec2(center), float(inner_radius), float(outer_radius), float(start_angle),
+                          float(end_angle), int(segments), _color(color))
+
+    @staticmethod
+    def rectangle(pos_x: int, pos_y: int, width: int, height: int, color: AnyRGB) -> None:
+        """Draw a color-filled rectangle"""
+        _rl.DrawRectangle(int(pos_x), int(pos_y), int(width), int(height), _color(color))
+
+    @staticmethod
+    def rectangle_v(position: AnyVec2, size: AnyVec2, color: AnyRGB) -> None:
+        """Draw a color-filled rectangle (Vector version)"""
+        _rl.DrawRectangleV(_vec2(position), _vec2(size), _color(color))
+
+    @staticmethod
+    def rectangle_rec(rec: AnyRect, color: AnyRGB) -> None:
+        """Draw a color-filled rectangle"""
+        _rl.DrawRectangleRec(_rect(rec), _color(color))
+
+    @staticmethod
+    def rectangle_pro(rec: AnyRect, origin: AnyVec2, rotation: float, color: AnyRGB) -> None:
+        """Draw a color-filled rectangle with pro parameters"""
+        _rl.DrawRectanglePro(_rect(rec), _vec2(origin), float(rotation), _color(color))
+
+    @staticmethod
+    def rectangle_gradient_v(pos_x: int, pos_y: int, width: int, height: int, color1: AnyRGB,
+                             color2: AnyRGB) -> None:
+        """Draw a vertical-gradient-filled rectangle"""
+        _rl.DrawRectangleGradientV(int(pos_x), int(pos_y), int(width), int(height), _color(color1),
+                                   _color(color2))
+
+    @staticmethod
+    def rectangle_gradient_h(pos_x: int, pos_y: int, width: int, height: int, color1: AnyRGB,
+                             color2: AnyRGB) -> None:
+        """Draw a horizontal-gradient-filled rectangle"""
+        _rl.DrawRectangleGradientH(int(pos_x), int(pos_y), int(width), int(height), _color(color1),
+                                   _color(color2))
+
+    @staticmethod
+    def rectangle_gradient_ex(rec: AnyRect, col1: AnyRGB, col2: AnyRGB, col3: AnyRGB, col4: AnyRGB) -> None:
+        """Draw a gradient-filled rectangle with custom vertex colors"""
+        _rl.DrawRectangleGradientEx(_rect(rec), _color(col1), _color(col2), _color(col3), _color(col4))
+
+    @staticmethod
+    def rectangle_lines(pos_x: int, pos_y: int, width: int, height: int, color: AnyRGB) -> None:
+        """Draw rectangle outline"""
+        _rl.DrawRectangleLines(int(pos_x), int(pos_y), int(width), int(height), _color(color))
+
+    @staticmethod
+    def rectangle_lines_ex(rec: AnyRect, line_thick: int, color: AnyRGB) -> None:
+        """Draw rectangle outline with extended parameters"""
+        _rl.DrawRectangleLinesEx(_rect(rec), int(line_thick), _color(color))
+
+    @staticmethod
+    def rectangle_rounded(rec: AnyRect, roundness: float, segments: int, color: AnyRGB) -> None:
+        """Draw rectangle with rounded edges"""
+        _rl.DrawRectangleRounded(_rect(rec), float(roundness), int(segments), _color(color))
+
+    @staticmethod
+    def rectangle_rounded_lines(rec: AnyRect, roundness: float, segments: int, line_thick: int,
+                                color: AnyRGB) -> None:
+        """Draw rectangle with rounded edges outline"""
+        _rl.DrawRectangleRoundedLines(_rect(rec), float(roundness), int(segments), int(line_thick),
+                                      _color(color))
+
+    @staticmethod
+    def triangle(v1: AnyVec2, v2: AnyVec2, v3: AnyVec2, color: AnyRGB) -> None:
+        """Draw a color-filled triangle (vertex in counter-clockwise order!)"""
+        _rl.DrawTriangle(_vec2(v1), _vec2(v2), _vec2(v3), _color(color))
+
+    @staticmethod
+    def triangle_lines(v1: AnyVec2, v2: AnyVec2, v3: AnyVec2, color: AnyRGB) -> None:
+        """Draw triangle outline (vertex in counter-clockwise order!)"""
+        _rl.DrawTriangleLines(_vec2(v1), _vec2(v2), _vec2(v3), _color(color))
+
+    @staticmethod
+    def triangle_fan(points: Sequence['Vector2'], points_count: int, color: AnyRGB) -> None:
+        """Draw a triangle fan defined by points (first vertex is the center)"""
+        _rl.DrawTriangleFan(_arr(Vector2, points), int(points_count), _color(color))
+
+    @staticmethod
+    def triangle_strip(points: Sequence['Vector2'], points_count: int, color: AnyRGB) -> None:
+        """Draw a triangle strip defined by points"""
+        _rl.DrawTriangleStrip(_arr(Vector2, points), int(points_count), _color(color))
+
+    @staticmethod
+    def poly(center: AnyVec2, sides: int, radius: float, rotation: float, color: AnyRGB) -> None:
+        """Draw a regular polygon (Vector version)"""
+        _rl.DrawPoly(_vec2(center), int(sides), float(radius), float(rotation), _color(color))
+
+    @staticmethod
+    def poly_lines(center: AnyVec2, sides: int, radius: float, rotation: float, color: AnyRGB) -> None:
+        """Draw a polygon outline of n sides"""
+        _rl.DrawPolyLines(_vec2(center), int(sides), float(radius), float(rotation), _color(color))
+
+    # endregion (drawing 2d)
+
+    # region DRAWING 3D
+
+    @staticmethod
+    def line3d(start_pos: AnyVec3, end_pos: AnyVec3, color: AnyRGB) -> None:
+        """Draw a line in 3D world space"""
+        return _rl.DrawLine3D(_vec3(start_pos), _vec3(end_pos), _color(color))
+
+    @staticmethod
+    def point3d(position: AnyVec3, color: AnyRGB) -> None:
+        """Draw a point in 3D space, actually a small line"""
+        return _rl.DrawPoint3D(_vec3(position), _color(color))
+
+    @staticmethod
+    def circle3d(center: AnyVec3, radius: float, rotation_axis: AnyVec3, rotation_angle: float,
+                 color: AnyRGB) -> None:
+        """Draw a circle in 3D world space"""
+        return _rl.DrawCircle3D(_vec3(center), float(radius), _vec3(rotation_axis), float(rotation_angle),
+                                _color(color))
+
+    @staticmethod
+    def triangle3d(v1: AnyVec3, v2: AnyVec3, v3: AnyVec3, color: AnyRGB) -> None:
+        """Draw a color-filled triangle (vertex in counter-clockwise order!)"""
+        return _rl.DrawTriangle3D(_vec3(v1), _vec3(v2), _vec3(v3), _color(color))
+
+    @staticmethod
+    def triangle_strip3d(points: Sequence['Vector3'], points_count: int, color: AnyRGB) -> None:
+        """Draw a triangle strip defined by points"""
+        return _rl.DrawTriangleStrip3D(_arr(Vector3, points), int(points_count), _color(color))
+
+    @staticmethod
+    def cube(position: AnyVec3, width: float, height: float, length: float, color: AnyRGB) -> None:
+        """Draw cube"""
+        return _rl.DrawCube(_vec3(position), float(width), float(height), float(length), _color(color))
+
+    @staticmethod
+    def cube_v(position: AnyVec3, size: AnyVec3, color: AnyRGB) -> None:
+        """Draw cube (Vector version)"""
+        return _rl.DrawCubeV(_vec3(position), _vec3(size), _color(color))
+
+    @staticmethod
+    def cube_wires(position: AnyVec3, width: float, height: float, length: float, color: AnyRGB) -> None:
+        """Draw cube wires"""
+        return _rl.DrawCubeWires(_vec3(position), float(width), float(height), float(length), _color(color))
+
+    @staticmethod
+    def cube_wires_v(position: AnyVec3, size: AnyVec3, color: AnyRGB) -> None:
+        """Draw cube wires (Vector version)"""
+        return _rl.DrawCubeWiresV(_vec3(position), _vec3(size), _color(color))
+
+    @staticmethod
+    def cube_texture(texture: 'Texture2D', position: AnyVec3, width: float, height: float, length: float,
+                     color: AnyRGB) -> None:
+        """Draw cube textured"""
+        return _rl.DrawCubeTexture(texture, _vec3(position), float(width), float(height), float(length), _color(color))
+
+    @staticmethod
+    def sphere(center_pos: AnyVec3, radius: float, color: AnyRGB) -> None:
+        """Draw sphere"""
+        return _rl.DrawSphere(_vec3(center_pos), float(radius), _color(color))
+
+    @staticmethod
+    def sphere_ex(center_pos: AnyVec3, radius: float, rings: int, slices: int, color: AnyRGB) -> None:
+        """Draw sphere with extended parameters"""
+        return _rl.DrawSphereEx(_vec3(center_pos), float(radius), int(rings), int(slices), _color(color))
+
+    @staticmethod
+    def sphere_wires(center_pos: AnyVec3, radius: float, rings: int, slices: int, color: AnyRGB) -> None:
+        """Draw sphere wires"""
+        return _rl.DrawSphereWires(_vec3(center_pos), float(radius), int(rings), int(slices), _color(color))
+
+    @staticmethod
+    def cylinder(position: AnyVec3, radius_top: float, radius_bottom: float, height: float, slices: int,
+                 color: AnyRGB) -> None:
+        """Draw a cylinder/cone"""
+        return _rl.DrawCylinder(_vec3(position), float(radius_top), float(radius_bottom), float(height), int(slices),
+                                _color(color))
+
+    @staticmethod
+    def cylinder_wires(position: AnyVec3, radius_top: float, radius_bottom: float, height: float, slices: int,
+                       color: AnyRGB) -> None:
+        """Draw a cylinder/cone wires"""
+        return _rl.DrawCylinderWires(_vec3(position), float(radius_top), float(radius_bottom), float(height),
+                                     int(slices),
+                                     _color(color))
+
+    @staticmethod
+    def plane(center_pos: AnyVec3, size: AnyVec2, color: AnyRGB) -> None:
+        """Draw a plane XZ"""
+        return _rl.DrawPlane(_vec3(center_pos), _vec2(size), _color(color))
+
+    @staticmethod
+    def ray(ray: 'Ray', color: AnyRGB) -> None:
+        """Draw a ray line"""
+        return _rl.DrawRay(ray, _color(color))
+
+    @staticmethod
+    def grid(slices: int, spacing: float) -> None:
+        """Draw a grid (centered at (0, 0, 0))"""
+        return _rl.DrawGrid(int(slices), float(spacing))
+
+    @staticmethod
+    def model(model: 'Model', position: AnyVec3, scale: float, tint: AnyRGB) -> None:
+        """Draw a model (with texture if set)"""
+        return _rl.DrawModel(model, _vec3(position), float(scale), _color(tint))
+
+    @staticmethod
+    def model_ex(model: 'Model', position: AnyVec3, rotation_axis: AnyVec3, rotation_angle: float, scale: AnyVec3,
+                 tint: AnyRGB) -> None:
+        """Draw a model with extended parameters"""
+        return _rl.DrawModelEx(model, _vec3(position), _vec3(rotation_axis), float(rotation_angle), _vec3(scale),
+                               _color(tint))
+
+    @staticmethod
+    def model_wires(model: 'Model', position: AnyVec3, scale: float, tint: AnyRGB) -> None:
+        """Draw a model wires (with texture if set)"""
+        return _rl.DrawModelWires(model, _vec3(position), float(scale), _color(tint))
+
+    @staticmethod
+    def model_wires_ex(model: 'Model', position: AnyVec3, rotation_axis: AnyVec3, rotation_angle: float,
+                       scale: AnyVec3,
+                       tint: AnyRGB) -> None:
+        """Draw a model wires (with texture if set) with extended parameters"""
+        return _rl.DrawModelWiresEx(model, _vec3(position), _vec3(rotation_axis), float(rotation_angle), _vec3(scale),
+                                    _color(tint))
+
+    @staticmethod
+    def bounding_box(box: 'BoundingBox', color: AnyRGB) -> None:
+        """Draw bounding box (wires)"""
+        return _rl.DrawBoundingBox(box, _color(color))
+
+    @staticmethod
+    def billboard(camera: 'Camera', texture: 'Texture2D', center: AnyVec3, size: float, tint: AnyRGB) -> None:
+        """Draw a billboard texture"""
+        return _rl.DrawBillboard(camera, texture, _vec3(center), float(size), _color(tint))
+
+    @staticmethod
+    def billboard_rec(camera: 'Camera', texture: 'Texture2D', source: AnyRect, center: AnyVec3, size: float,
+                      tint: AnyRGB) -> None:
+        """Draw a billboard texture defined by source"""
+        return _rl.DrawBillboardRec(camera, texture, _rect(source), _vec3(center), float(size), _color(tint))
+
+    # endregion (drawing 3D)
+
+    # region DRAWING TEXT
+
+    @staticmethod
+    def draw_fps(pos_x: int, pos_y: int) -> None:
+        """Draw current FPS"""
+        return _rl.DrawFPS(int(pos_x), int(pos_y))
+
+    @staticmethod
+    def draw_text(text: str, pos_x: int, pos_y: int, font_size: int, color: AnyRGB) -> None:
+        """Draw text (using default font)"""
+        return _rl.DrawText(_str_in(text), int(pos_x), int(pos_y), int(font_size), _color(color))
+
+    @staticmethod
+    def draw_text_ex(font: 'Font', text: str, position: AnyVec2, font_size: float, spacing: float,
+                     tint: AnyRGB) -> None:
+        """Draw text using font and additional parameters"""
+        return _rl.DrawTextEx(font, _str_in(text), _vec2(position), float(font_size), float(spacing), _color(tint))
+
+    @staticmethod
+    def draw_text_rec(font: 'Font', text: str, rec: AnyRect, font_size: float, spacing: float, word_wrap: bool,
+                      tint: AnyRGB) -> None:
+        """Draw text using font inside rectangle limits"""
+        return _rl.DrawTextRec(font, _str_in(text), _rect(rec), float(font_size), float(spacing), bool(word_wrap),
+                               _color(tint))
+
+    @staticmethod
+    def draw_text_rec_ex(font: 'Font', text: str, rec: AnyRect, font_size: float, spacing: float, word_wrap: bool,
+                         tint: AnyRGB, select_start: int, select_length: int, select_tint: AnyRGB,
+                         select_back_tint: AnyRGB) -> None:
+        """Draw text using font inside rectangle limits with support for text selection"""
+        return _rl.DrawTextRecEx(font, _str_in(text), _rect(rec), float(font_size), float(spacing), bool(word_wrap),
+                                 _color(tint), int(select_start), int(select_length), _color(select_tint),
+                                 _color(select_back_tint))
+
+    @staticmethod
+    def draw_text_codepoint(font: 'Font', codepoint: int, position: AnyVec2, font_size: float, tint: AnyRGB) -> None:
+        """Draw one character (codepoint)"""
+        return _rl.DrawTextCodepoint(font, int(codepoint), _vec2(position), float(font_size), _color(tint))
+
+    # endregion (drawing text)
+
+    # endregion (methods)
+
+
+class PixelData:
+
+    def __init__(self):
+        raise TypeError("PixelData class is not meant to be instantiated.")
+
+    # region METHODS
+
+    @staticmethod
+    def get_color(src_ptr: bytes, format_: int) -> 'Color':
+        """Get Color from a source pixel pointer of certain format"""
+        return _rl.GetPixelColor(src_ptr, int(format_))
+
+    @staticmethod
+    def set_color(dst_ptr: bytes, color: AnyRGB, format_: int) -> None:
+        """Set color formatted into destination pixel pointer"""
+        return _rl.SetPixelColor(dst_ptr, _color(color), int(format_))
+
+    @staticmethod
+    def get_data_size(width: int, height: int, format_: int) -> int:
+        """Get pixel data size in bytes for certain format"""
+        return _rl.GetPixelDataSize(int(width), int(height), int(format_))
+
+    # endregion (methods)
+
+
+class Text:
+
+    def __init__(self):
+        raise TypeError("Text class is not meant to be instantiated.")
+
+    # region STATICMETHODS
+
+    @staticmethod
+    def copy(dst: str, src: str) -> int:
+        """Copy one string to another, returns bytes copied"""
+        return _rl.TextCopy(_str_in(dst), _str_in(src))
+
+    @staticmethod
+    def is_equal(text1: str, text2: str) -> bool:
+        """Check if two text string are equal"""
+        return _rl.TextIsEqual(_str_in(text1), _str_in(text2))
+
+    @staticmethod
+    def length(text: str) -> int:
+        """Get text length, checks for '\0' ending"""
+        return _rl.TextLength(_str_in(text))
+
+    @staticmethod
+    def format(text: str, *args, **kwargs) -> str:
+        """Text formatting with variables (Python formatting rules)"""
+        # return _rl.TextFormat(_str_in(text), ...)
+        return _str_out(text.format(*args, **kwargs))
+
+    @staticmethod
+    def subtext(text: str, position: int, length: int) -> str:
+        """Get a piece of a text string"""
+        return _str_out(_rl.TextSubtext(_str_in(text), int(position), int(length)))
+
+    @staticmethod
+    def replace(text: str, replace: str, by: str) -> str:
+        """Replace text string (memory must be freed!)"""
+        return _str_out(_rl.TextReplace(_str_in(text), _str_in(replace), _str_in(by)))
+
+    @staticmethod
+    def insert(text: str, insert: str, position: int) -> str:
+        """Insert text in a position (memory must be freed!)"""
+        return _str_out(_rl.TextInsert(_str_in(text), _str_in(insert), int(position)))
+
+    @staticmethod
+    def join(text_list: Sequence[str], count: int, delimiter: str) -> str:
+        """Join text strings with delimiter"""
+        return _str_out(_rl.TextJoin(_str_in2(text_list), int(count), _str_in(delimiter)))
+
+    @staticmethod
+    def split(text: str, delimiter: str) -> Sequence[bytes]:
+        """Split text into multiple strings"""
+        count = IntPtr(0)
+        splits = _rl.TextSplit(_str_in(text), ord(delimiter[0]), count)
+        return tuple(split for split in splits[:count.contents[0]])
+
+    @staticmethod
+    def append(text: str, append: str, position: int) -> int:
+        """Append text at specific position and move cursor!"""
+        ptr = IntPtr(position)
+        _rl.TextAppend(_str_in(text), _str_in(append), ptr)
+        return ptr.contents[0]
+
+    @staticmethod
+    def find_index(text: str, find: str) -> int:
+        """Find first text occurrence within a string"""
+        return _rl.TextFindIndex(_str_in(text), _str_in(find))
+
+    @staticmethod
+    def to_upper(text: str) -> str:
+        """Get upper case version of provided string"""
+        return _str_out(_rl.TextToUpper(_str_in(text)))
+
+    @staticmethod
+    def to_lower(text: str) -> str:
+        """Get lower case version of provided string"""
+        return _str_out(_rl.TextToLower(_str_in(text)))
+
+    @staticmethod
+    def to_pascal(text: str) -> str:
+        """Get Pascal case notation version of provided string"""
+        return _str_out(_rl.TextToPascal(_str_in(text)))
+
+    @staticmethod
+    def to_integer(text: str) -> int:
+        """Get integer value from text (negative values not supported)"""
+        return _rl.TextToInteger(_str_in(text))
+
+    @staticmethod
+    def to_utf8(codepoints: Sequence[int], length: int) -> str:
+        """Encode text codepoint into utf8 text (memory must be freed!)"""
+        return _str_out(_rl.TextToUtf8(_arr(Int, codepoints), int(length)))
+
+    @staticmethod
+    def get_codepoints(text: str) -> Tuple[int, int]:
+        """Get all codepoints in a string, codepoints count returned by parameters"""
+        count = IntPtr(0)
+        result = _rl.GetCodepoints(_str_in(text), count)
+        return result, count.contents[0]
+
+    @staticmethod
+    def get_codepoints_count(text: str) -> int:
+        """Get total number of characters (codepoints) in a UTF8 encoded string"""
+        return _rl.GetCodepointsCount(_str_in(text))
+
+    @staticmethod
+    def get_next_codepoint(text: str) -> Tuple[int, int]:
+        """Returns next codepoint in a UTF8 encoded string; 0x3f('?') is returned on failure"""
+        bytes_processed = IntPtr(0)
+        result = _rl.GetNextCodepoint(_str_in(text), bytes_processed)
+        return result, bytes_processed.contents[0]
+
+    @staticmethod
+    def codepoint_to_utf8(codepoint: int) -> Tuple[str, int]:
+        """Encode codepoint into utf8 text (char array length returned as parameter)"""
+        byte_length = IntPtr(0)
+        result = _rl.CodepointToUtf8(int(codepoint), byte_length)
+        return result, byte_length.contents[0]
+
+    # endregion (staticmethods)
+
+
+class Cursor:
+
+    def __init__(self):
+        raise TypeError("Cursor class is not meant to be instantiated.")
+
+    # region METHODS
+
+    @staticmethod
+    def show() -> None:
+        """Shows cursor"""
+        _rl.ShowCursor()
+
+    @staticmethod
+    def hide() -> None:
+        """Hides cursor"""
+        _rl.HideCursor()
+
+    @staticmethod
+    def is_hidden() -> bool:
+        """Check if cursor is not visible"""
+        return _rl.IsCursorHidden()
+
+    @staticmethod
+    def enable() -> None:
+        """Enables cursor (unlock cursor)"""
+        _rl.EnableCursor()
+
+    @staticmethod
+    def disable() -> None:
+        """Disables cursor (lock cursor)"""
+        _rl.DisableCursor()
+
+    @staticmethod
+    def is_on_screen() -> bool:
+        """Check if cursor is on the current screen."""
+        return _rl.IsCursorOnScreen()
+
+    # endregion (methods)
+
+
+class Mem:
+
+    def __init__(self):
+        raise TypeError("Mem class is not meant to be instantiated.")
+
+    # region METHODS
+
+    @staticmethod
+    def alloc(size: int) -> bytes:
+        """Internal memory allocator"""
+        return _rl.MemAlloc(int(size))
+
+    @staticmethod
+    def realloc(ptr: bytes, size: int) -> bytes:
+        """Internal memory reallocator"""
+        return _rl.MemRealloc(ptr, int(size))
+
+    @staticmethod
+    def free(ptr: bytes) -> None:
+        """Internal memory free"""
+        return _rl.MemFree(ptr)
+
+    # endregion (methods)
+
+
+class TraceLog:
+
+    def __init__(self):
+        raise TypeError("TraceLog class is not meant to be instantiated.")
+
+    # region METHODS
+
+    @staticmethod
+    def set_callback(callback: TraceLogCallback) -> None:
+        """Set custom trace log"""
+        return _rl.SetTraceLogCallback(callback)
+
+    @staticmethod
+    def trace_log(log_level: int, text: str) -> None:
+        """Show trace log messages (LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR)"""
+        return _rl.TraceLog(int(log_level), _str_in(text))
+
+    @staticmethod
+    def set_level(log_level: int) -> None:
+        """Set the current threshold (minimum) log level"""
+        return _rl.SetTraceLogLevel(int(log_level))
+
+    # endregion (methods)
+
+
+class System:
+
+    def __init__(self):
+        raise TypeError("System class is not meant to be instantiated.")
+
+    # region METHODS
+
+    @staticmethod
+    def set_load_file_data_callback(callback: LoadFileDataCallback) -> None:
+        """Set custom file binary data loader"""
+        return _rl.SetLoadFileDataCallback(callback)
+
+    @staticmethod
+    def set_save_file_data_callback(callback: SaveFileDataCallback) -> None:
+        """Set custom file binary data saver"""
+        return _rl.SetSaveFileDataCallback(callback)
+
+    @staticmethod
+    def set_load_file_text_callback(callback: LoadFileTextCallback) -> None:
+        """Set custom file text data loader"""
+        return _rl.SetLoadFileTextCallback(callback)
+
+    @staticmethod
+    def set_save_file_text_callback(callback: SaveFileTextCallback) -> None:
+        """Set custom file text data saver"""
+        return _rl.SetSaveFileTextCallback(callback)
+
+    @staticmethod
+    def load_file_data(file_name: str, bytes_read: Sequence[int]) -> bytes:
+        """Load file data as byte array (read)"""
+        return _rl.LoadFileData(_str_in(file_name), _arr(Int, bytes_read))
+
+    @staticmethod
+    def unload_file_data(data: bytes) -> None:
+        """Unload file data allocated by LoadFileData()"""
+        return _rl.UnloadFileData(data)
+
+    @staticmethod
+    def save_file_data(file_name: str, data: bytes, bytes_to_write: int) -> bool:
+        """Save data to file from byte array (write), returns true on success"""
+        return _rl.SaveFileData(_str_in(file_name), data, int(bytes_to_write))
+
+    @staticmethod
+    def load_file_text(file_name: str) -> str:
+        """Load text data from file (read), returns a '\0' terminated string"""
+        return _rl.LoadFileText(_str_in(file_name))
+
+    @staticmethod
+    def unload_file_text(text: bytes) -> None:
+        """Unload file text data allocated by LoadFileText()"""
+        return _rl.UnloadFileText(text)
+
+    @staticmethod
+    def save_file_text(file_name: str, text: str) -> bool:
+        """Save text data to file (write), string must be '\0' terminated, returns true on success"""
+        return _rl.SaveFileText(_str_in(file_name), _str_in(text))
+
+    @staticmethod
+    def file_exists(file_name: str) -> bool:
+        """Check if file exists"""
+        return _rl.FileExists(_str_in(file_name))
+
+    @staticmethod
+    def directory_exists(dir_path: str) -> bool:
+        """Check if a directory path exists"""
+        return _rl.DirectoryExists(_str_in(dir_path))
+
+    @staticmethod
+    def is_file_extension(file_name: str, ext: str) -> bool:
+        """Check file extension (including point: .png, .wav)"""
+        return _rl.IsFileExtension(_str_in(file_name), _str_in(ext))
+
+    @staticmethod
+    def get_file_extension(file_name: str) -> str:
+        """Get pointer to extension for a filename string (includes dot: ".png")"""
+        return _rl.GetFileExtension(_str_in(file_name))
+
+    @staticmethod
+    def get_file_name(file_path: str) -> str:
+        """Get pointer to filename for a path string"""
+        return _rl.GetFileName(_str_in(file_path))
+
+    @staticmethod
+    def get_file_name_without_ext(file_path: str) -> str:
+        """Get filename string without extension (uses static string)"""
+        return _rl.GetFileNameWithoutExt(_str_in(file_path))
+
+    @staticmethod
+    def get_directory_path(file_path: str) -> str:
+        """Get full path for a given fileName with path (uses static string)"""
+        return _rl.GetDirectoryPath(_str_in(file_path))
+
+    @staticmethod
+    def get_prev_directory_path(dir_path: str) -> str:
+        """Get previous directory path for a given path (uses static string)"""
+        return _rl.GetPrevDirectoryPath(_str_in(dir_path))
+
+    @staticmethod
+    def get_working_directory() -> str:
+        """Get current working directory (uses static string)"""
+        return _rl.GetWorkingDirectory()
+
+    @staticmethod
+    @contextlib.contextmanager
+    def get_directory_files(dir_path: str):
+        """Get filenames in a directory path (memory should be freed)"""
+        count = IntPtr(0)
+        result = _rl.GetDirectoryFiles(_str_in(dir_path), count)
+        files = []
+        for i in range(count.value):
+            files.append(result[i].decode('utf-8'))
+        yield files
+        _rl.ClearDirectoryFiles()
+
+    @staticmethod
+    def change_directory(dir_: str) -> bool:
+        """Change working directory, return true on success"""
+        return _rl.ChangeDirectory(_str_in(dir_))
+
+    @staticmethod
+    def is_file_dropped() -> bool:
+        """Check if a file has been dropped into window"""
+        return _rl.IsFileDropped()
+
+    @staticmethod
+    @contextlib.contextmanager
+    def get_dropped_files():
+        """Get dropped files names (memory should be freed)"""
+        count = IntPtr(0)
+        result = _rl.GetDroppedFiles(count)
+        files = []
+        for i in range(count.value):
+            files.append(result[i].decode('utf-8'))
+        yield tuple(files)
+        _rl.ClearDroppedFiles()
+
+    @staticmethod
+    def get_file_mod_time(file_name: str) -> int:
+        """Get file modification time (last write time)"""
+        return _rl.GetFileModTime(_str_in(file_name))
+
+    @staticmethod
+    def compress_data(data: bytes) -> Tuple[bytes, int]:
+        """Compress data (DEFLATE algorithm)"""
+        compressed_length = IntPtr(0)
+        compressed_data = _rl.CompressData(data, len(data), compressed_length)
+        return compressed_data, compressed_length.contents
+
+    @staticmethod
+    def decompress_data(comp_data: bytes) -> Tuple[bytes, int]:
+        """Decompress data (DEFLATE algorithm)"""
+        decompressed_length = IntPtr(0)
+        decompressed_data = _rl.DecompressData(comp_data, len(comp_data), decompressed_length)
+        return decompressed_data, decompressed_length.contents
+
+    @staticmethod
+    def save_storage_value(position: int, value: int) -> bool:
+        """Save integer value to storage file (to defined position), returns true on success"""
+        return _rl.SaveStorageValue(int(position), int(value))
+
+    @staticmethod
+    def load_storage_value(position: int) -> int:
+        """Load integer value from storage file (from defined position)"""
+        return _rl.LoadStorageValue(int(position))
+
+    @staticmethod
+    def open_url(url: str) -> None:
+        """Open URL with default system browser (if available)"""
+        return _rl.OpenURL(_str_in(url))
+
+    # endregion (methods)
+
 
 # region VECTORS
 
@@ -567,7 +2112,9 @@ class Vector3(Structure):
         self.z -= other if is_num else other[2]
         return self
 
-    def __mul__(self, other: Union[Number, VectorN]) -> 'Vector3':
+    def __mul__(self, other: Union[Number, VectorN, 'Matrix']) -> 'Vector3':
+        if isinstance(other, Matrix):
+            return _rl.Vector3Transform(self, other)
         is_num = is_number(other)
         return Vector3(self.x * (other if is_num else other[0]),
                        self.y * (other if is_num else other[1]),
@@ -1259,6 +2806,76 @@ class Matrix(Structure):
                    0.0, 0.0, value, 0.0,
                    0.0, 0.0, 0.0, value)
 
+    @staticmethod
+    def identity() -> 'Matrix':
+        return _rl.MatrixIdentity()
+
+    @staticmethod
+    def translate(x: float, y: float, z: float) -> 'Matrix':
+        """Returns translation matrix"""
+        return _rl.MatrixTranslate(x, y, z)
+
+    @staticmethod
+    def rotate(axis: Vector3, angle: float) -> 'Matrix':
+        """Create rotation matrix from axis and angle
+
+        NOTE: Angle should be provided in radians
+        """
+        return _rl.MatrixRotate(axis, angle)
+
+    @staticmethod
+    def rotate_x(angle: float) -> 'Matrix':
+        """Returns x-rotation matrix (angle in radians)"""
+        return _rl.MatrixRotateX(angle)
+
+    @staticmethod
+    def rotate_y(angle: float) -> 'Matrix':
+        """Returns y-rotation matrix (angle in radians)"""
+        return _rl.MatrixRotateY(angle)
+
+    @staticmethod
+    def rotate_z(angle: float) -> 'Matrix':
+        """Returns z-rotation matrix (angle in radians)"""
+        return _rl.MatrixRotateZ(angle)
+
+    @staticmethod
+    def rotate_xyz(ang: Vector3) -> 'Matrix':
+        """Returns xyz-rotation matrix (angles in radians)"""
+        return _rl.MatrixRotateXYZ(ang)
+
+    @staticmethod
+    def rotate_zyx(ang: Vector3) -> 'Matrix':
+        """Returns zyx-rotation matrix (angles in radians)"""
+        return _rl.MatrixRotateZYX(ang)
+
+    @staticmethod
+    def scale(x: float, y: float, z: float) -> 'Matrix':
+        """Returns scaling matrix"""
+        return _rl.MatrixScale(x, y, z)
+
+    @staticmethod
+    def frustum(left: float, right: float, bottom: float, top: float, near: float, far: float) -> 'Matrix':
+        """Returns perspective projection matrix"""
+        return _rl.MatrixFrustum(left, right, bottom, top, near, far)
+
+    @staticmethod
+    def perspective(fovy: float, aspect: float, near: float, far: float) -> 'Matrix':
+        """Returns perspective projection matrix
+
+        NOTE: Angle should be provided in radians
+        """
+        return _rl.MatrixPerspective(fovy, aspect, near, far)
+
+    @staticmethod
+    def ortho(left: float, right: float, bottom: float, top: float, near: float, far: float) -> 'Matrix':
+        """Returns orthographic projection matrix"""
+        return _rl.MatrixOrtho(left, right, bottom, top, near, far)
+
+    @staticmethod
+    def look_at(eye: Vector3, target: Vector3, up: Vector3) -> 'Matrix':
+        """Returns camera look-at matrix (matrix: view)"""
+        return _rl.MatrixLookAt(eye, target, up)
+
     # endregion (classmethods)
 
     def __init__(self,
@@ -1285,7 +2902,27 @@ class Matrix(Structure):
 
     # endregion (representation)
 
+    # region ARITHMETIC
+
+    def __add__(self, other: 'Matrix') -> 'Matrix':
+        return _rl.MatrixAdd(self, other)
+
+    def __sub__(self, other: 'Matrix') -> 'Matrix':
+        return _rl.MatrixSubtract(self, other)
+
+    def __mul__(self, other: Union['Matrix', Vector3]) -> Union['Matrix', Vector3]:
+        if isinstance(other, Vector3):
+            return _rl.Vector3Transform(other, self)
+        return _rl.MatrixMultiply(self, other)
+
+    # endregion (arithmetic)
+
     # region PROPERTIES
+
+    @property
+    def trace(self) -> float:
+        """Returns the trace of the matrix (sum of the values along diagonal)"""
+        return _rl.MatrixTrace(self)
 
     # region COLUMNS
 
@@ -1360,6 +2997,26 @@ class Matrix(Structure):
     # endregion (rows)
 
     # endregion (properties)
+
+    # region METHODS
+
+    def determinant(self) -> float:
+        """Compute matrix determinant"""
+        return _rl.MatrixDeterminant(self)
+
+    def transpose(self) -> 'Matrix':
+        """Transposes provided matrix"""
+        return _rl.MatrixTranspose(self)
+
+    def invert(self) -> 'Matrix':
+        """Invert provided matrix"""
+        return _rl.MatrixInvert(self)
+
+    def normalize(self) -> 'Matrix':
+        """Normalize provided matrix"""
+        return _rl.MatrixNormalize(self)
+
+    # endregion (methos)
 
 
 MatrixPtr = POINTER(Matrix)
@@ -1730,6 +3387,11 @@ class Image(Structure):
         return _rl.LoadImageFromMemory(_str_in(file_type), file_data, int(data_size))
 
     @staticmethod
+    def get_screen_data() -> 'Image':
+        """Get pixel data from screen buffer and return an Image (screenshot)"""
+        return _rl.GetScreenData()
+
+    @staticmethod
     def gen_plain_color(width: int, height: int, color: AnyRGB) -> 'Image':
         """Generate image: plain color"""
         return _rl.GenImageColor(int(width), int(height), _color(color))
@@ -2023,8 +3685,30 @@ class Texture(Structure):
         ('format', c_int),
     ]
 
+    # region CLASSMETHODS
+
+    @staticmethod
+    def load(file_name: str) -> 'Texture2D':
+        """Load texture from file into GPU memory (VRAM)"""
+        return _rl.LoadTexture(_str_in(file_name))
+
+    @staticmethod
+    def load_from_image(image: Image) -> 'Texture2D':
+        """Load texture from image data"""
+        return _rl.LoadTextureFromImage(image)
+
+    @staticmethod
+    def load_cubemap(image: Image, layout: int) -> 'TextureCubemap':
+        """Load cubemap from image, multiple image cubemap layouts supported"""
+        return _rl.LoadTextureCubemap(image, int(layout))
+
+    # endregion
+
     def __init__(self, id: int, width: int, height: int, mipmaps: int, format_: int):
         super().__init__(id, width, height, mipmaps, format_)
+
+    def __del__(self):
+        _rl.UnloadTexture(self)
 
     # region REPRESENTATION
 
@@ -2036,79 +3720,85 @@ class Texture(Structure):
 
     # endregion
 
+    # region METHODS
+
+    def update_texture(self, pixels: bytes) -> None:
+        """Update GPU texture with new data"""
+        _rl.UpdateTexture(self, pixels)
+
+    def update_texture_rec(self, rec: AnyRect, pixels: bytes) -> None:
+        """Update GPU texture rectangle with new data"""
+        _rl.UpdateTextureRec(self, _rect(rec), pixels)
+
+    def get_texture_data(self) -> 'Image':
+        """Get pixel data from GPU texture and return an Image"""
+        return _rl.GetTextureData(self)
+
+    def gen_texture_mipmaps(self) -> None:
+        """Generate GPU mipmaps for a texture"""
+        return _rl.GenTextureMipmaps(byref(self))
+
+    def set_texture_filter(self, filter_: int) -> None:
+        """Set texture scaling filter mode"""
+        return _rl.SetTextureFilter(self, int(filter_))
+
+    def set_texture_wrap(self, wrap: int) -> None:
+        """Set texture wrapping mode"""
+        return _rl.SetTextureWrap(self, int(wrap))
+
+    # region DRAWING
+
+    def draw_texture(self, pos_x: int, pos_y: int, tint: AnyRGB) -> None:
+        """Draw a Texture2D"""
+        return _rl.DrawTexture(self, int(pos_x), int(pos_y), _color(tint))
+
+    def draw_texture_v(self, position: AnyVec2, tint: AnyRGB) -> None:
+        """Draw a Texture2D with position defined as Vector2"""
+        return _rl.DrawTextureV(self, _vec2(position), _color(tint))
+
+    def draw_texture_ex(self, position: AnyVec2, rotation: float, scale: float, tint: AnyRGB) -> None:
+        """Draw a Texture2D with extended parameters"""
+        return _rl.DrawTextureEx(self, _vec2(position), float(rotation), float(scale), _color(tint))
+
+    def draw_texture_rec(self, source: AnyRect, position: AnyVec2, tint: AnyRGB) -> None:
+        """Draw a part of a texture defined by a rectangle"""
+        return _rl.DrawTextureRec(self, _rect(source), _vec2(position), _color(tint))
+
+    def draw_texture_quad(self, tiling: AnyVec2, offset: AnyVec2, quad: AnyRect, tint: AnyRGB) -> None:
+        """Draw texture quad with tiling and offset parameters"""
+        return _rl.DrawTextureQuad(self, _vec2(tiling), _vec2(offset), _rect(quad), _color(tint))
+
+    def draw_texture_tiled(self, source: AnyRect, dest: AnyRect, origin: AnyVec2, rotation: float,
+                           scale: float, tint: AnyRGB) -> None:
+        """Draw part of a texture (defined by a rectangle) with rotation and scale tiled into dest."""
+        return _rl.DrawTextureTiled(self, _rect(source), _rect(dest), _vec2(origin), float(rotation), float(scale),
+                                    _color(tint))
+
+    def draw_texture_pro(self, source: AnyRect, dest: AnyRect, origin: AnyVec2, rotation: float,
+                         tint: AnyRGB) -> None:
+        """Draw a part of a texture defined by a rectangle with 'pro' parameters"""
+        return _rl.DrawTexturePro(self, _rect(source), _rect(dest), _vec2(origin), float(rotation), _color(tint))
+
+    def draw_texture_npatch(self, n_patch_info: 'NPatchInfo', dest: AnyRect, origin: AnyVec2,
+                            rotation: float,
+                            tint: AnyRGB) -> None:
+        """Draws a texture (or part of it) that stretches or shrinks nicely"""
+        return _rl.DrawTextureNPatch(self, n_patch_info, _rect(dest), _vec2(origin), float(rotation), _color(tint))
+
+    def draw_texture_poly(self, center: AnyVec2, points: Sequence[Vector2], texcoords: Sequence[Vector2],
+                          points_count: int, tint: AnyRGB) -> None:
+        """Draw a textured polygon"""
+        return _rl.DrawTexturePoly(self, _vec2(center), _arr(Vector2, points), _arr(Vector2, texcoords),
+                                   int(points_count), _color(tint))
+
+    # endregion (drawing)
+
+    # endregion (methods)
+
 
 TextureCubemap = Texture
-
-# class TextureCubemap(Structure):
-#     _fields_ = [
-#         ('id', c_uint),
-#         ('width', c_int),
-#         ('height', c_int),
-#         ('mipmaps', c_int),
-#         ('format', c_int),
-#     ]
-#
-#     def __init__(self, id: int, width: int, height: int, mipmaps: int, format_: int):
-#         super().__init__(id, width, height, mipmaps, format_)
-#
-#     # region REPRESENTATION
-#
-#     def __str__(self) -> str:
-#         return f"({self.id}, {self.width}, {self.height}, {self.mipmaps}, {self.format})"
-#
-#     def __repr__(self) -> str:
-#         return f"{_clsname(self)}({self.id}, {self.width}, {self.height}, {self.mipmaps}, {self.format})"
-#
-#     # endregion
-
-#
-# class Texture2D(Structure):
-#     _fields_ = [
-#         ('id', c_uint),
-#         ('width', c_int),
-#         ('height', c_int),
-#         ('mipmaps', c_int),
-#         ('format', c_int),
-#     ]
-#
-#     def __init__(self, id: int, width: int, height: int, mipmaps: int, format_: int):
-#         super().__init__(id, width, height, mipmaps, format_)
-#
-#     # region REPRESENTATION
-#
-#     def __str__(self) -> str:
-#         return f"({self.id}, {self.width}, {self.height}, {self.mipmaps}, {self.format})"
-#
-#     def __repr__(self) -> str:
-#         return f"{_clsname(self)}({self.id}, {self.width}, {self.height}, {self.mipmaps}, {self.format})"
-#
-#     # endregion
-
-
 Texture2D = Texture
 Texture2DPtr = POINTER(Texture2D)
-
-
-#
-# class RenderTexture(Structure):
-#     _fields_ = [
-#         ('id', c_uint),
-#         ('texture', Texture2D),
-#         ('depth', Texture2D),
-#     ]
-#
-#     def __init__(self, id: int, texture: Texture2D, depth: Texture2D):
-#         super().__init__(id, texture, depth)
-#
-#     # region REPRESENTATION
-#
-#     def __str__(self) -> str:
-#         return f"({self.id}, {self.texture}, {self.depth})"
-#
-#     def __repr__(self) -> str:
-#         return f"{_clsname(self)}({self.id}, {self.texture}, {self.depth})"
-#
-#     # endregion
 
 
 class RenderTexture2D(Structure):
@@ -2118,8 +3808,20 @@ class RenderTexture2D(Structure):
         ('depth', Texture2D),
     ]
 
+    # region CLASSMETHODS
+
+    @staticmethod
+    def load_render_texture(width: int, height: int) -> 'RenderTexture2D':
+        """Load texture for rendering (framebuffer)"""
+        return _rl.LoadRenderTexture(int(width), int(height))
+
+    # endregion (classmethods)
+
     def __init__(self, id: int, texture: Texture2D, depth: Texture2D):
         super().__init__(id, texture, depth)
+
+    def __del__(self):
+        _rl.UnloadRenderTexture(self)
 
     # region REPRESENTATION
 
@@ -2420,33 +4122,11 @@ class Camera3D(Structure):
         """Returns size position for a 3d world space position"""
         return _rl.GetWorldToScreenEx(_vec3(position), self, int(width), int(height))
 
+    def get_mouse_ray(self, mouse_position: AnyVec2) -> 'Ray':
+        """Returns a ray trace from mouse position"""
+        return _rl.GetMouseRay(_vec2(mouse_position), self)
+
     # endregion (methods)
-
-
-#
-# class Camera(Structure):
-#     _fields_ = [
-#         ('position', Vector3),
-#         ('target', Vector3),
-#         ('up', Vector3),
-#         ('fovy', c_float),
-#         ('projection', c_int),
-#     ]
-#
-#     def __init__(self, position: Optional[Vector3] = None, target: Optional[Vector3] = None,
-#                  up: Optional[Vector3] = None, fovy: float = 0.0, projection: int = 0):
-#         super().__init__(position if position else Vector3(), target if target else Vector3(),
-#                          up if up else Vector3(), fovy, projection)
-#
-#     # region REPRESENTATION
-#
-#     def __str__(self) -> str:
-#         return f"({self.position}, {self.target}, {self.up}, {self.fovy}, {self.projection})"
-#
-#     def __repr__(self) -> str:
-#         return f"{_clsname(self)}({self.position}, {self.target}, {self.up}, {self.fovy}, {self.projection})"
-#
-#     # endregion
 
 
 Camera = Camera3D
@@ -2532,6 +4212,60 @@ class Mesh(Structure):
         ('vboId', POINTER(c_uint)),
     ]
 
+    # region CLASSMETHODS
+
+    @staticmethod
+    def gen_poly(sides: int, radius: float) -> 'Mesh':
+        """Generate polygonal mesh"""
+        return _rl.GenMeshPoly(int(sides), float(radius))
+
+    @staticmethod
+    def gen_plane(width: float, length: float, res_x: int, res_z: int) -> 'Mesh':
+        """Generate plane mesh (with subdivisions)"""
+        return _rl.GenMeshPlane(float(width), float(length), int(res_x), int(res_z))
+
+    @staticmethod
+    def gen_cube(width: float, height: float, length: float) -> 'Mesh':
+        """Generate cuboid mesh"""
+        return _rl.GenMeshCube(float(width), float(height), float(length))
+
+    @staticmethod
+    def gen_sphere(radius: float, rings: int, slices: int) -> 'Mesh':
+        """Generate sphere mesh (standard sphere)"""
+        return _rl.GenMeshSphere(float(radius), int(rings), int(slices))
+
+    @staticmethod
+    def gen_hemisphere(radius: float, rings: int, slices: int) -> 'Mesh':
+        """Generate half-sphere mesh (no bottom cap)"""
+        return _rl.GenMeshHemiSphere(float(radius), int(rings), int(slices))
+
+    @staticmethod
+    def gen_cylinder(radius: float, height: float, slices: int) -> 'Mesh':
+        """Generate cylinder mesh"""
+        return _rl.GenMeshCylinder(float(radius), float(height), int(slices))
+
+    @staticmethod
+    def gen_torus(radius: float, size: float, rad_seg: int, sides: int) -> 'Mesh':
+        """Generate torus mesh"""
+        return _rl.GenMeshTorus(float(radius), float(size), int(rad_seg), int(sides))
+
+    @staticmethod
+    def gen_knot(radius: float, size: float, rad_seg: int, sides: int) -> 'Mesh':
+        """Generate trefoil knot mesh"""
+        return _rl.GenMeshKnot(float(radius), float(size), int(rad_seg), int(sides))
+
+    @staticmethod
+    def gen_heightmap(heightmap: Image, size: AnyVec3) -> 'Mesh':
+        """Generate heightmap mesh from image data"""
+        return _rl.GenMeshHeightmap(heightmap, _vec3(size))
+
+    @staticmethod
+    def gen_cubicmap(cubicmap: Image, cube_size: AnyVec3) -> 'Mesh':
+        """Generate cubes-based map mesh from image data"""
+        return _rl.GenMeshCubicmap(cubicmap, _vec3(cube_size))
+
+    # endregion (classmethods)
+
     def __init__(self, vertex_count: int, triangle_count: int, vertices: Sequence[float], texcoords: Sequence[float],
                  texcoords2: Sequence[float], normals: Sequence[float], tangents: Sequence[float],
                  colors: Sequence[int],
@@ -2552,6 +4286,46 @@ class Mesh(Structure):
         return f"{_clsname(self)}({self.vertexCount}, {self.triangleCount}, {self.vaoId}, {self.vboId})"
 
     # endregion
+
+    # region METHODS
+
+    def upload(self, dynamic: bool) -> None:
+        """Upload mesh vertex data in GPU and provide VAO/VBO ids"""
+        return _rl.UploadMesh(byref(self), bool(dynamic))
+
+    def update_buffer(self, index: int, data: bytes, data_size: int, offset: int) -> None:
+        """Update mesh vertex data in GPU for a specific buffer index"""
+        return _rl.UpdateMeshBuffer(self, int(index), data, int(data_size), int(offset))
+
+    def draw(self, material: 'Material', transform: Matrix) -> None:
+        """Draw a 3d mesh with material and transform"""
+        return _rl.DrawMesh(self, material, transform)
+
+    def draw_instanced(self, material: 'Material', transforms: Sequence[Matrix], instances: int) -> None:
+        """Draw multiple mesh instances with material and different transforms"""
+        return _rl.DrawMeshInstanced(self, material, _arr(Matrix, transforms), int(instances))
+
+    def unload(self) -> None:
+        """Unload mesh data from CPU and GPU"""
+        return _rl.UnloadMesh(self)
+
+    def export(self, file_name: str) -> bool:
+        """Export mesh data to file, returns true on success"""
+        return _rl.ExportMesh(self, _str_in(file_name))
+
+    def bounding_box(self) -> 'BoundingBox':
+        """Compute mesh bounding box limits"""
+        return _rl.MeshBoundingBox(self)
+
+    def tangents(self) -> None:
+        """Compute mesh tangents"""
+        return _rl.MeshTangents(byref(self))
+
+    def binormals(self) -> None:
+        """Compute mesh binormals"""
+        return _rl.MeshBinormals(byref(self))
+
+    # endregion (methods)
 
 
 MeshPtr = POINTER(Mesh)
@@ -2661,11 +4435,30 @@ class Material(Structure):
         ('params', c_float * 4),
     ]
 
+    # region CLASSMETHODS
+
+    @staticmethod
+    def load(file_name: str) -> Sequence['Material']:
+        """Load materials from model file"""
+        material_count = IntPtr(0)
+        material: MaterialPtr = _rl.LoadMaterials(_str_in(file_name), material_count)
+        return [material.contents[i] for i in range(material_count.contents[0])]
+
+    @staticmethod
+    def load_default() -> 'Material':
+        """Load default material (Supports: DIFFUSE, SPECULAR, NORMAL maps)"""
+        return _rl.LoadMaterialDefault()
+
+    # endregion (classmethods)
+
     def __init__(self, shader: int, maps: Sequence[MaterialMap], params: Sequence[float]):
         n_params = len(params)
         if n_params > 4:
             raise ValueError(f"Expected up to 4 param values, got {n_params}.")
         super().__init__(shader, maps, (c_float * n_params)(*params))
+
+    def __del__(self):
+        _rl.UnloadMaterial(self)
 
     # region REPRESENTATION
 
@@ -2676,6 +4469,14 @@ class Material(Structure):
         return f"{_clsname(self)}({self.shader}, {self.maps}, {self.params})"
 
     # endregion
+
+    # region METHODS
+
+    def set_texture(self, map_type: int, texture: Texture2D) -> None:
+        """Set texture for a material map type (MATERIAL_MAP_DIFFUSE, MATERIAL_MAP_SPECULAR...)"""
+        return _rl.SetMaterialTexture(byref(self), int(map_type), texture)
+
+    # endregion (methods)
 
 
 MaterialPtr = POINTER(Material)
@@ -2740,9 +4541,23 @@ class Model(Structure):
         ('bindPose', POINTER(Transform)),
     ]
 
+    # region CLASSMETHODS
+
+    @staticmethod
+    def load(file_name: str) -> 'Model':
+        """Load model from files (meshes and materials)"""
+        return _rl.LoadModel(_str_in(file_name))
+
+    @staticmethod
+    def load_from_mesh(mesh: Mesh) -> 'Model':
+        """Load model from generated mesh (default material)"""
+        return _rl.LoadModelFromMesh(mesh)
+
+    # endregion (classmethods)
+
     def __init__(self, transform: Transform, mesh_count: int, material_count: int, meshes: Sequence[Mesh],
                  materials: Sequence[Material], mesh_material: Sequence[int], bone_count: int,
-                 bones: Sequence[BoneInfo], bind_pose: Sequence[Transform]):
+                 bones: Sequence[BoneInfo], bind_pose: Sequence[Transform], keep_meshes: bool = False):
         mesh_array = Mesh * len(meshes)
         material_array = Material * len(materials)
         mesh_material_array = c_int * len(mesh_material)
@@ -2751,6 +4566,13 @@ class Model(Structure):
         super().__init__(transform, mesh_count, material_count, mesh_array(*meshes), material_array(*materials),
                          mesh_material_array(*mesh_material), bone_count, bone_array(*bones),
                          transform_array(bind_pose))
+        self.keep_meshes: bool = keep_meshes
+
+    def __del__(self):
+        if self.keep_meshes:
+            _rl.UnloadModelKeepMeshes(self)
+        else:
+            _rl.UnloadModel(self)
 
     # region REPRESENTATION
 
@@ -2761,6 +4583,39 @@ class Model(Structure):
         return f"{_clsname(self)}({self.transform}, {self.materialCount}, {self.bones}, {self.framePoses})"
 
     # endregion
+
+    # region METHODS
+
+    def set_model_mesh_material(self, mesh_id: int, material_id: int) -> None:
+        """Set material for a mesh"""
+        return _rl.SetModelMeshMaterial(byref(self), int(mesh_id), int(material_id))
+
+    @staticmethod
+    def load_model_animations(file_name: str) -> Tuple['ModelAnimationPtr', int]:
+        """Load model animations from file"""
+        anims_count = IntPtr(0)
+        model_anim = _rl.LoadModelAnimations(_str_in(file_name), anims_count)
+        return model_anim, anims_count.contents
+
+    def update_model_animation(self, anim: 'ModelAnimation', frame: int) -> None:
+        """Update model animation pose"""
+        return _rl.UpdateModelAnimation(self, anim, int(frame))
+
+    @staticmethod
+    def unload_model_animation(anim: 'ModelAnimation') -> None:
+        """Unload animation data"""
+        return _rl.UnloadModelAnimation(anim)
+
+    @staticmethod
+    def unload_model_animations(animations: 'ModelAnimation', count: int) -> None:
+        """Unload animation array data"""
+        return _rl.UnloadModelAnimations(byref(animations), int(count))
+
+    def is_model_animation_valid(self, anim: 'ModelAnimation') -> bool:
+        """Check model animation skeleton match"""
+        return _rl.IsModelAnimationValid(self, anim)
+
+    # endregion (methods)
 
 
 ModelPtr = POINTER(Model)
@@ -2801,8 +4656,8 @@ class Ray(Structure):
         ('direction', Vector3),
     ]
 
-    def __init__(self, position: Vector3, direction: Vector3):
-        super().__init__(position, direction)
+    def __init__(self, position: Optional[Vector3] = None, direction: [Vector3] = None):
+        super().__init__(position if position else Vector3(), direction if position else Vector3())
 
     # region REPRESENTATION
 
@@ -2813,6 +4668,10 @@ class Ray(Structure):
         return f"{_clsname(self)}({self.position}, {self.direction})"
 
     # endregion
+
+    # region METHODS
+
+    # endregion (methods
 
 
 class RayHitInfo(Structure):
@@ -2856,8 +4715,25 @@ class Wave(Structure):
         ('data', c_void_p),
     ]
 
+    # region CLASSMETHODS
+
+    @staticmethod
+    def load(file_name: str) -> 'Wave':
+        """Load wave data from file"""
+        return _rl.LoadWave(_str_in(file_name))
+
+    @staticmethod
+    def load_from_memory(file_type: str, file_data: bytes, data_size: int) -> 'Wave':
+        """Load wave from memory buffer, fileType refers to extension: i.e. ".wav"."""
+        return _rl.LoadWaveFromMemory(_str_in(file_type), file_data, int(data_size))
+
+    # endregion (classmethods)
+
     def __init__(self, sample_count: int, sample_rate: int, sample_size: int, channels: int, data: IntPtr):
         super().__init__(sample_count, sample_rate, sample_size, channels, data)
+
+    def __del__(self):
+        _rl.UnloadWave(self)
 
     # region REPRESENTATION
 
@@ -2868,6 +4744,30 @@ class Wave(Structure):
         return f"{_clsname(self)}({self.sampleCount}, {self.sampleRate}, {self.SampleSize}, {self.channels})"
 
     # endregion
+
+    # region METHODS
+
+    def format(self, sample_rate: int, sample_size: int, channels: int) -> None:
+        """Convert wave data to desired format"""
+        return _rl.WaveFormat(self, int(sample_rate), int(sample_size), int(channels))
+
+    def copy(self) -> 'Wave':
+        """Copy a wave to a new wave"""
+        return _rl.WaveCopy(self)
+
+    def crop(self, init_sample: int, final_sample: int) -> None:
+        """Crop a wave to defined samples range"""
+        return _rl.WaveCrop(self, int(init_sample), int(final_sample))
+
+    def export_wave(self, file_name: str) -> bool:
+        """Export wave data to file, returns true on success"""
+        return _rl.ExportWave(self, _str_in(file_name))
+
+    def export_wave_as_code(self, file_name: str) -> bool:
+        """Export wave sample data to code (.h), returns true on success"""
+        return _rl.ExportWaveAsCode(self, _str_in(file_name))
+
+    # endregion (methods)
 
 
 WavePtr = POINTER(Wave)
@@ -2889,8 +4789,25 @@ class AudioStream(Structure):
         ('channels', c_uint),
     ]
 
+    # region CLASSMETHODS
+
+    @staticmethod
+    def init_audio_stream(sample_rate: int, sample_size: int, channels: int) -> 'AudioStream':
+        """Init audio stream (to stream raw audio pcm data)"""
+        return _rl.InitAudioStream(int(sample_rate), int(sample_size), int(channels))
+
+    @staticmethod
+    def set_buffer_size_default(size: int) -> None:
+        """Default size for new audio streams"""
+        return _rl.SetAudioStreamBufferSizeDefault(int(size))
+
+    # endregion (classmethods)
+
     def __init__(self, buffer: rAudioBufferPtr, sample_rate: int, sample_size: int, channels: int):
         super().__init__(buffer, sample_rate, sample_size, channels)
+
+    def __del__(self):
+        _rl.CloseAudioStream(self)
 
     # region REPRESENTATION
 
@@ -2902,6 +4819,52 @@ class AudioStream(Structure):
 
     # endregion
 
+    # region PROPERTIES
+
+    @property
+    def is_processed(self) -> bool:
+        """Check if any audio stream buffers requires refill"""
+        return _rl.IsAudioStreamProcessed(self)
+
+    @property
+    def is_playing(self) -> bool:
+        """Check if audio stream is playing"""
+        return _rl.IsAudioStreamPlaying(self)
+
+    # endregion (properties)
+
+    # region METHODS
+
+    def update(self, data: bytes, samples_count: int) -> None:
+        """Update audio stream buffers with data"""
+        return _rl.UpdateAudioStream(self, data, int(samples_count))
+
+    def play(self) -> None:
+        """Play audio stream"""
+        return _rl.PlayAudioStream(self)
+
+    def pause(self) -> None:
+        """Pause audio stream"""
+        return _rl.PauseAudioStream(self)
+
+    def resume(self) -> None:
+        """Resume audio stream"""
+        return _rl.ResumeAudioStream(self)
+
+    def stop(self) -> None:
+        """Stop audio stream"""
+        return _rl.StopAudioStream(self)
+
+    def set_volume(self, volume: float) -> None:
+        """Set volume for audio stream (1.0 is max level)"""
+        return _rl.SetAudioStreamVolume(self, float(volume))
+
+    def set_pitch(self, pitch: float) -> None:
+        """Set pitch for audio stream (1.0 is base level)"""
+        return _rl.SetAudioStreamPitch(self, float(pitch))
+
+    # endregion (methods)
+
 
 class Sound(Structure):
     _fields_ = [
@@ -2909,8 +4872,25 @@ class Sound(Structure):
         ('sampleCount', c_uint),
     ]
 
+    # region CLASSMETHODS
+
+    @staticmethod
+    def load(file_name: str) -> 'Sound':
+        """Load sound from file"""
+        return _rl.LoadSound(_str_in(file_name))
+
+    @staticmethod
+    def load_from_wave(wave: Wave) -> 'Sound':
+        """Load sound from wave data"""
+        return _rl.LoadSoundFromWave(wave)
+
+    # endregion (classmethods)
+
     def __init__(self, stream: AudioStream, sample_count: int):
         super().__init__(stream, sample_count)
+
+    def __del__(self):
+        _rl.UnloadWave(self)
 
     # region REPRESENTATION
 
@@ -2921,6 +4901,71 @@ class Sound(Structure):
         return f"{_clsname(self)}({self.stream}, {self.sampleCount})"
 
     # endregion
+
+    # region PROPERTIES
+
+    @property
+    def is_playing(self) -> bool:
+        """Check if a sound is currently playing"""
+        return _rl.IsSoundPlaying(self)
+
+    @property
+    def get_sounds_playing(self) -> int:
+        """Get number of sounds playing in the multichannel"""
+        return _rl.GetSoundsPlaying()
+
+    # endregion (properties)
+
+    # region METHODS
+
+    def play(self) -> None:
+        """Play a sound"""
+        return _rl.PlaySound(self)
+
+    def stop(self) -> None:
+        """Stop playing a sound"""
+        return _rl.StopSound(self)
+
+    def pause(self) -> None:
+        """Pause a sound"""
+        return _rl.PauseSound(self)
+
+    def resume(self) -> None:
+        """Resume a paused sound"""
+        return _rl.ResumeSound(self)
+
+    def update(self, data: bytes, samples_count: int) -> None:
+        """Update sound buffer with new data"""
+        return _rl.UpdateSound(self, data, int(samples_count))
+
+    def play_multi(self) -> None:
+        """Play a sound (using multichannel buffer pool)"""
+        return _rl.PlaySoundMulti(self)
+
+    @staticmethod
+    def stop_multi() -> None:
+        """Stop any sound playing (using multichannel buffer pool)"""
+        return _rl.StopSoundMulti()
+
+    def set_volume(self, volume: float) -> None:
+        """Set volume for a sound (1.0 is max level)"""
+        return _rl.SetSoundVolume(self, float(volume))
+
+    def set_pitch(self, pitch: float) -> None:
+        """Set pitch for a sound (1.0 is base level)"""
+        return _rl.SetSoundPitch(self, float(pitch))
+
+    @staticmethod
+    def load_samples(wave: Wave) -> Sequence[float]:
+        """Load samples data from wave as a floats array"""
+        return _rl.LoadWaveSamples(wave)
+
+    @staticmethod
+    def unload_samples(samples: Sequence[float]) -> None:
+        """Unload samples data loaded with LoadWaveSamples()"""
+        return _rl.UnloadWaveSamples(_arr(Float, samples))
+
+    # endregion (methods)
 
 
 class Music(Structure):
@@ -2933,8 +4978,25 @@ class Music(Structure):
         ('ctxData', c_void_p),
     ]
 
+    # region CLASSMETHODS
+
+    @staticmethod
+    def load_stream(file_name: str) -> 'Music':
+        """Load music stream from file"""
+        return _rl.LoadMusicStream(_str_in(file_name))
+
+    @staticmethod
+    def load_stream_from_memory(file_type: str, data: bytes, data_size: int) -> 'Music':
+        """Load music stream from data"""
+        return _rl.LoadMusicStreamFromMemory(_str_in(file_type), data, int(data_size))
+
+    # endregion (classmethods)
+
     def __init__(self, stream: AudioStream, sample_count: int, looping: bool, ctx_type: int, ctx_data: IntPtr):
         super().__init__(stream, sample_count, looping, ctx_type, ctx_data)
+
+    def __del__(self):
+        _rl.UnloadMusicStream(self)
 
     # region REPRESENTATION
 
@@ -2946,11 +5008,61 @@ class Music(Structure):
 
     # endregion
 
+    # region PROPERTIES
+
+    @property
+    def time_length(self) -> float:
+        """Get music time length (in seconds)"""
+        return _rl.GetMusicTimeLength(self)
+
+    @property
+    def time_played(self) -> float:
+        """Get current music time played (in seconds)"""
+        return _rl.GetMusicTimePlayed(self)
+
+    # endregion (properties)
+
+    # region METHODS
+
+    def play_stream(self) -> None:
+        """Start music playing"""
+        return _rl.PlayMusicStream(self)
+
+    def is_playing(self) -> bool:
+        """Check if music is playing"""
+        return _rl.IsMusicPlaying(self)
+
+    def update_stream(self) -> None:
+        """Updates buffers for music streaming"""
+        return _rl.UpdateMusicStream(self)
+
+    def stop_stream(self) -> None:
+        """Stop music playing"""
+        return _rl.StopMusicStream(self)
+
+    def pause_stream(self) -> None:
+        """Pause music playing"""
+        return _rl.PauseMusicStream(self)
+
+    def resume_stream(self) -> None:
+        """Resume playing paused music"""
+        return _rl.ResumeMusicStream(self)
+
+    def set_volume(self, volume: float) -> None:
+        """Set volume for music (1.0 is max level)"""
+        return _rl.SetMusicVolume(self, float(volume))
+
+    def set_pitch(self, pitch: float) -> None:
+        """Set pitch for a music (1.0 is base level)"""
+        return _rl.SetMusicPitch(self, float(pitch))
+
+    # endregion (methods)
+
 
 MusicData = POINTER(Music)
 
 
-class _VrDeviceInfo(Structure):
+class VrDeviceInfo(Structure):
     _fields_ = [
         ('hResolution', c_int),
         ('vResolution', c_int),
@@ -2964,8 +5076,38 @@ class _VrDeviceInfo(Structure):
         ('chromaAbCorrection', c_float * 4),
     ]
 
+    def __init__(self, h_resolution: int, v_resolution: int, h_screen_size: float, v_screen_size: float,
+                 v_screen_center: float, eye_to_screen_distance: float, lens_separation_distance: float,
+                 interpupillary_distance: float, lens_distortion_values: Sequence[float],
+                 chroma_ab_correction: Sequence[float]):
+        super().__init__(h_resolution, v_resolution, h_screen_size, v_screen_size, v_screen_center,
+                         eye_to_screen_distance, lens_separation_distance, interpupillary_distance,
+                         _arr(Float, lens_distortion_values), _arr(Float, chroma_ab_correction))
 
-class _VrStereoConfig(Structure):
+    # region REPRESENTATION
+
+    def __str__(self) -> str:
+        return (f"({self.hResolution}, {self.vResolution}, {self.hScreenSize}, {self.vScreenSize},"
+                f" {self.vScreenCenter}, {self.eyeToScreenDistance}, {self.lensSeparationDistance},"
+                f" {self.interpupillaryDistance}, {self.lensDistortionValues}, {self.chromaAbCorrection})")
+
+    def __repr__(self) -> str:
+        return (f"{_clsname(self)}({self.hResolution}, {self.vResolution}, {self.hScreenSize}, {self.vScreenSize},"
+                f" {self.vScreenCenter}, {self.eyeToScreenDistance}, {self.lensSeparationDistance},"
+                f" {self.interpupillaryDistance}, {self.lensDistortionValues}, {self.chromaAbCorrection})")
+
+    # endregion (representation)
+
+    # region METHODS
+
+    def load(self) -> 'VrStereoConfig':
+        """Load VR stereo config for VR simulator device parameters"""
+        return _rl.LoadVrStereoConfig(self)
+
+    # endregion (methods)
+
+
+class VrStereoConfig(Structure):
     _fields_ = [
         ('projection', Matrix * 2),
         ('viewOffset', Matrix * 2),
@@ -2976,6 +5118,37 @@ class _VrStereoConfig(Structure):
         ('scale', c_float * 2),
         ('scaleIn', c_float * 2),
     ]
+
+    def __init__(self, projection: Sequence[Matrix], view_offset: Sequence[Matrix],
+                 left_lens_center: Sequence[float], right_lens_center: Sequence[float],
+                 left_screen_center: Sequence[float], right_screen_center: Sequence[float],
+                 scale: Sequence[float], scale_in: Sequence[float]):
+        super().__init__(self, _arr(Matrix, projection), _arr(Matrix, view_offset),
+                         _arr(Float, left_lens_center), _arr(Float, right_lens_center),
+                         _arr(Float, left_screen_center), _arr(Float, right_screen_center),
+                         _arr(Float, scale), _arr(Float, scale_in))
+
+    # region REPRESENTATION
+
+    def __str__(self) -> str:
+        return (f"({self.projection}, {self.viewOffset}, {self.leftLensCenter},"
+                f" {self.rightLensCenter}, {self.leftScreenCenter},"
+                f" {self.rightScreenCenter}, {self.scale}, {self.scaleIn})")
+
+    def __repr__(self) -> str:
+        return (f"({_clsname(self)}{self.projection}, {self.viewOffset}, {self.leftLensCenter},"
+                f" {self.rightLensCenter}, {self.leftScreenCenter},"
+                f" {self.rightScreenCenter}, {self.scale}, {self.scaleIn})")
+
+    # endregion (representation)
+
+    # region METHODS
+
+    def unload(self) -> None:
+        """Unload VR stereo config"""
+        return _rl.UnloadVrStereoConfig(self)
+
+    # endregion (methods)
 
 # endregion (classes)
 # ---------------------------------------------------------

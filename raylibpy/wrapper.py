@@ -18,6 +18,8 @@ def _init():
     if _initialized:
         return
 
+    # region RAYLIB
+
     _rl.InitWindow.argtypes = [Int, Int, CharPtr]
     _rl.InitWindow.restype = None
 
@@ -198,16 +200,16 @@ def _init():
     _rl.EndScissorMode.argtypes = []
     _rl.EndScissorMode.restype = None
 
-    _rl.BeginVrStereoMode.argtypes = [_VrStereoConfig]
+    _rl.BeginVrStereoMode.argtypes = [VrStereoConfig]
     _rl.BeginVrStereoMode.restype = None
 
     _rl.EndVrStereoMode.argtypes = []
     _rl.EndVrStereoMode.restype = None
 
-    _rl.LoadVrStereoConfig.argtypes = [_VrDeviceInfo]
-    _rl.LoadVrStereoConfig.restype = _VrStereoConfig
+    _rl.LoadVrStereoConfig.argtypes = [VrDeviceInfo]
+    _rl.LoadVrStereoConfig.restype = VrStereoConfig
 
-    _rl.UnloadVrStereoConfig.argtypes = [_VrStereoConfig]
+    _rl.UnloadVrStereoConfig.argtypes = [VrStereoConfig]
     _rl.UnloadVrStereoConfig.restype = None
 
     _rl.LoadShader.argtypes = [CharPtr, CharPtr]
@@ -1421,6 +1423,297 @@ def _init():
 
     _rl.SetAudioStreamBufferSizeDefault.argtypes = [Int]
     _rl.SetAudioStreamBufferSizeDefault.restype = None
+
+    # endregion (raylib)
+
+    # region RAYMATH
+
+    _rl.Clamp.argtypes = (Float, Float, Float)
+    _rl.Clamp.restype = Float
+
+    _rl.Lerp.argtypes = (Float, Float, Float)
+    _rl.Lerp.restype = Float
+
+    _rl.Normalize.argtypes = (Float, Float, Float)
+    _rl.Normalize.restype = Float
+
+    _rl.Remap.argtypes = (Float, Float, Float, Float, Float)
+    _rl.Remap.restype = Float
+
+    _rl.Vector2Zero.argtypes = ()
+    _rl.Vector2Zero.restype = Vector2
+
+    _rl.Vector2One.argtypes = ()
+    _rl.Vector2One.restype = Vector2
+
+    _rl.Vector2Add.argtypes = (Vector2, Vector2)
+    _rl.Vector2Add.restype = Vector2
+
+    _rl.Vector2AddValue.argtypes = (Vector2, Float)
+    _rl.Vector2AddValue.restype = Vector2
+
+    _rl.Vector2Subtract.argtypes = (Vector2, Vector2)
+    _rl.Vector2Subtract.restype = Vector2
+
+    _rl.Vector2SubtractValue.argtypes = (Vector2, Float)
+    _rl.Vector2SubtractValue.restype = Vector2
+
+    _rl.Vector2Length.argtypes = (Vector2,)
+    _rl.Vector2Length.restype = Float
+
+    _rl.Vector2LengthSqr.argtypes = (Vector2,)
+    _rl.Vector2LengthSqr.restype = Float
+
+    _rl.Vector2DotProduct.argtypes = (Vector2, Vector2)
+    _rl.Vector2DotProduct.restype = Float
+
+    _rl.Vector2Distance.argtypes = (Vector2, Vector2)
+    _rl.Vector2Distance.restype = Float
+
+    _rl.Vector2Angle.argtypes = (Vector2, Vector2)
+    _rl.Vector2Angle.restype = Float
+
+    _rl.Vector2Scale.argtypes = (Vector2, Float)
+    _rl.Vector2Scale.restype = Vector2
+
+    _rl.Vector2Multiply.argtypes = (Vector2, Vector2)
+    _rl.Vector2Multiply.restype = Vector2
+
+    _rl.Vector2Negate.argtypes = (Vector2,)
+    _rl.Vector2Negate.restype = Vector2
+
+    _rl.Vector2Divide.argtypes = (Vector2, Vector2)
+    _rl.Vector2Divide.restype = Vector2
+
+    _rl.Vector2Normalize.argtypes = (Vector2,)
+    _rl.Vector2Normalize.restype = Vector2
+
+    _rl.Vector2Lerp.argtypes = (Vector2, Vector2, Float)
+    _rl.Vector2Lerp.restype = Vector2
+
+    _rl.Vector2Reflect.argtypes = (Vector2, Vector2)
+    _rl.Vector2Reflect.restype = Vector2
+
+    _rl.Vector2Rotate.argtypes = (Vector2, Float)
+    _rl.Vector2Rotate.restype = Vector2
+
+    _rl.Vector2MoveTowards.argtypes = (Vector2, Vector2, Float)
+    _rl.Vector2MoveTowards.restype = Vector2
+
+    _rl.Vector3Zero.argtypes = ()
+    _rl.Vector3Zero.restype = Vector3
+
+    _rl.Vector3One.argtypes = ()
+    _rl.Vector3One.restype = Vector3
+
+    _rl.Vector3Add.argtypes = (Vector3, Vector3)
+    _rl.Vector3Add.restype = Vector3
+
+    _rl.Vector3AddValue.argtypes = (Vector3, Float)
+    _rl.Vector3AddValue.restype = Vector3
+
+    _rl.Vector3Subtract.argtypes = (Vector3, Vector3)
+    _rl.Vector3Subtract.restype = Vector3
+
+    _rl.Vector3SubtractValue.argtypes = (Vector3, Float)
+    _rl.Vector3SubtractValue.restype = Vector3
+
+    _rl.Vector3Scale.argtypes = (Vector3, Float)
+    _rl.Vector3Scale.restype = Vector3
+
+    _rl.Vector3Multiply.argtypes = (Vector3, Vector3)
+    _rl.Vector3Multiply.restype = Vector3
+
+    _rl.Vector3CrossProduct.argtypes = (Vector3, Vector3)
+    _rl.Vector3CrossProduct.restype = Vector3
+
+    _rl.Vector3Perpendicular.argtypes = (Vector3,)
+    _rl.Vector3Perpendicular.restype = Vector3
+
+    _rl.Vector3Length.argtypes = (Vector3,)
+    _rl.Vector3Length.restype = Float
+
+    _rl.Vector3LengthSqr.argtypes = (Vector3,)
+    _rl.Vector3LengthSqr.restype = Float
+
+    _rl.Vector3DotProduct.argtypes = (Vector3, Vector3)
+    _rl.Vector3DotProduct.restype = Float
+
+    _rl.Vector3Distance.argtypes = (Vector3, Vector3)
+    _rl.Vector3Distance.restype = Float
+
+    _rl.Vector3Negate.argtypes = (Vector3,)
+    _rl.Vector3Negate.restype = Vector3
+
+    _rl.Vector3Divide.argtypes = (Vector3, Vector3)
+    _rl.Vector3Divide.restype = Vector3
+
+    _rl.Vector3Normalize.argtypes = (Vector3,)
+    _rl.Vector3Normalize.restype = Vector3
+
+    _rl.Vector3OrthoNormalize.argtypes = (Vector3, Vector3)
+    _rl.Vector3OrthoNormalize.restype = None
+
+    _rl.Vector3Transform.argtypes = (Vector3, Matrix)
+    _rl.Vector3Transform.restype = Vector3
+
+    _rl.Vector3RotateByQuaternion.argtypes = (Vector3, Quaternion)
+    _rl.Vector3RotateByQuaternion.restype = Vector3
+
+    _rl.Vector3Lerp.argtypes = (Vector3, Vector3, Float)
+    _rl.Vector3Lerp.restype = Vector3
+
+    _rl.Vector3Reflect.argtypes = (Vector3, Vector3)
+    _rl.Vector3Reflect.restype = Vector3
+
+    _rl.Vector3Min.argtypes = (Vector3, Vector3)
+    _rl.Vector3Min.restype = Vector3
+
+    _rl.Vector3Max.argtypes = (Vector3, Vector3)
+    _rl.Vector3Max.restype = Vector3
+
+    _rl.Vector3Barycenter.argtypes = (Vector3, Vector3, Vector3, Vector3)
+    _rl.Vector3Barycenter.restype = Vector3
+
+    _rl.Vector3ToFloatV.argtypes = (Vector3,)
+    _rl.Vector3ToFloatV.restype = FloatPtr
+
+    _rl.MatrixDeterminant.argtypes = (Matrix,)
+    _rl.MatrixDeterminant.restype = Float
+
+    _rl.MatrixTrace.argtypes = (Matrix,)
+    _rl.MatrixTrace.restype = Float
+
+    _rl.MatrixTranspose.argtypes = (Matrix,)
+    _rl.MatrixTranspose.restype = Matrix
+
+    _rl.MatrixInvert.argtypes = (Matrix,)
+    _rl.MatrixInvert.restype = Matrix
+
+    _rl.MatrixNormalize.argtypes = (Matrix,)
+    _rl.MatrixNormalize.restype = Matrix
+
+    _rl.MatrixIdentity.argtypes = ()
+    _rl.MatrixIdentity.restype = Matrix
+
+    _rl.MatrixAdd.argtypes = (Matrix, Matrix)
+    _rl.MatrixAdd.restype = Matrix
+
+    _rl.MatrixSubtract.argtypes = (Matrix, Matrix)
+    _rl.MatrixSubtract.restype = Matrix
+
+    _rl.MatrixMultiply.argtypes = (Matrix, Matrix)
+    _rl.MatrixMultiply.restype = Matrix
+
+    _rl.MatrixTranslate.argtypes = (Float, Float, Float)
+    _rl.MatrixTranslate.restype = Matrix
+
+    _rl.MatrixRotate.argtypes = (Vector3, Float)
+    _rl.MatrixRotate.restype = Matrix
+
+    _rl.MatrixRotateX.argtypes = (Float,)
+    _rl.MatrixRotateX.restype = Matrix
+
+    _rl.MatrixRotateY.argtypes = (Float,)
+    _rl.MatrixRotateY.restype = Matrix
+
+    _rl.MatrixRotateZ.argtypes = (Float,)
+    _rl.MatrixRotateZ.restype = Matrix
+
+    _rl.MatrixRotateXYZ.argtypes = (Vector3,)
+    _rl.MatrixRotateXYZ.restype = Matrix
+
+    _rl.MatrixRotateZYX.argtypes = (Vector3,)
+    _rl.MatrixRotateZYX.restype = Matrix
+
+    _rl.MatrixScale.argtypes = (Float, Float, Float)
+    _rl.MatrixScale.restype = Matrix
+
+    _rl.MatrixFrustum.argtypes = (Double, Double, Double, Double, Double, Double)
+    _rl.MatrixFrustum.restype = Matrix
+
+    _rl.MatrixPerspective.argtypes = (Double, Double, Double, Double)
+    _rl.MatrixPerspective.restype = Matrix
+
+    _rl.MatrixOrtho.argtypes = (Double, Double, Double, Double, Double, Double)
+    _rl.MatrixOrtho.restype = Matrix
+
+    _rl.MatrixLookAt.argtypes = (Vector3, Vector3, Vector3)
+    _rl.MatrixLookAt.restype = Matrix
+
+    _rl.MatrixToFloatV.argtypes = (Matrix,)
+    _rl.MatrixToFloatV.restype = FloatPtr
+
+    _rl.QuaternionAdd.argtypes = (Quaternion, Quaternion)
+    _rl.QuaternionAdd.restype = Quaternion
+
+    _rl.QuaternionAddValue.argtypes = (Quaternion, Float)
+    _rl.QuaternionAddValue.restype = Quaternion
+
+    _rl.QuaternionSubtract.argtypes = (Quaternion, Quaternion)
+    _rl.QuaternionSubtract.restype = Quaternion
+
+    _rl.QuaternionSubtractValue.argtypes = (Quaternion, Float)
+    _rl.QuaternionSubtractValue.restype = Quaternion
+
+    _rl.QuaternionIdentity.argtypes = ()
+    _rl.QuaternionIdentity.restype = Quaternion
+
+    _rl.QuaternionLength.argtypes = (Quaternion,)
+    _rl.QuaternionLength.restype = Float
+
+    _rl.QuaternionNormalize.argtypes = (Quaternion,)
+    _rl.QuaternionNormalize.restype = Quaternion
+
+    _rl.QuaternionInvert.argtypes = (Quaternion,)
+    _rl.QuaternionInvert.restype = Quaternion
+
+    _rl.QuaternionMultiply.argtypes = (Quaternion, Quaternion)
+    _rl.QuaternionMultiply.restype = Quaternion
+
+    _rl.QuaternionScale.argtypes = (Quaternion, Float)
+    _rl.QuaternionScale.restype = Quaternion
+
+    _rl.QuaternionDivide.argtypes = (Quaternion, Quaternion)
+    _rl.QuaternionDivide.restype = Quaternion
+
+    _rl.QuaternionLerp.argtypes = (Quaternion, Quaternion, Float)
+    _rl.QuaternionLerp.restype = Quaternion
+
+    _rl.QuaternionNlerp.argtypes = (Quaternion, Quaternion, Float)
+    _rl.QuaternionNlerp.restype = Quaternion
+
+    _rl.QuaternionSlerp.argtypes = (Quaternion, Quaternion, Float)
+    _rl.QuaternionSlerp.restype = Quaternion
+
+    _rl.QuaternionFromVector3ToVector3.argtypes = (Vector3, Vector3)
+    _rl.QuaternionFromVector3ToVector3.restype = Quaternion
+
+    _rl.QuaternionFromMatrix.argtypes = (Matrix,)
+    _rl.QuaternionFromMatrix.restype = Quaternion
+
+    _rl.QuaternionToMatrix.argtypes = (Quaternion,)
+    _rl.QuaternionToMatrix.restype = Matrix
+
+    _rl.QuaternionFromAxisAngle.argtypes = (Vector3, Float)
+    _rl.QuaternionFromAxisAngle.restype = Quaternion
+
+    _rl.QuaternionToAxisAngle.argtypes = (Quaternion, Vector3, Float)
+    _rl.QuaternionToAxisAngle.restype = None
+
+    _rl.QuaternionFromEuler.argtypes = (Float, Float, Float)
+    _rl.QuaternionFromEuler.restype = Quaternion
+
+    _rl.QuaternionToEuler.argtypes = (Quaternion,)
+    _rl.QuaternionToEuler.restype = Vector3
+
+    _rl.QuaternionTransform.argtypes = (Quaternion, Matrix)
+    _rl.QuaternionTransform.restype = Quaternion
+
+    _rl.Vector3Unproject.argtypes = (Vector3, Matrix, Matrix)
+    _rl.Vector3Unproject.restype = Vector3
+
+    # endregion (raymath)
 
     _initialized = True
 
