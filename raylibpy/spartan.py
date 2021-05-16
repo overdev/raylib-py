@@ -1149,8 +1149,8 @@ def is_file_dropped() -> bool:
 
 def get_dropped_files() -> Sequence[str]:
     """Get dropped files names (memory should be freed)"""
-    count = IntPtr(0)
-    result = _rl.GetDroppedFiles(count)
+    count = Long(0)
+    result = _rl.GetDroppedFiles(byref(count))
     files = []
     for i in range(count.value):
         files.append(result[i].decode('utf-8'))
