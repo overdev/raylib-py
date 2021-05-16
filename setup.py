@@ -55,7 +55,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.2.0',  # Required
+    version='3.7.0a0',  # Required
 
     python_requires='>=3.3, <4',
 
