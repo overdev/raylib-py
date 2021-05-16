@@ -11,7 +11,7 @@ from ctypes import (
     c_void_p,
     c_float,
     c_double,
-    POINTER, c_long, CFUNCTYPE,
+    POINTER, c_long, CFUNCTYPE
 )
 
 __all__ = [
@@ -31,6 +31,7 @@ __all__ = [
     'Int',
     'UInt',
     'Long',
+    'LongPtr',
     'Float',
     'Double',
     'Number',
@@ -62,6 +63,7 @@ CharPtr = c_char_p
 CharPtrPtr = POINTER(c_char_p)
 UCharPtr = POINTER(c_ubyte)
 IntPtr = POINTER(c_int)
+LongPtr = POINTER(c_long)
 UIntPtr = POINTER(c_uint)
 FloatPtr = POINTER(c_float)
 Char = c_byte

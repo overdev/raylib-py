@@ -2,7 +2,6 @@
 
 from raylibpy.colors import *
 from raylibpy.spartan import *
-from raylibpy.consts import *
 
 
 def main() -> int:

@@ -1,9 +1,11 @@
 # core_input_keys.py
-from raylibpy import *
+
+from raylibpy.colors import *
+from raylibpy.spartan import *
+from raylibpy.consts import *
 
 
 def main():
-
     screen_width: int = 800
     screen_height: int = 450
 

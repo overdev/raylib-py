@@ -1,11 +1,12 @@
 # core_color_select.py
 
-from raylibpy import *
+from raylibpy.colors import *
+from raylibpy.spartan import *
+from raylibpy.consts import *
 from typing import List
 
 
 def main():
-
     init_window(800, 450, "raylib [core] example - color selection")
 
     colors: List[Color] = [
@@ -24,7 +25,6 @@ def main():
             100,
             100
         )
-        print(rect)
         color_rects.append(rect)
 
     selected: List[bool] = [False for i in range(21)]

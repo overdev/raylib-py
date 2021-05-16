@@ -1,10 +1,10 @@
 # core_basic_window.py
 
-from raylibpy import *
+from raylibpy.colors import *
+from raylibpy.spartan import *
 
 
 def main():
-
     init_window(800, 450, "raylib [core] example - basic window")
 
     set_target_fps(60)
