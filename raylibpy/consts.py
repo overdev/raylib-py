@@ -370,7 +370,7 @@ FLAG_INTERLACED_HINT = ConfigFlags.FLAG_INTERLACED_HINT
 
 # Trace log type
 class TraceLogLevel(IntEnum):
-    LOG_ALL = auto()
+    LOG_ALL = 0
     LOG_TRACE = auto()
     LOG_DEBUG = auto()
     LOG_INFO = auto()
