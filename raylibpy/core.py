@@ -1258,6 +1258,13 @@ class Matrix(Structure):
                    0.0, 0.0, value, 0.0,
                    0.0, 0.0, 0.0, value)
 
+    @classmethod
+    def zero(cls) -> 'Matrix':
+        return cls(0.0, 0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0, 0.0)
+
     # endregion (classmethods)
 
     def __init__(self,
@@ -2352,6 +2359,28 @@ class VrDeviceInfo(Structure):
         ('chromaAbCorrection', c_float * 4),
     ]
 
+    def __init__(self, h_resolution: int, v_resolution: int, h_screen_size: float, v_screen_size: float,
+                 v_screen_center: float, eye_to_screen_distance: float, lens_separation_distance: float,
+                 interpupillary_distance: float, lens_distortion_values: Sequence[float],
+                 chroma_ab_correction: Sequence[float]):
+        super().__init__(h_resolution, v_resolution, h_screen_size, v_screen_size, v_screen_center,
+                         eye_to_screen_distance, lens_separation_distance, interpupillary_distance,
+                         _arr(Float, lens_distortion_values), _arr(Float, chroma_ab_correction))
+
+    # region REPRESENTATION
+
+    def __str__(self) -> str:
+        return (f"({self.hResolution}, {self.vResolution}, {self.hScreenSize}, {self.vScreenSize},"
+                f" {self.vScreenCenter}, {self.eyeToScreenDistance}, {self.lensSeparationDistance},"
+                f" {self.interpupillaryDistance}, {self.lensDistortionValues}, {self.chromaAbCorrection})")
+
+    def __repr__(self) -> str:
+        return (f"{_clsname(self)}({self.hResolution}, {self.vResolution}, {self.hScreenSize}, {self.vScreenSize},"
+                f" {self.vScreenCenter}, {self.eyeToScreenDistance}, {self.lensSeparationDistance},"
+                f" {self.interpupillaryDistance}, {self.lensDistortionValues}, {self.chromaAbCorrection})")
+
+    # endregion (representation)
+
 
 class VrStereoConfig(Structure):
     _fields_ = [
@@ -2364,6 +2393,29 @@ class VrStereoConfig(Structure):
         ('scale', c_float * 2),
         ('scaleIn', c_float * 2),
     ]
+
+    def __init__(self, projection: Sequence[Matrix], view_offset: Sequence[Matrix],
+                 left_lens_center: Sequence[float], right_lens_center: Sequence[float],
+                 left_screen_center: Sequence[float], right_screen_center: Sequence[float],
+                 scale: Sequence[float], scale_in: Sequence[float]):
+        super().__init__(self, _arr(Matrix, projection), _arr(Matrix, view_offset),
+                         _arr(Float, left_lens_center), _arr(Float, right_lens_center),
+                         _arr(Float, left_screen_center), _arr(Float, right_screen_center),
+                         _arr(Float, scale), _arr(Float, scale_in))
+
+    # region REPRESENTATION
+
+    def __str__(self) -> str:
+        return (f"({self.projection}, {self.viewOffset}, {self.leftLensCenter},"
+                f" {self.rightLensCenter}, {self.leftScreenCenter},"
+                f" {self.rightScreenCenter}, {self.scale}, {self.scaleIn})")
+
+    def __repr__(self) -> str:
+        return (f"({_clsname(self)}{self.projection}, {self.viewOffset}, {self.leftLensCenter},"
+                f" {self.rightLensCenter}, {self.leftScreenCenter},"
+                f" {self.rightScreenCenter}, {self.scale}, {self.scaleIn})")
+
+    # endregion (representation)
 
 
 # endregion (classes)
