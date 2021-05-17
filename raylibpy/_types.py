@@ -107,7 +107,7 @@ AnyQuat4 = Union[Seq, Num4, int4, float4, 'Vector4']
 
 # region CALLBACKS
 
-TraceLogCallback = CFUNCTYPE(None, Int, CharPtr, VoidPtr)
+TraceLogCallback = CFUNCTYPE(None, Int, CharPtr)
 LoadFileDataCallback = CFUNCTYPE(UCharPtr, CharPtr, UIntPtr)
 SaveFileDataCallback = CFUNCTYPE(Bool, CharPtr, VoidPtr, UInt)
 LoadFileTextCallback = CFUNCTYPE(CharPtr, CharPtr)
