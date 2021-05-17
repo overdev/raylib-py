@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from ctypes import byref
-from typing import Sequence, Tuple, Union
+from typing import Sequence, Tuple, Union, Optional
 import raylibpy.core as core
 from raylibpy import _rl
 from raylibpy._types import *
@@ -9,6 +9,12 @@ from raylibpy.core import *
 
 
 __all__ = [
+    'TraceLogCallback',
+    'LoadFileDataCallback',
+    'SaveFileDataCallback',
+    'LoadFileTextCallback',
+    'SaveFileTextCallback',
+
     'clamp',
     'init_window',
     'window_should_close',
@@ -881,9 +887,10 @@ def unload_vr_stereo_config(config: VrStereoConfig) -> None:
     return _rl.UnloadVrStereoConfig(config)
 
 
-def load_shader(vs_file_name: str, fs_file_name: str) -> Shader:
+def load_shader(vs_file_name: Optional[str], fs_file_name: Optional[str]) -> Shader:
     """Load shader from files and bind default locations"""
-    return _rl.LoadShader(_str_in(vs_file_name), _str_in(fs_file_name))
+    return _rl.LoadShader(_str_in(vs_file_name) if vs_file_name else b"\00",
+                          _str_in(fs_file_name) if fs_file_name else b"\00")
 
 
 def load_shader_from_memory(vs_code: str, fs_code: str) -> Shader:
