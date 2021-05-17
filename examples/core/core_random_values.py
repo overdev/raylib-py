@@ -1,9 +1,9 @@
-# core_input_keys.py
+# core_random_values.py
 # ******************************************************************************************
 #
-#   raylib [core] example - Keyboard input
+#   raylib [core] example - Generate random values
 #
-#   This example has been created using raylib 1.0 (www.raylib.com)
+#   This example has been created using raylib 1.1 (www.raylib.com)
 #   raylib is licensed under an unmodified zlib/libpng license (View raylib.h for details)
 #
 #   Copyright (c) 2014 Ramon Santamaria (@raysan5)
@@ -12,7 +12,6 @@
 
 from raylibpy.colors import *
 from raylibpy.spartan import *
-from raylibpy.consts import *
 
 
 def main() -> int:
@@ -21,9 +20,11 @@ def main() -> int:
     screen_width: int = 800
     screen_height: int = 450
 
-    init_window(screen_width, screen_height, "raylib [core] example - keyboard input")
+    init_window(screen_width, screen_height, "raylib [core] example - generate random values")
 
-    ball_position: Vector2 = Vector2(screen_width / 2, screen_height / 2)
+    frames_counter: int = 0  # Variable used to count frames
+
+    rand_value: int = get_random_value(-8, 5)  # Get a random integer number between -8 and 5 (both included)
 
     set_target_fps(60)  # Set our game to run at 60 frames-per-second
     # --------------------------------------------------------------------------------------
@@ -32,14 +33,12 @@ def main() -> int:
     while not window_should_close():  # Detect window close button or ESC key
         # Update
         # ----------------------------------------------------------------------------------
-        if is_key_down(KEY_RIGHT):
-            ball_position.x += 2.0
-        if is_key_down(KEY_LEFT):
-            ball_position.x -= 2.0
-        if is_key_down(KEY_UP):
-            ball_position.y -= 2.0
-        if is_key_down(KEY_DOWN):
-            ball_position.y += 2.0
+        frames_counter += 1
+
+        # Every two seconds (120 frames) a new random value is generated
+        if ((frames_counter / 120) % 2) == 1:
+            rand_value = get_random_value(-8, 5)
+            frames_counter = 0
         # ----------------------------------------------------------------------------------
 
         # Draw
@@ -48,9 +47,9 @@ def main() -> int:
 
             clear_background(RAYWHITE)
 
-            draw_text("move the ball with arrow keys", 10, 10, 20, DARKGRAY)
+            draw_text("Every 2 seconds a new random value is generated:", 130, 100, 20, MAROON)
 
-            draw_circle_v(ball_position, 50, MAROON)
+            draw_text(f"{rand_value}", 360, 180, 80, LIGHTGRAY)
 
         # EndDrawing()
         # ----------------------------------------------------------------------------------
@@ -65,4 +64,3 @@ def main() -> int:
 
 if __name__ == '__main__':
     main()
-

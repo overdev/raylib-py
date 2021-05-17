@@ -1,9 +1,9 @@
-# core_input_keys.py
+# core_input_mouse_wheel.py
 # ******************************************************************************************
 #
-#   raylib [core] example - Keyboard input
+#   raylib [core] examples - Mouse wheel input
 #
-#   This example has been created using raylib 1.0 (www.raylib.com)
+#   This test has been created using raylib 1.1 (www.raylib.com)
 #   raylib is licensed under an unmodified zlib/libpng license (View raylib.h for details)
 #
 #   Copyright (c) 2014 Ramon Santamaria (@raysan5)
@@ -12,7 +12,6 @@
 
 from raylibpy.colors import *
 from raylibpy.spartan import *
-from raylibpy.consts import *
 
 
 def main() -> int:
@@ -21,9 +20,10 @@ def main() -> int:
     screen_width: int = 800
     screen_height: int = 450
 
-    init_window(screen_width, screen_height, "raylib [core] example - keyboard input")
+    init_window(screen_width, screen_height, "raylib [core] example - input mouse wheel")
 
-    ball_position: Vector2 = Vector2(screen_width / 2, screen_height / 2)
+    box_position_y: int = screen_height // 2 - 40
+    scroll_speed: int = 4  # Scrolling speed in pixels
 
     set_target_fps(60)  # Set our game to run at 60 frames-per-second
     # --------------------------------------------------------------------------------------
@@ -32,25 +32,18 @@ def main() -> int:
     while not window_should_close():  # Detect window close button or ESC key
         # Update
         # ----------------------------------------------------------------------------------
-        if is_key_down(KEY_RIGHT):
-            ball_position.x += 2.0
-        if is_key_down(KEY_LEFT):
-            ball_position.x -= 2.0
-        if is_key_down(KEY_UP):
-            ball_position.y -= 2.0
-        if is_key_down(KEY_DOWN):
-            ball_position.y += 2.0
+        box_position_y -= (get_mouse_wheel_move() * scroll_speed)
         # ----------------------------------------------------------------------------------
 
         # Draw
         # ----------------------------------------------------------------------------------
         with drawing():
-
             clear_background(RAYWHITE)
 
-            draw_text("move the ball with arrow keys", 10, 10, 20, DARKGRAY)
+            draw_rectangle(screen_width // 2 - 40, box_position_y, 80, 80, MAROON)
 
-            draw_circle_v(ball_position, 50, MAROON)
+            draw_text("Use mouse wheel to move the cube up and down!", 10, 10, 20, GRAY)
+            draw_text(f"Box position Y: {box_position_y}", 10, 40, 20, LIGHTGRAY)
 
         # EndDrawing()
         # ----------------------------------------------------------------------------------
@@ -65,4 +58,3 @@ def main() -> int:
 
 if __name__ == '__main__':
     main()
-
