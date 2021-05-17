@@ -4,6 +4,10 @@ from raylibpy.core import *
 from raylibpy import _rl
 
 __all__ = [
+    'PI',
+    'DEG2RAD',
+    'RAD2DEG',
+
     'clamp',
     'lerp',
     'normalize',
@@ -100,6 +104,10 @@ __all__ = [
     'quaternion_transform',
     'vector3_unproject',
 ]
+
+PI = 3.14159265358979323846
+DEG2RAD = PI / 180.0
+RAD2DEG = 180.0 / PI
 
 
 # ----------------------------------------------------------------------------------
