@@ -2,6 +2,7 @@ import sys
 import os
 import platform
 import ctypes
+import itertools
 from ctypes import CDLL, wintypes
 
 __all__ = [
@@ -65,11 +66,47 @@ class WinDLLEx(ctypes.WinDLL):
 # endregion (cdllex)
 
 
-_lib_fname = {
-    'win32': 'raylib.dll',
-    'linux': 'libraylib.so.3.7.0',
-    'darwin': 'libraylib.3.7.0.dylib'
-}
+def raylib_so_paths():
+	'''Return a list of full paths to try and load the shared library from
+	'''
+	def so_paths():
+		main_mod = sys.modules['__main__']
+		running_from_repl = '__file__' not in dir(main_mod)
+		return filter(None, [
+			os.environ.get('RAYLIB_BIN_PATH') if 'RAYLIB_BIN_PATH' in os.environ else None,
+			os.path.join(os.path.dirname(__file__), 'bin'),
+			os.path.join(os.path.dirname(main_mod.__file__), 'bin') if not running_from_repl else None,
+		])
+	def so_names():
+		lib_filenames = {
+		    'win32': ['raylib.dll', 'libraylib.dll', 'libraylib_shared.dll'],
+		    'linux': ['libraylib.so.3.7.0', 'libraylib.so.370', 'libraylib.so'],
+		    'darwin': ['libraylib.3.7.0.dylib', 'libraylib.dylib.370', 'libraylib.dylib'],
+		}
+		return filter(None, [
+			os.environ.get('RAYLIB_BIN_FILENAME'),
+			*lib_filenames[sys.platform]
+		])
+	def join_paths(paths):
+		return os.path.join(*paths)
+
+	paths = itertools.product(so_paths(), so_names())
+	return list(map(join_paths, paths))
+
+def find_raylib_so(raylib_paths):
+	'''Given a list of possible paths, finds the first valid one.
+	If no paths are valid, throws a RuntimeError.
+	'''
+	valid_paths = list(filter(lambda path: os.path.isfile(path), raylib_paths))
+	if len(valid_paths):
+		return valid_paths[0]
+
+	raise RuntimeError((
+		'Cannot find Raylib shared object in these search paths:\n'
+		'{}'
+	).format('\n'.join(raylib_paths)))
+
+
 
 _lib_platform = sys.platform
 
@@ -78,7 +115,8 @@ if _lib_platform == 'win32':
 else:
     _bitness = '64bit' if sys.maxsize > 2 ** 32 else '32bit'
 
-_lib_fname_abspath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bin', _lib_fname[_lib_platform])
+
+_lib_fname_abspath = find_raylib_so(raylib_so_paths())
 _lib_fname_abspath = os.path.normcase(os.path.normpath(_lib_fname_abspath))
 
 print(
@@ -99,7 +137,6 @@ print(
 
 _rl = None
 if _lib_platform == 'win32':
-
     try:
         _rl = CDLLEx(_lib_fname_abspath, LOAD_WITH_ALTERED_SEARCH_PATH)
     except OSError as err:
