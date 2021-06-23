@@ -62,46 +62,26 @@ if sys.platform == 'win32':
 
 # endregion (cdllex)
 
-
-def raylib_so_paths():
-    '''Return a list of full paths to try and load the shared library from
+def raylib_library_path():
+    '''Return the full path of the raylib shared library
+    If the environment variable "USE_EXTERNAL_RAYLIB" is set (no value required)
+    then the library will be loaded from the system library paths.
     '''
-    def so_paths():
-        main_mod = sys.modules['__main__']
-        running_from_repl = '__file__' not in dir(main_mod)
-        return filter(None, [
-            os.environ.get('RAYLIB_BIN_PATH') if 'RAYLIB_BIN_PATH' in os.environ else None,
-            os.path.join(os.path.dirname(__file__), 'bin'),
-            os.path.join(os.path.dirname(main_mod.__file__), 'bin') if not running_from_repl else None,
-        ])
-    def so_names():
+    def so_path():
+        default_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bin')
+        return default_path if not 'USE_EXTERNAL_RAYLIB' in os.environ else ''
+    def so_name():
+        '''Returns the appropriate for the library on the current platform.'''
         lib_filenames = {
-            'win32': ['raylib.dll', 'libraylib.dll', 'libraylib_shared.dll'],
-            'linux': ['libraylib.so.3.7.0', 'libraylib.so.370', 'libraylib.so'],
-            'darwin': ['libraylib.3.7.0.dylib', 'libraylib.dylib.370', 'libraylib.dylib'],
+            'Windows': 'libraylib.dll',
+            'Linux': 'libraylib.so.3.7.0',
+            'Darwin': 'libraylib.3.7.0.dylib',
         }
-        return filter(None, [
-            os.environ.get('RAYLIB_BIN_FILENAME'),
-            *lib_filenames[sys.platform]
-        ])
-    def join_paths(paths):
-        return os.path.join(*paths)
+        if platform.system() not in lib_filenames:
+            raise ValueError('Unrecognised system "{}"'.format(platform.system()))
+        return lib_filenames.get(platform.system())
 
-    paths = itertools.product(so_paths(), so_names())
-    return list(map(join_paths, paths))
-
-def find_raylib_so(raylib_paths):
-    '''Given a list of possible paths, finds the first valid one.
-    If no paths are valid, throws a RuntimeError.
-    '''
-    valid_paths = list(filter(lambda path: os.path.isfile(path), raylib_paths))
-    if len(valid_paths):
-        return valid_paths[0]
-
-    raise RuntimeError((
-        'Cannot find Raylib shared object in these search paths:\n'
-        '{}'
-    ).format('\n'.join(raylib_paths)))
+    return os.path.join(so_path(), so_name())
 
 
 
@@ -113,7 +93,7 @@ else:
     _bitness = '64bit' if sys.maxsize > 2 ** 32 else '32bit'
 
 
-_lib_fname_abspath = find_raylib_so(raylib_so_paths())
+_lib_fname_abspath = raylib_library_path()
 _lib_fname_abspath = os.path.normcase(os.path.normpath(_lib_fname_abspath))
 
 print(
