@@ -7,7 +7,6 @@ from ctypes import CDLL, wintypes
 
 __all__ = [
     '_rl',
-    'CDLLEx',
 ]
 
 # region LIBRARY LOADING
