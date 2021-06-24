@@ -92,7 +92,7 @@ def main() -> int:
             if check_collision_point_rec(get_mouse_position(), toggle_recs[i]):
                 mouse_hover_rec = i
 
-                if is_mouse_button_released(MOUSE_LEFT_BUTTON):
+                if is_mouse_button_released(MOUSE_BUTTON_LEFT):
                     current_process = i
                     texture_reload = True
                 break

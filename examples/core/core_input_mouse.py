@@ -35,21 +35,21 @@ def main() -> int:
         # ----------------------------------------------------------------------------------
         ball_position = get_mouse_position()
 
-        if is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
+        if is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
             ball_color = MAROON
-        elif is_mouse_button_pressed(MOUSE_MIDDLE_BUTTON):
+        elif is_mouse_button_pressed(MOUSE_BUTTON_MIDDLE):
             ball_color = LIME
-        elif is_mouse_button_pressed(MOUSE_RIGHT_BUTTON):
+        elif is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
             ball_color = DARKBLUE
 
         # NOTE: not supported in 3.7:
-        # elif is_mouse_button_pressed(MOUSE_SIDE_BUTTON):
+        # elif is_mouse_button_pressed(MOUSE_BUTTON_SIDE):
         #     ball_color = PURPLE
-        # elif is_mouse_button_pressed(MOUSE_EXTRA_BUTTON):
+        # elif is_mouse_button_pressed(MOUSE_BUTTON_EXTRA):
         #     ball_color = YELLOW
-        # elif is_mouse_button_pressed(MOUSE_FORWARD_BUTTON):
+        # elif is_mouse_button_pressed(MOUSE_BUTTON_FORWARD):
         #     ball_color = ORANGE
-        # elif is_mouse_button_pressed(MOUSE_BACK_BUTTON):
+        # elif is_mouse_button_pressed(MOUSE_BUTTON_BACK):
         #     ball_color = BEIGE
         # ----------------------------------------------------------------------------------
 

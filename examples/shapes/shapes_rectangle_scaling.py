@@ -51,7 +51,7 @@ def main() -> int:
                                                     MOUSE_SCALE_MARK_SIZE,
                                                     MOUSE_SCALE_MARK_SIZE))):
             mouse_scale_ready = True
-            if is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
+            if is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
                 mouse_scale_mode = True
         else:
             mouse_scale_ready = False
@@ -67,7 +67,7 @@ def main() -> int:
             if rec.height < MOUSE_SCALE_MARK_SIZE:
                 rec.height = MOUSE_SCALE_MARK_SIZE
 
-            if is_mouse_button_released(MOUSE_LEFT_BUTTON):
+            if is_mouse_button_released(MOUSE_BUTTON_LEFT):
                 mouse_scale_mode = False
         # ----------------------------------------------------------------------------------
 

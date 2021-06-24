@@ -62,7 +62,7 @@ def main() -> int:
     while not window_should_close():
         # Update
         # ----------------------------------------------------------------------------------
-        if is_mouse_button_pressed(MOUSE_LEFT_BUTTON) or is_key_pressed(KEY_RIGHT):
+        if is_mouse_button_pressed(MOUSE_BUTTON_LEFT) or is_key_pressed(KEY_RIGHT):
             current_texture = (current_texture + 1) % NUM_TEXTURES  # Cycle between the textures
         # ----------------------------------------------------------------------------------
 

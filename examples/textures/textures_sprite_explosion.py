@@ -56,7 +56,7 @@ def main() -> int:
         # ----------------------------------------------------------------------------------
 
         # Check for mouse button pressed and activate explosion (if not active)
-        if is_mouse_button_pressed(MOUSE_LEFT_BUTTON) and not active:
+        if is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and not active:
             position = get_mouse_position()
             active = True
 

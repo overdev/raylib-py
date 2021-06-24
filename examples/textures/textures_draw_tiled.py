@@ -82,7 +82,7 @@ def main() -> int:
         screen_height = get_screen_height()
 
         # Handle mouse
-        if is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
+        if is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
             mouse: Vector2 = get_mouse_position()
 
             # Check which pattern was clicked and set it as the active pattern

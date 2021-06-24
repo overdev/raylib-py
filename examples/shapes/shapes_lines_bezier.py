@@ -35,9 +35,9 @@ def main() -> int:
     while not window_should_close():  # Detect window close button or ESC key
         # Update
         # ----------------------------------------------------------------------------------
-        if is_mouse_button_down(MOUSE_LEFT_BUTTON):
+        if is_mouse_button_down(MOUSE_BUTTON_LEFT):
             start = get_mouse_position()
-        elif is_mouse_button_down(MOUSE_RIGHT_BUTTON):
+        elif is_mouse_button_down(MOUSE_BUTTON_RIGHT):
             end = get_mouse_position()
         # ----------------------------------------------------------------------------------
 

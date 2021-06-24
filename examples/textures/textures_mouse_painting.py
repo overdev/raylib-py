@@ -91,7 +91,7 @@ def main() -> int:
             else:
                 color_mouse_hover = -1
 
-        if color_mouse_hover >= 0 and is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
+        if color_mouse_hover >= 0 and is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
             color_selected = color_mouse_hover
             color_selected_prev = color_selected
 
@@ -108,7 +108,7 @@ def main() -> int:
             clear_background(colors[0])
             end_texture_mode()
 
-        if is_mouse_button_down(MOUSE_LEFT_BUTTON) or (get_gesture_detected() == GESTURE_DRAG):
+        if is_mouse_button_down(MOUSE_BUTTON_LEFT) or (get_gesture_detected() == GESTURE_DRAG):
             # Paint circle into render texture
             # NOTE: To avoid discontinuous circles, we could store
             # previous-next mouse points and just draw a line using brush size
@@ -117,7 +117,7 @@ def main() -> int:
                 draw_circle(mouse_pos.x, mouse_pos.y, brush_size, colors[color_selected])
             end_texture_mode()
 
-        if is_mouse_button_down(MOUSE_RIGHT_BUTTON):
+        if is_mouse_button_down(MOUSE_BUTTON_RIGHT):
             if not mouse_was_pressed:
                 color_selected_prev = color_selected
                 color_selected = 0
@@ -129,7 +129,7 @@ def main() -> int:
                 if mouse_pos.y > 50:
                     draw_circle(mouse_pos.x, mouse_pos.y, brush_size, colors[0])
             # end texture mode
-        elif is_mouse_button_released(MOUSE_RIGHT_BUTTON) and mouse_was_pressed:
+        elif is_mouse_button_released(MOUSE_BUTTON_RIGHT) and mouse_was_pressed:
             color_selected = color_selected_prev
             mouse_was_pressed = False
 
@@ -141,7 +141,7 @@ def main() -> int:
 
         # Image saving logic
         # NOTE: Saving painted texture to a default named image
-        if btn_save_mouse_hover and is_mouse_button_released(MOUSE_LEFT_BUTTON) or is_key_pressed(KEY_S):
+        if btn_save_mouse_hover and is_mouse_button_released(MOUSE_BUTTON_LEFT) or is_key_pressed(KEY_S):
             image: Image = get_texture_data(target.texture)
             image_flip_vertical(image)
             export_image(image, "my_amazing_texture_painting.png")
@@ -168,7 +168,7 @@ def main() -> int:
 
         # Draw drawing circle for reference
         if mouse_pos.y > 50:
-            if is_mouse_button_down(MOUSE_RIGHT_BUTTON):
+            if is_mouse_button_down(MOUSE_BUTTON_RIGHT):
                 draw_circle_lines(mouse_pos.x, mouse_pos.y, brush_size, GRAY)
             else:
                 draw_circle(get_mouse_x(), get_mouse_y(), brush_size, colors[color_selected])

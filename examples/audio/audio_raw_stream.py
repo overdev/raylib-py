@@ -73,7 +73,7 @@ def main() -> int:
         # Sample mouse input.
         mouse_position = get_mouse_position()
 
-        if is_mouse_button_down(MOUSE_LEFT_BUTTON):
+        if is_mouse_button_down(MOUSE_BUTTON_LEFT):
             fp: float = mouse_position.y
             frequency = 40.0 + fp
 
