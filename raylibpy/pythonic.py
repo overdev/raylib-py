@@ -2,7 +2,7 @@ import re
 import contextlib
 from ctypes import byref
 from raylibpy import _rl
-from typing import Any, Dict, Union, Tuple, List, Sequence, TypeVar, Optional, NamedTuple
+from typing import Any, Dict, Union, Tuple, List, Sequence, TypeVar, Optional, NamedTuple, MutableSequence
 from ctypes import (
     Structure,
     c_bool,
@@ -189,7 +189,7 @@ def _str_in(value: Union[str, bytes]) -> bytes:
     return value.encode('utf-8', 'ignore') if isinstance(value, str) else value
 
 
-def _str_in2(values: Sequence[Union[str, bytes]]) -> Array[bytes]:
+def _str_in2(values: Sequence[Union[str, bytes]]) -> MutableSequence[bytes]:
     return _arr(CharPtr, tuple(_str_in(value) for value in values))
 
 
@@ -197,11 +197,11 @@ def _str_out(value: Union[str, bytes]) -> str:
     return value.decode('utf-8', 'ignore') if isinstance(value, bytes) else value
 
 
-def _arr(typ: Any, data: Sequence[U]) -> Array[U]:
+def _arr(typ: Any, data: Sequence[U]) -> MutableSequence[U]:
     return (typ * len(data))(*data)
 
 
-def _arr2(typ: Any, data: Sequence[U]) -> Array[U]:
+def _arr2(typ: Any, data: Sequence[U]) -> MutableSequence[U]:
     arr = typ * len(data[0])
     return (arr * len(data))(*data)
 
