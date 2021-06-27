@@ -26,7 +26,7 @@ _raylib-py_ uses type [annotations](https://www.python.org/dev/peps/pep-3107/#id
 that supports it is required.
 
 Some Python versions may not have [enum](https://pypi.org/project/enum/)
-and/or [typings](https://pypi.org/project/typing/) modules as part of the standard library, wich are required. These are
+and/or [typings](https://pypi.org/project/typing/) modules as part of the standard library, which are required. These are
 installed automatically by pip.
 
 ### Installing
@@ -52,6 +52,22 @@ py-3.x-32 -m pip install raylib-py
 ```
 
 > Note that the minimum Python version tested is 3.4. Please, let me know if you're able to run it in Python33.
+
+_raylib-py_ comes with 32bit binaries for Windows, Mac and Linux, but you're not required to use these.
+If you have an existing _raylib_ _**dll**_, _**dylib**_ or _**so**_ binary, you can set the environment variable
+"USE_EXTERNAL_RAYLIB" to any value (it just has to exist) and _raylib-py_ will fallback to using your operating
+sytems mechanism of loading libraries.
+
+```python
+import os
+
+# specify that we should load raylib from the system instead
+os.environ["USE_EXTERNAL_RAYLIB"] = True
+
+import raylibpy
+
+# let the fun begin.
+```
 
 ## Tests
 
@@ -287,4 +303,3 @@ _raylib-py_ (and _raylib_) is licensed under an unmodified zlib/libpng license, 
 * Inspiration
 * etc
 -->
-
