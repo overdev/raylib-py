@@ -53,7 +53,7 @@ def main() -> int:
     while not window_should_close():  # Detect window close button or ESC key
         # Update
         # ----------------------------------------------------------------------------------
-        if is_mouse_button_down(MOUSE_LEFT_BUTTON):
+        if is_mouse_button_down(MOUSE_BUTTON_LEFT):
             # Create more bunnies
             for i in range(100):
                 if bunnies_count < MAX_BUNNIES:

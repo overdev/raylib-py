@@ -40,7 +40,7 @@ def main():
             if check_collision_point_rec(mouse_point, color_rects[i]):
                 colors[i].a = 120
 
-                if is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
+                if is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
                     selected[i] = not selected[i]
             else:
                 colors[i].a = 255

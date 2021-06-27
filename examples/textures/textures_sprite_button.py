@@ -57,12 +57,12 @@ def main() -> int:
 
         # Check button state
         if check_collision_point_rec(mouse_point, btn_bounds):
-            if is_mouse_button_down(MOUSE_LEFT_BUTTON):
+            if is_mouse_button_down(MOUSE_BUTTON_LEFT):
                 btn_state = 2
             else:
                 btn_state = 1
 
-            if is_mouse_button_released(MOUSE_LEFT_BUTTON):
+            if is_mouse_button_released(MOUSE_BUTTON_LEFT):
                 btn_action = True
         else:
             btn_state = 0

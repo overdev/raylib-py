@@ -39,7 +39,7 @@ def main() -> int:
         # ---------------------------------------------------------------------------------
         update_camera(camera)
 
-        if is_mouse_button_pressed(MOUSE_LEFT_BUTTON):
+        if is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
             ray = get_mouse_ray(get_mouse_position(), camera)
 
             #
