@@ -72,7 +72,7 @@ def raylib_library_path():
     def so_name():
         '''Returns the appropriate for the library on the current platform.'''
         lib_filenames = {
-            'Windows': 'libraylib.dll',
+            'Windows': 'raylib.dll',
             'Linux': 'libraylib.so.3.7.0',
             'Darwin': 'libraylib.3.7.0.dylib',
         }
