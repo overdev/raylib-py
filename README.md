@@ -14,7 +14,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 _raylib-py_ uses type [annotations](https://www.python.org/dev/peps/pep-3107/#id30) in its source, so a Python version that supports it is required.
 
-Some Python versions may not have [enum](https://pypi.org/project/enum/) and/or [typings](https://pypi.org/project/typing/) modules as part of the standard library, wich are required. These are installed automatically by pip.
+Some Python versions may not have [enum](https://pypi.org/project/enum/) and/or [typings](https://pypi.org/project/typing/) modules as part of the standard library, which are required. These are installed automatically by pip.
 
 ### Installing
 
