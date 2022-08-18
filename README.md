@@ -1,3 +1,5 @@
+# DISCONTINUED: please, refer to <a href="https://github.com/overdev/raylibpyctbg">raylibpyctbgh</a> for a possibly better alternative</h1>
+
 <img align="left" src="https://github.com/overdev/raylib-py/blob/master/logo/raylib-py_256x256.png" width=256>
 
 # raylib-py
