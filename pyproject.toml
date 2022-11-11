@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "raylib-py"
+version = "4.2.0"
+authors = [
+  { name="Jorge A. Gomes", email="jorgegomes83@protonmail.com" },
+]
+description = "A simple and easy-to-use library to enjoy videogames programming (written in C)"
+readme = "README.md"
+requires-python = ">=3.3"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/overdev/raylibpyctbg"
+"Bug Tracker" = "https://github.com/overdev/raylibpyctbg/issues"
