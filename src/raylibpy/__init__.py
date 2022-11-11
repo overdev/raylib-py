@@ -932,13 +932,14 @@ __all__ = [
     'set_audio_stream_callback',
     'attach_audio_stream_processor',
     'detach_audio_stream_processor',
-    'Drawing',
-    'ScissorMode',
-    'Mode2D',
-    'Mode3D',
-    'ShaderMode',
-    'TextureMode',
-    'VrStereoMode',
+    'drawing',
+    'scissor_mode',
+    'blend_mode',
+    'mode2d',
+    'mode3d',
+    'shader_mode',
+    'texture_mode',
+    'vr_stereo_mode',
     'clamp',
     'lerp',
     'normalize',
@@ -12747,6 +12748,13 @@ def scissor_mode(x, y, width, height):# type: (int, int, int, int) -> None
     _BeginScissorMode(int(x), int(y), int(width), int(height))
     yield
     _EndScissorMode()
+
+@contextmanager
+def blend_mode(mode):# type: (int) -> None
+    """Context manager for blend mode"""
+    _BeginBlendMode(int(mode))
+    yield
+    _EndBlendMode()
 
 @contextmanager
 def mode2d(camera):# type: (Camera2D) -> None
