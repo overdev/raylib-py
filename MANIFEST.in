@@ -1,0 +1,6 @@
+include src\raylibpy\bin\32bit\*.dylib
+include src\raylibpy\bin\32bit\*.dll
+include src\raylibpy\bin\32bit\libraylib.so.4.2.0
+include src\raylibpy\bin\64bit\*.dylib
+include src\raylibpy\bin\64bit\*.dll
+include src\raylibpy\bin\64bit\libraylib.so.4.2.0

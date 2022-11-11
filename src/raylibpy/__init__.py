@@ -1425,7 +1425,7 @@ if _lib_platform == 'win32':
 else:
     _bitness = '64bit' if sys.maxsize > 2 ** 32 else '32bit'
 
-_lib_fname_abspath = os.path.join('../lib', 'bin', _bitness, _lib_fname[_lib_platform])
+_lib_fname_abspath = os.path.join(os.path.dirname(__file__), 'bin', _bitness, _lib_fname[_lib_platform])
 _lib_fname_abspath = os.path.normcase(os.path.normpath(_lib_fname_abspath))
 
 print(
