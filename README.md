@@ -33,6 +33,49 @@ The source in this repo is pretty much outdated and does not reflect the latest 
 
 The latest release published here was generated from another project, as mentioned in #45.
 
+## How to install:
+
+From PyPI, in the CLI:
+
+```
+$ pip install raylib-py
+```
+
+You can also download the wheel from the [releases](https://github.com/overdev/raylib-py/releases) page and install it with pip locally:
+
+```
+$ pip install path/to/raylib_py-4.5.0-py3-none-any.whl
+```
+
+## How to use:
+
+Try this (after installed raylib-py, create a new python file, save the code below into it, then run it):
+
+```python
+
+from raylibpy import *
+
+
+def main():
+
+    init_window(800, 450, "raylib [core] example - basic window")
+
+    set_target_fps(60)
+
+    while not window_should_close():
+
+        begin_drawing()
+        clear_background(RAYWHITE)
+        draw_text("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY)
+        end_drawing()
+
+    close_window()
+
+
+if __name__ == '__main__':
+    main()
+```
+
 ## Features:
 - PEP8 naming convention only:
 
