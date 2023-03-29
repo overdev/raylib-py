@@ -13,25 +13,25 @@
 ![PyPI - Downloads](https://img.shields.io/pypi/dd/raylib-py?label=PyPI%20Downloads&style=plastic)
 
 ![GitHub all releases](https://img.shields.io/github/downloads/overdev/raylib-py/total?style=plastic)
-![GitHub release (by tag)](https://img.shields.io/github/downloads/overdev/raylib-py/v4.2.0/total?style=plastic)
+![GitHub release (by tag)](https://img.shields.io/github/downloads/overdev/raylib-py/v4.5.0/total?style=plastic)
 ![GitHub forks](https://img.shields.io/github/forks/overdev/raylib-py?style=social)
 
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/overdev/raylib-py?style=plastic)
-![GitHub commits since tagged version](https://img.shields.io/github/commits-since/overdev/raylib-py/v4.2.0?style=plastic)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/overdev/raylib-py/v4.5.0?style=plastic)
 
 A python binding for the great _C_ library **[raylib](https://github.com/raysan5/raylib)**.
 
 
-# WARNING: This project is in a semi discontinued state.
+# WARNING: This is a releases-only repository.
 
-Plase, read this [issue](https://github.com/overdev/raylib-py/issues/45) for more information.
+Please, read this [issue](https://github.com/overdev/raylib-py/issues/45) for more information.
 
-I intend to use this repository only to make new package distribution releases.
-No specific changes in the source will be made.
+I intend to use this repository only to publish new raylib-py releases.
+The source in this repo is pretty much outdated and does not reflect the latest release.
 
 ## Release Information:
 
-The current release was made as output of another project, as mentioned in #45.
+The latest release published here was generated from another project, as mentioned in #45.
 
 ## Features:
 - PEP8 naming convention only:
