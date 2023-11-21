@@ -76,6 +76,10 @@ if __name__ == '__main__':
     main()
 ```
 
+## API Documentation
+
+Please refer to [DOCS.md for v5.0.0b1](https://github.com/overdev/raylib-py/releases/download/v5.0.0b1/DOCS.md)
+
 ## Features:
 - PEP8 naming convention only:
 
