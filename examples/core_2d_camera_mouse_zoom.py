@@ -33,8 +33,8 @@ def main():
     while not window_should_close():
         if is_mouse_button_down(MOUSE_BUTTON_RIGHT):
             delta = get_mouse_delta()
-            delta  = vector2scale(delta, -1.0 / camera.zoom)
-            camera.target  = vector2add(camera.target, delta)
+            delta  = delta * (-1.0 / camera.zoom)
+            camera.target += delta
 
         wheel = get_mouse_wheel_move()
         
