@@ -44,7 +44,7 @@ $ pip install raylib-py
 You can also download the wheel from the [releases](https://github.com/overdev/raylib-py/releases) page and install it with pip locally:
 
 ```
-$ pip install path/to/raylib_py-4.5.0-py3-none-any.whl
+$ pip install path/to/raylib_py-5.0.0-py3-none-any.whl
 ```
 
 ## How to use:
