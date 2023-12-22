@@ -1,210 +1,347 @@
+# #!/usr/bin/python3
+# -*- encoding: utf8 -*-
+
+# region LICENSE INFORMATION
+
+# C raylib license
+
+# ------------------------------------------------------------------------------
+# zlib/libpng
+#
+# raylib is licensed under an unmodified zlib/libpng license, which is an OSI-certified,
+# BSD-like license that allows static linking with closed source software:
+#
+# Copyright (c) 2013-2023 Ramon Santamaria (@raysan5)
+#
+# This software is provided "as-is", without any express or implied warranty. In no event
+# will the authors be held liable for any damages arising from the use of this software.
+#
+# Permission is granted to anyone to use this software for any purpose, including commercial
+# applications, and to alter it and redistribute it freely, subject to the following restrictions:
+#
+#    1. The origin of this software must not be misrepresented; you must not claim that you
+#    wrote the original software. If you use this software in a product, an acknowledgment
+#    in the product documentation would be appreciated but is not required.
+#
+#    2. Altered source versions must be plainly marked as such, and must not be misrepresented
+#    as being the original software.
+#
+#    3. This notice may not be removed or altered from any source distribution.
+#
+# ------------------------------------------------------------------------------
+
+# raylib-py license
+
+# ------------------------------------------------------------------------------
+# The MIT License
+#
+#
+# Copyright (c) 2023 Jorge A. Gomes
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# ------------------------------------------------------------------------------
+
+# endregion (license information)
+
+# region IMPORTS
 
 import sys
 import re
 import os
 import platform
 import ctypes
+import json
+import struct
+
+from typing import Generic, TypeVar
 from enum import IntEnum
 from contextlib import contextmanager
-from typing import Optional as Opt, Any, Sequence as Seq, Union
 from ctypes import (
     CDLL, wintypes,
-    c_bool, c_char, c_byte, c_short, c_long, c_longlong, c_ubyte, c_ushort, c_ulong, c_ulonglong, c_float, c_double, c_char_p, c_void_p,
-    Structure, POINTER, CFUNCTYPE, byref, cast
-) 
+    c_bool,
+    c_char, c_wchar, c_char_p, c_wchar_p,
+    c_byte, c_short, c_int, c_long, c_longlong,
+    c_ubyte, c_ushort, c_uint, c_ulong, c_ulonglong,
+    c_float, c_double, c_longdouble,
+    c_void_p, c_size_t,
+    Array, Structure, POINTER, CFUNCTYPE, byref, cast, pointer, POINTER
+)
 
+from . import easings
+
+
+# endregion (imports)
+
+# region EXPORTS
 
 __all__ = [
-    'rlapi',
+
+    # utilities
+    'byte_array',
+    'clear_format_string_cache',
+    'double_array',
+    'float_array',
+    'int_array',
+    'pop_out_param',
+    'short_array',
+    'string_array',
+    'ubyte_array',
+    'uint_array',
+    'ushort_array',
+
+    # types
+    'AutomationEventListPtr',
+    'AutomationEventPtr',
+    'BoneInfoPtr',
     'Bool',
-    'BoolPtr',
-    'Byte',
-    'BytePtr',
+    'CameraPtr',
     'Char',
+    'Char32',
     'CharPtr',
-    'Short',
-    'ShortPtr',
+    'CharPtrPtr',
+    'ColorPtr',
+    'Double',
+    'Float',
+    'Float16',
+    'Float2',
+    'Float3',
+    'Float4',
+    'FloatPtr',
+    'GlyphInfoPtr',
+    'ImagePtr',
     'Int',
+    'Int4',
     'IntPtr',
     'Long',
-    'LongPtr',
-    'UByte',
-    'UBytePtr',
-    'UShort',
-    'UShortPtr',
+    'MaterialMapPtr',
+    'MaterialPtr',
+    'MatrixPtr',
+    'MeshPtr',
+    'ModelAnimationPtr',
+    'ModelPtr',
+    'RectanglePtr',
+    'RectanglePtrPtr',
+    'Texture2DPtr',
+    'TransformPtr',
+    'TransformPtrPtr',
+    'UChar',
+    'UCharPtr',
     'UInt',
+    'UInt4',
     'UIntPtr',
-    'ULong',
-    'ULongPtr',
-    'Float',
-    'FloatPtr',
-    'Double',
-    'DoublePtr',
+    'UShortPtr',
+    'Vector2Ptr',
+    'Vector3Ptr',
     'VoidPtr',
-    'VoidPtrPtr',
+    'WavePtr',
+    'rAudioBufferPtr',
+    'rAudioProcessorPtr',
+    'rlDrawCallPtr',
+    'rlRenderBatchPtr',
+    'rlVertexBufferPtr',
 
+    # structs
+    'AudioStream',
+    'AutomationEvent',
+    'AutomationEventList',
+    'BoneInfo',
+    'BoundingBox',
+    'Camera2D',
+    'Camera3D',
+    'Color',
+    'FilePathList',
+    'Font',
+    'GlyphInfo',
+    'Image',
+    'Material',
+    'MaterialMap',
+    'Matrix',
+    'Mesh',
+    'Model',
+    'ModelAnimation',
+    'Music',
+    'NPatchInfo',
+    'Ray',
+    'RayCollision',
+    'Rectangle',
+    'RenderTexture',
+    'Shader',
+    'Sound',
+    'Texture',
+    'Transform',
     'Vector2',
     'Vector3',
     'Vector4',
-    'Matrix',
-    'Color',
-    'Rectangle',
-    'Image',
-    'Texture',
-    'RenderTexture',
-    'NPatchInfo',
-    'GlyphInfo',
-    'Font',
-    'Camera3D',
-    'Camera2D',
-    'Mesh',
-    'Shader',
-    'MaterialMap',
-    'Material',
-    'Transform',
-    'BoneInfo',
-    'Model',
-    'ModelAnimation',
-    'Ray',
-    'RayCollision',
-    'BoundingBox',
-    'Wave',
-    'AudioStream',
-    'Sound',
-    'Music',
     'VrDeviceInfo',
     'VrStereoConfig',
-    'FilePathList',
-    'RAYLIB_VERSION',
-    'PI',
-    'DEG2RAD',
-    'RAD2DEG',
-    'LIGHTGRAY',
-    'GRAY',
-    'DARKGRAY',
-    'YELLOW',
-    'GOLD',
-    'ORANGE',
-    'PINK',
-    'RED',
-    'MAROON',
-    'GREEN',
-    'LIME',
-    'DARKGREEN',
-    'SKYBLUE',
-    'BLUE',
-    'DARKBLUE',
-    'PURPLE',
-    'VIOLET',
-    'DARKPURPLE',
-    'BEIGE',
-    'BROWN',
-    'DARKBROWN',
-    'WHITE',
-    'BLACK',
-    'BLANK',
-    'MAGENTA',
-    'RAYWHITE',
-    'Quaternion',
-    'Texture2D',
-    'TextureCubemap',
-    'RenderTexture2D',
-    'Camera',
+    'Wave',
+    'float16',
+    'float3',
+    'rlDrawCall',
+    'rlRenderBatch',
+    'rlVertexBuffer',
+
+    # enums
+    'BlendMode',
+    'CameraMode',
+    'CameraProjection',
     'ConfigFlags',
-    'FLAG_VSYNC_HINT',
-    'FLAG_FULLSCREEN_MODE',
-    'FLAG_WINDOW_RESIZABLE',
-    'FLAG_WINDOW_UNDECORATED',
-    'FLAG_WINDOW_HIDDEN',
-    'FLAG_WINDOW_MINIMIZED',
-    'FLAG_WINDOW_MAXIMIZED',
-    'FLAG_WINDOW_UNFOCUSED',
-    'FLAG_WINDOW_TOPMOST',
-    'FLAG_WINDOW_ALWAYS_RUN',
-    'FLAG_WINDOW_TRANSPARENT',
-    'FLAG_WINDOW_HIGHDPI',
-    'FLAG_WINDOW_MOUSE_PASSTHROUGH',
-    'FLAG_MSAA_4X_HINT',
-    'FLAG_INTERLACED_HINT',
-    'TraceLogLevel',
-    'LOG_ALL',
-    'LOG_TRACE',
-    'LOG_DEBUG',
-    'LOG_INFO',
-    'LOG_WARNING',
-    'LOG_ERROR',
-    'LOG_FATAL',
-    'LOG_NONE',
+    'CubemapLayout',
+    'FontType',
+    'GamepadAxis',
+    'GamepadButton',
+    'Gesture',
     'KeyboardKey',
-    'KEY_NULL',
-    'KEY_APOSTROPHE',
-    'KEY_COMMA',
-    'KEY_MINUS',
-    'KEY_PERIOD',
-    'KEY_SLASH',
-    'KEY_ZERO',
-    'KEY_ONE',
-    'KEY_TWO',
-    'KEY_THREE',
-    'KEY_FOUR',
-    'KEY_FIVE',
-    'KEY_SIX',
-    'KEY_SEVEN',
-    'KEY_EIGHT',
-    'KEY_NINE',
-    'KEY_SEMICOLON',
-    'KEY_EQUAL',
+    'MaterialMapIndex',
+    'MouseButton',
+    'MouseCursor',
+    'NPatchLayout',
+    'PixelFormat',
+    'ShaderAttributeDataType',
+    'ShaderLocationIndex',
+    'ShaderUniformDataType',
+    'TextureFilter',
+    'TextureWrap',
+    'TraceLogLevel',
+    'rlBlendMode',
+    'rlCullMode',
+    'rlFramebufferAttachTextureType',
+    'rlFramebufferAttachType',
+    'rlGlVersion',
+    'rlPixelFormat',
+    'rlShaderAttributeDataType',
+    'rlShaderLocationIndex',
+    'rlShaderUniformDataType',
+    'rlTextureFilter',
+    'rlTraceLogLevel',
+
+    # aliases
+    'Camera',
+    'CameraPtr',
+    'Quaternion',
+    'QuaternionPtr',
+    'RenderTexture2D',
+    'RenderTexture2DPtr',
+    'Texture2D',
+    'Texture2DPtr',
+    'TextureCubemap',
+    'TextureCubemapPtr',
+
+    # enumerands
+    'BLEND_ADDITIVE',
+    'BLEND_ADD_COLORS',
+    'BLEND_ALPHA',
+    'BLEND_ALPHA_PREMULTIPLY',
+    'BLEND_CUSTOM',
+    'BLEND_CUSTOM_SEPARATE',
+    'BLEND_MULTIPLIED',
+    'BLEND_SUBTRACT_COLORS',
+    'CAMERA_CUSTOM',
+    'CAMERA_FIRST_PERSON',
+    'CAMERA_FREE',
+    'CAMERA_ORBITAL',
+    'CAMERA_ORTHOGRAPHIC',
+    'CAMERA_PERSPECTIVE',
+    'CAMERA_THIRD_PERSON',
+    'CUBEMAP_LAYOUT_AUTO_DETECT',
+    'CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE',
+    'CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR',
+    'CUBEMAP_LAYOUT_LINE_HORIZONTAL',
+    'CUBEMAP_LAYOUT_LINE_VERTICAL',
+    'CUBEMAP_LAYOUT_PANORAMA',
+    'FLAG_BORDERLESS_WINDOWED_MODE',
+    'FLAG_FULLSCREEN_MODE',
+    'FLAG_INTERLACED_HINT',
+    'FLAG_MSAA_4X_HINT',
+    'FLAG_VSYNC_HINT',
+    'FLAG_WINDOW_ALWAYS_RUN',
+    'FLAG_WINDOW_HIDDEN',
+    'FLAG_WINDOW_HIGHDPI',
+    'FLAG_WINDOW_MAXIMIZED',
+    'FLAG_WINDOW_MINIMIZED',
+    'FLAG_WINDOW_MOUSE_PASSTHROUGH',
+    'FLAG_WINDOW_RESIZABLE',
+    'FLAG_WINDOW_TOPMOST',
+    'FLAG_WINDOW_TRANSPARENT',
+    'FLAG_WINDOW_UNDECORATED',
+    'FLAG_WINDOW_UNFOCUSED',
+    'FONT_BITMAP',
+    'FONT_DEFAULT',
+    'FONT_SDF',
+    'GAMEPAD_AXIS_LEFT_TRIGGER',
+    'GAMEPAD_AXIS_LEFT_X',
+    'GAMEPAD_AXIS_LEFT_Y',
+    'GAMEPAD_AXIS_RIGHT_TRIGGER',
+    'GAMEPAD_AXIS_RIGHT_X',
+    'GAMEPAD_AXIS_RIGHT_Y',
+    'GAMEPAD_BUTTON_LEFT_FACE_DOWN',
+    'GAMEPAD_BUTTON_LEFT_FACE_LEFT',
+    'GAMEPAD_BUTTON_LEFT_FACE_RIGHT',
+    'GAMEPAD_BUTTON_LEFT_FACE_UP',
+    'GAMEPAD_BUTTON_LEFT_THUMB',
+    'GAMEPAD_BUTTON_LEFT_TRIGGER_1',
+    'GAMEPAD_BUTTON_LEFT_TRIGGER_2',
+    'GAMEPAD_BUTTON_MIDDLE',
+    'GAMEPAD_BUTTON_MIDDLE_LEFT',
+    'GAMEPAD_BUTTON_MIDDLE_RIGHT',
+    'GAMEPAD_BUTTON_RIGHT_FACE_DOWN',
+    'GAMEPAD_BUTTON_RIGHT_FACE_LEFT',
+    'GAMEPAD_BUTTON_RIGHT_FACE_RIGHT',
+    'GAMEPAD_BUTTON_RIGHT_FACE_UP',
+    'GAMEPAD_BUTTON_RIGHT_THUMB',
+    'GAMEPAD_BUTTON_RIGHT_TRIGGER_1',
+    'GAMEPAD_BUTTON_RIGHT_TRIGGER_2',
+    'GAMEPAD_BUTTON_UNKNOWN',
+    'GESTURE_DOUBLETAP',
+    'GESTURE_DRAG',
+    'GESTURE_HOLD',
+    'GESTURE_NONE',
+    'GESTURE_PINCH_IN',
+    'GESTURE_PINCH_OUT',
+    'GESTURE_SWIPE_DOWN',
+    'GESTURE_SWIPE_LEFT',
+    'GESTURE_SWIPE_RIGHT',
+    'GESTURE_SWIPE_UP',
+    'GESTURE_TAP',
     'KEY_A',
+    'KEY_APOSTROPHE',
     'KEY_B',
-    'KEY_C',
-    'KEY_D',
-    'KEY_E',
-    'KEY_F',
-    'KEY_G',
-    'KEY_H',
-    'KEY_I',
-    'KEY_J',
-    'KEY_K',
-    'KEY_L',
-    'KEY_M',
-    'KEY_N',
-    'KEY_O',
-    'KEY_P',
-    'KEY_Q',
-    'KEY_R',
-    'KEY_S',
-    'KEY_T',
-    'KEY_U',
-    'KEY_V',
-    'KEY_W',
-    'KEY_X',
-    'KEY_Y',
-    'KEY_Z',
-    'KEY_LEFT_BRACKET',
+    'KEY_BACK',
     'KEY_BACKSLASH',
-    'KEY_RIGHT_BRACKET',
-    'KEY_GRAVE',
-    'KEY_SPACE',
-    'KEY_ESCAPE',
-    'KEY_ENTER',
-    'KEY_TAB',
     'KEY_BACKSPACE',
-    'KEY_INSERT',
-    'KEY_DELETE',
-    'KEY_RIGHT',
-    'KEY_LEFT',
-    'KEY_DOWN',
-    'KEY_UP',
-    'KEY_PAGE_UP',
-    'KEY_PAGE_DOWN',
-    'KEY_HOME',
-    'KEY_END',
+    'KEY_C',
     'KEY_CAPS_LOCK',
-    'KEY_SCROLL_LOCK',
-    'KEY_NUM_LOCK',
-    'KEY_PRINT_SCREEN',
-    'KEY_PAUSE',
+    'KEY_COMMA',
+    'KEY_D',
+    'KEY_DELETE',
+    'KEY_DOWN',
+    'KEY_E',
+    'KEY_EIGHT',
+    'KEY_END',
+    'KEY_ENTER',
+    'KEY_EQUAL',
+    'KEY_ESCAPE',
+    'KEY_F',
     'KEY_F1',
+    'KEY_F10',
+    'KEY_F11',
+    'KEY_F12',
     'KEY_F2',
     'KEY_F3',
     'KEY_F4',
@@ -213,17 +350,16 @@ __all__ = [
     'KEY_F7',
     'KEY_F8',
     'KEY_F9',
-    'KEY_F10',
-    'KEY_F11',
-    'KEY_F12',
-    'KEY_LEFT_SHIFT',
-    'KEY_LEFT_CONTROL',
-    'KEY_LEFT_ALT',
-    'KEY_LEFT_SUPER',
-    'KEY_RIGHT_SHIFT',
-    'KEY_RIGHT_CONTROL',
-    'KEY_RIGHT_ALT',
-    'KEY_RIGHT_SUPER',
+    'KEY_FIVE',
+    'KEY_FOUR',
+    'KEY_G',
+    'KEY_GRAVE',
+    'KEY_H',
+    'KEY_HOME',
+    'KEY_I',
+    'KEY_INSERT',
+    'KEY_J',
+    'KEY_K',
     'KEY_KB_MENU',
     'KEY_KP_0',
     'KEY_KP_1',
@@ -235,876 +371,128 @@ __all__ = [
     'KEY_KP_7',
     'KEY_KP_8',
     'KEY_KP_9',
+    'KEY_KP_ADD',
     'KEY_KP_DECIMAL',
     'KEY_KP_DIVIDE',
-    'KEY_KP_MULTIPLY',
-    'KEY_KP_SUBTRACT',
-    'KEY_KP_ADD',
     'KEY_KP_ENTER',
     'KEY_KP_EQUAL',
-    'KEY_BACK',
+    'KEY_KP_MULTIPLY',
+    'KEY_KP_SUBTRACT',
+    'KEY_L',
+    'KEY_LEFT',
+    'KEY_LEFT_ALT',
+    'KEY_LEFT_BRACKET',
+    'KEY_LEFT_CONTROL',
+    'KEY_LEFT_SHIFT',
+    'KEY_LEFT_SUPER',
+    'KEY_M',
     'KEY_MENU',
-    'KEY_VOLUME_UP',
+    'KEY_MINUS',
+    'KEY_N',
+    'KEY_NINE',
+    'KEY_NULL',
+    'KEY_NUM_LOCK',
+    'KEY_O',
+    'KEY_ONE',
+    'KEY_P',
+    'KEY_PAGE_DOWN',
+    'KEY_PAGE_UP',
+    'KEY_PAUSE',
+    'KEY_PERIOD',
+    'KEY_PRINT_SCREEN',
+    'KEY_Q',
+    'KEY_R',
+    'KEY_RIGHT',
+    'KEY_RIGHT_ALT',
+    'KEY_RIGHT_BRACKET',
+    'KEY_RIGHT_CONTROL',
+    'KEY_RIGHT_SHIFT',
+    'KEY_RIGHT_SUPER',
+    'KEY_S',
+    'KEY_SCROLL_LOCK',
+    'KEY_SEMICOLON',
+    'KEY_SEVEN',
+    'KEY_SIX',
+    'KEY_SLASH',
+    'KEY_SPACE',
+    'KEY_T',
+    'KEY_TAB',
+    'KEY_THREE',
+    'KEY_TWO',
+    'KEY_U',
+    'KEY_UP',
+    'KEY_V',
     'KEY_VOLUME_DOWN',
-    'MouseButton',
-    'MOUSE_BUTTON_LEFT',
-    'MOUSE_BUTTON_RIGHT',
-    'MOUSE_BUTTON_MIDDLE',
-    'MOUSE_BUTTON_SIDE',
-    'MOUSE_BUTTON_EXTRA',
-    'MOUSE_BUTTON_FORWARD',
-    'MOUSE_BUTTON_BACK',
-    'MouseCursor',
-    'MOUSE_CURSOR_DEFAULT',
-    'MOUSE_CURSOR_ARROW',
-    'MOUSE_CURSOR_IBEAM',
-    'MOUSE_CURSOR_CROSSHAIR',
-    'MOUSE_CURSOR_POINTING_HAND',
-    'MOUSE_CURSOR_RESIZE_EW',
-    'MOUSE_CURSOR_RESIZE_NS',
-    'MOUSE_CURSOR_RESIZE_NWSE',
-    'MOUSE_CURSOR_RESIZE_NESW',
-    'MOUSE_CURSOR_RESIZE_ALL',
-    'MOUSE_CURSOR_NOT_ALLOWED',
-    'GamepadButton',
-    'GAMEPAD_BUTTON_UNKNOWN',
-    'GAMEPAD_BUTTON_LEFT_FACE_UP',
-    'GAMEPAD_BUTTON_LEFT_FACE_RIGHT',
-    'GAMEPAD_BUTTON_LEFT_FACE_DOWN',
-    'GAMEPAD_BUTTON_LEFT_FACE_LEFT',
-    'GAMEPAD_BUTTON_RIGHT_FACE_UP',
-    'GAMEPAD_BUTTON_RIGHT_FACE_RIGHT',
-    'GAMEPAD_BUTTON_RIGHT_FACE_DOWN',
-    'GAMEPAD_BUTTON_RIGHT_FACE_LEFT',
-    'GAMEPAD_BUTTON_LEFT_TRIGGER_1',
-    'GAMEPAD_BUTTON_LEFT_TRIGGER_2',
-    'GAMEPAD_BUTTON_RIGHT_TRIGGER_1',
-    'GAMEPAD_BUTTON_RIGHT_TRIGGER_2',
-    'GAMEPAD_BUTTON_MIDDLE_LEFT',
-    'GAMEPAD_BUTTON_MIDDLE',
-    'GAMEPAD_BUTTON_MIDDLE_RIGHT',
-    'GAMEPAD_BUTTON_LEFT_THUMB',
-    'GAMEPAD_BUTTON_RIGHT_THUMB',
-    'GamepadAxis',
-    'GAMEPAD_AXIS_LEFT_X',
-    'GAMEPAD_AXIS_LEFT_Y',
-    'GAMEPAD_AXIS_RIGHT_X',
-    'GAMEPAD_AXIS_RIGHT_Y',
-    'GAMEPAD_AXIS_LEFT_TRIGGER',
-    'GAMEPAD_AXIS_RIGHT_TRIGGER',
-    'MaterialMapIndex',
+    'KEY_VOLUME_UP',
+    'KEY_W',
+    'KEY_X',
+    'KEY_Y',
+    'KEY_Z',
+    'KEY_ZERO',
+    'LOG_ALL',
+    'LOG_DEBUG',
+    'LOG_ERROR',
+    'LOG_FATAL',
+    'LOG_INFO',
+    'LOG_NONE',
+    'LOG_TRACE',
+    'LOG_WARNING',
     'MATERIAL_MAP_ALBEDO',
-    'MATERIAL_MAP_METALNESS',
-    'MATERIAL_MAP_NORMAL',
-    'MATERIAL_MAP_ROUGHNESS',
-    'MATERIAL_MAP_OCCLUSION',
+    'MATERIAL_MAP_BRDF',
+    'MATERIAL_MAP_CUBEMAP',
     'MATERIAL_MAP_EMISSION',
     'MATERIAL_MAP_HEIGHT',
-    'MATERIAL_MAP_CUBEMAP',
     'MATERIAL_MAP_IRRADIANCE',
+    'MATERIAL_MAP_METALNESS',
+    'MATERIAL_MAP_NORMAL',
+    'MATERIAL_MAP_OCCLUSION',
     'MATERIAL_MAP_PREFILTER',
-    'MATERIAL_MAP_BRDF',
-    'ShaderLocationIndex',
-    'SHADER_LOC_VERTEX_POSITION',
-    'SHADER_LOC_VERTEX_TEXCOORD01',
-    'SHADER_LOC_VERTEX_TEXCOORD02',
-    'SHADER_LOC_VERTEX_NORMAL',
-    'SHADER_LOC_VERTEX_TANGENT',
-    'SHADER_LOC_VERTEX_COLOR',
-    'SHADER_LOC_MATRIX_MVP',
-    'SHADER_LOC_MATRIX_VIEW',
-    'SHADER_LOC_MATRIX_PROJECTION',
-    'SHADER_LOC_MATRIX_MODEL',
-    'SHADER_LOC_MATRIX_NORMAL',
-    'SHADER_LOC_VECTOR_VIEW',
-    'SHADER_LOC_COLOR_DIFFUSE',
-    'SHADER_LOC_COLOR_SPECULAR',
-    'SHADER_LOC_COLOR_AMBIENT',
-    'SHADER_LOC_MAP_ALBEDO',
-    'SHADER_LOC_MAP_METALNESS',
-    'SHADER_LOC_MAP_NORMAL',
-    'SHADER_LOC_MAP_ROUGHNESS',
-    'SHADER_LOC_MAP_OCCLUSION',
-    'SHADER_LOC_MAP_EMISSION',
-    'SHADER_LOC_MAP_HEIGHT',
-    'SHADER_LOC_MAP_CUBEMAP',
-    'SHADER_LOC_MAP_IRRADIANCE',
-    'SHADER_LOC_MAP_PREFILTER',
-    'SHADER_LOC_MAP_BRDF',
-    'ShaderUniformDataType',
-    'SHADER_UNIFORM_FLOAT',
-    'SHADER_UNIFORM_VEC2',
-    'SHADER_UNIFORM_VEC3',
-    'SHADER_UNIFORM_VEC4',
-    'SHADER_UNIFORM_INT',
-    'SHADER_UNIFORM_IVEC2',
-    'SHADER_UNIFORM_IVEC3',
-    'SHADER_UNIFORM_IVEC4',
-    'SHADER_UNIFORM_SAMPLER2D',
-    'ShaderAttributeDataType',
-    'SHADER_ATTRIB_FLOAT',
-    'SHADER_ATTRIB_VEC2',
-    'SHADER_ATTRIB_VEC3',
-    'SHADER_ATTRIB_VEC4',
-    'PixelFormat',
-    'PIXELFORMAT_UNCOMPRESSED_GRAYSCALE',
-    'PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA',
-    'PIXELFORMAT_UNCOMPRESSED_R5G6B5',
-    'PIXELFORMAT_UNCOMPRESSED_R8G8B8',
-    'PIXELFORMAT_UNCOMPRESSED_R5G5B5A1',
-    'PIXELFORMAT_UNCOMPRESSED_R4G4B4A4',
-    'PIXELFORMAT_UNCOMPRESSED_R8G8B8A8',
-    'PIXELFORMAT_UNCOMPRESSED_R32',
-    'PIXELFORMAT_UNCOMPRESSED_R32G32B32',
-    'PIXELFORMAT_UNCOMPRESSED_R32G32B32A32',
+    'MATERIAL_MAP_ROUGHNESS',
+    'MOUSE_BUTTON_BACK',
+    'MOUSE_BUTTON_EXTRA',
+    'MOUSE_BUTTON_FORWARD',
+    'MOUSE_BUTTON_LEFT',
+    'MOUSE_BUTTON_MIDDLE',
+    'MOUSE_BUTTON_RIGHT',
+    'MOUSE_BUTTON_SIDE',
+    'MOUSE_CURSOR_ARROW',
+    'MOUSE_CURSOR_CROSSHAIR',
+    'MOUSE_CURSOR_DEFAULT',
+    'MOUSE_CURSOR_IBEAM',
+    'MOUSE_CURSOR_NOT_ALLOWED',
+    'MOUSE_CURSOR_POINTING_HAND',
+    'MOUSE_CURSOR_RESIZE_ALL',
+    'MOUSE_CURSOR_RESIZE_EW',
+    'MOUSE_CURSOR_RESIZE_NESW',
+    'MOUSE_CURSOR_RESIZE_NS',
+    'MOUSE_CURSOR_RESIZE_NWSE',
+    'NPATCH_NINE_PATCH',
+    'NPATCH_THREE_PATCH_HORIZONTAL',
+    'NPATCH_THREE_PATCH_VERTICAL',
+    'PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA',
+    'PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA',
     'PIXELFORMAT_COMPRESSED_DXT1_RGB',
     'PIXELFORMAT_COMPRESSED_DXT1_RGBA',
     'PIXELFORMAT_COMPRESSED_DXT3_RGBA',
     'PIXELFORMAT_COMPRESSED_DXT5_RGBA',
     'PIXELFORMAT_COMPRESSED_ETC1_RGB',
-    'PIXELFORMAT_COMPRESSED_ETC2_RGB',
     'PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA',
+    'PIXELFORMAT_COMPRESSED_ETC2_RGB',
     'PIXELFORMAT_COMPRESSED_PVRT_RGB',
     'PIXELFORMAT_COMPRESSED_PVRT_RGBA',
-    'PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA',
-    'PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA',
-    'TextureFilter',
-    'TEXTURE_FILTER_POINT',
-    'TEXTURE_FILTER_BILINEAR',
-    'TEXTURE_FILTER_TRILINEAR',
-    'TEXTURE_FILTER_ANISOTROPIC_4X',
-    'TEXTURE_FILTER_ANISOTROPIC_8X',
-    'TEXTURE_FILTER_ANISOTROPIC_16X',
-    'TextureWrap',
-    'TEXTURE_WRAP_REPEAT',
-    'TEXTURE_WRAP_CLAMP',
-    'TEXTURE_WRAP_MIRROR_REPEAT',
-    'TEXTURE_WRAP_MIRROR_CLAMP',
-    'CubemapLayout',
-    'CUBEMAP_LAYOUT_AUTO_DETECT',
-    'CUBEMAP_LAYOUT_LINE_VERTICAL',
-    'CUBEMAP_LAYOUT_LINE_HORIZONTAL',
-    'CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR',
-    'CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE',
-    'CUBEMAP_LAYOUT_PANORAMA',
-    'FontType',
-    'FONT_DEFAULT',
-    'FONT_BITMAP',
-    'FONT_SDF',
-    'BlendMode',
-    'BLEND_ALPHA',
-    'BLEND_ADDITIVE',
-    'BLEND_MULTIPLIED',
-    'BLEND_ADD_COLORS',
-    'BLEND_SUBTRACT_COLORS',
-    'BLEND_ALPHA_PREMULTIPLY',
-    'BLEND_CUSTOM',
-    'Gesture',
-    'GESTURE_NONE',
-    'GESTURE_TAP',
-    'GESTURE_DOUBLETAP',
-    'GESTURE_HOLD',
-    'GESTURE_DRAG',
-    'GESTURE_SWIPE_RIGHT',
-    'GESTURE_SWIPE_LEFT',
-    'GESTURE_SWIPE_UP',
-    'GESTURE_SWIPE_DOWN',
-    'GESTURE_PINCH_IN',
-    'GESTURE_PINCH_OUT',
-    'CameraMode',
-    'CAMERA_CUSTOM',
-    'CAMERA_FREE',
-    'CAMERA_ORBITAL',
-    'CAMERA_FIRST_PERSON',
-    'CAMERA_THIRD_PERSON',
-    'CameraProjection',
-    'CAMERA_PERSPECTIVE',
-    'CAMERA_ORTHOGRAPHIC',
-    'NPatchLayout',
-    'NPATCH_NINE_PATCH',
-    'NPATCH_THREE_PATCH_VERTICAL',
-    'NPATCH_THREE_PATCH_HORIZONTAL',
-    'TraceLogCallback',
-    'LoadFileDataCallback',
-    'SaveFileDataCallback',
-    'LoadFileTextCallback',
-    'SaveFileTextCallback',
-    'AudioCallback',
-    'init_window',
-    'window_should_close',
-    'close_window',
-    'is_window_ready',
-    'is_window_fullscreen',
-    'is_window_hidden',
-    'is_window_minimized',
-    'is_window_maximized',
-    'is_window_focused',
-    'is_window_resized',
-    'is_window_state',
-    'set_window_state',
-    'clear_window_state',
-    'toggle_fullscreen',
-    'maximize_window',
-    'minimize_window',
-    'restore_window',
-    'set_window_icon',
-    'set_window_title',
-    'set_window_position',
-    'set_window_monitor',
-    'set_window_min_size',
-    'set_window_size',
-    'set_window_opacity',
-    'get_window_handle',
-    'get_screen_width',
-    'get_screen_height',
-    'get_render_width',
-    'get_render_height',
-    'get_monitor_count',
-    'get_current_monitor',
-    'get_monitor_position',
-    'get_monitor_width',
-    'get_monitor_height',
-    'get_monitor_physical_width',
-    'get_monitor_physical_height',
-    'get_monitor_refresh_rate',
-    'get_window_position',
-    'get_window_scale_dpi',
-    'get_monitor_name',
-    'set_clipboard_text',
-    'get_clipboard_text',
-    'enable_event_waiting',
-    'disable_event_waiting',
-    'swap_screen_buffer',
-    'poll_input_events',
-    'wait_time',
-    'show_cursor',
-    'hide_cursor',
-    'is_cursor_hidden',
-    'enable_cursor',
-    'disable_cursor',
-    'is_cursor_on_screen',
-    'clear_background',
-    'begin_drawing',
-    'end_drawing',
-    'begin_mode2d',
-    'end_mode2d',
-    'begin_mode3d',
-    'end_mode3d',
-    'begin_texture_mode',
-    'end_texture_mode',
-    'begin_shader_mode',
-    'end_shader_mode',
-    'begin_blend_mode',
-    'end_blend_mode',
-    'begin_scissor_mode',
-    'end_scissor_mode',
-    'begin_vr_stereo_mode',
-    'end_vr_stereo_mode',
-    'load_vr_stereo_config',
-    'unload_vr_stereo_config',
-    'load_shader',
-    'load_shader_from_memory',
-    'get_shader_location',
-    'get_shader_location_attrib',
-    'set_shader_value',
-    'set_shader_value_v',
-    'set_shader_value_matrix',
-    'set_shader_value_texture',
-    'unload_shader',
-    'get_mouse_ray',
-    'get_camera_matrix',
-    'get_camera_matrix2d',
-    'get_world_to_screen',
-    'get_screen_to_world2d',
-    'get_world_to_screen_ex',
-    'get_world_to_screen2d',
-    'set_target_fps',
-    'get_fps',
-    'get_frame_time',
-    'get_time',
-    'get_random_value',
-    'set_random_seed',
-    'take_screenshot',
-    'set_config_flags',
-    'trace_log',
-    'set_trace_log_level',
-    'mem_alloc',
-    'mem_realloc',
-    'mem_free',
-    'open_url',
-    'set_trace_log_callback',
-    'set_load_file_data_callback',
-    'set_save_file_data_callback',
-    'set_load_file_text_callback',
-    'set_save_file_text_callback',
-    'load_file_data',
-    'unload_file_data',
-    'save_file_data',
-    'export_data_as_code',
-    'load_file_text',
-    'unload_file_text',
-    'save_file_text',
-    'file_exists',
-    'directory_exists',
-    'is_file_extension',
-    'get_file_length',
-    'get_file_extension',
-    'get_file_name',
-    'get_file_name_without_ext',
-    'get_directory_path',
-    'get_prev_directory_path',
-    'get_working_directory',
-    'get_application_directory',
-    'change_directory',
-    'is_path_file',
-    'load_directory_files',
-    'load_directory_files_ex',
-    'unload_directory_files',
-    'is_file_dropped',
-    'load_dropped_files',
-    'unload_dropped_files',
-    'get_file_mod_time',
-    'compress_data',
-    'decompress_data',
-    'encode_data_base64',
-    'decode_data_base64',
-    'is_key_pressed',
-    'is_key_down',
-    'is_key_released',
-    'is_key_up',
-    'set_exit_key',
-    'get_key_pressed',
-    'get_char_pressed',
-    'is_gamepad_available',
-    'get_gamepad_name',
-    'is_gamepad_button_pressed',
-    'is_gamepad_button_down',
-    'is_gamepad_button_released',
-    'is_gamepad_button_up',
-    'get_gamepad_button_pressed',
-    'get_gamepad_axis_count',
-    'get_gamepad_axis_movement',
-    'set_gamepad_mappings',
-    'is_mouse_button_pressed',
-    'is_mouse_button_down',
-    'is_mouse_button_released',
-    'is_mouse_button_up',
-    'get_mouse_x',
-    'get_mouse_y',
-    'get_mouse_position',
-    'get_mouse_delta',
-    'set_mouse_position',
-    'set_mouse_offset',
-    'set_mouse_scale',
-    'get_mouse_wheel_move',
-    'get_mouse_wheel_move_v',
-    'set_mouse_cursor',
-    'get_touch_x',
-    'get_touch_y',
-    'get_touch_position',
-    'get_touch_point_id',
-    'get_touch_point_count',
-    'set_gestures_enabled',
-    'is_gesture_detected',
-    'get_gesture_detected',
-    'get_gesture_hold_duration',
-    'get_gesture_drag_vector',
-    'get_gesture_drag_angle',
-    'get_gesture_pinch_vector',
-    'get_gesture_pinch_angle',
-    'set_camera_mode',
-    'update_camera',
-    'set_camera_pan_control',
-    'set_camera_alt_control',
-    'set_camera_smooth_zoom_control',
-    'set_camera_move_controls',
-    'set_shapes_texture',
-    'draw_pixel',
-    'draw_pixel_v',
-    'draw_line',
-    'draw_line_v',
-    'draw_line_ex',
-    'draw_line_bezier',
-    'draw_line_bezier_quad',
-    'draw_line_bezier_cubic',
-    'draw_line_strip',
-    'draw_circle',
-    'draw_circle_sector',
-    'draw_circle_sector_lines',
-    'draw_circle_gradient',
-    'draw_circle_v',
-    'draw_circle_lines',
-    'draw_ellipse',
-    'draw_ellipse_lines',
-    'draw_ring',
-    'draw_ring_lines',
-    'draw_rectangle',
-    'draw_rectangle_v',
-    'draw_rectangle_rec',
-    'draw_rectangle_pro',
-    'draw_rectangle_gradient_v',
-    'draw_rectangle_gradient_h',
-    'draw_rectangle_gradient_ex',
-    'draw_rectangle_lines',
-    'draw_rectangle_lines_ex',
-    'draw_rectangle_rounded',
-    'draw_rectangle_rounded_lines',
-    'draw_triangle',
-    'draw_triangle_lines',
-    'draw_triangle_fan',
-    'draw_triangle_strip',
-    'draw_poly',
-    'draw_poly_lines',
-    'draw_poly_lines_ex',
-    'check_collision_recs',
-    'check_collision_circles',
-    'check_collision_circle_rec',
-    'check_collision_point_rec',
-    'check_collision_point_circle',
-    'check_collision_point_triangle',
-    'check_collision_lines',
-    'check_collision_point_line',
-    'get_collision_rec',
-    'load_image',
-    'load_image_raw',
-    'load_image_anim',
-    'load_image_from_memory',
-    'load_image_from_texture',
-    'load_image_from_screen',
-    'unload_image',
-    'export_image',
-    'export_image_as_code',
-    'gen_image_color',
-    'gen_image_gradient_v',
-    'gen_image_gradient_h',
-    'gen_image_gradient_radial',
-    'gen_image_checked',
-    'gen_image_white_noise',
-    'gen_image_cellular',
-    'image_copy',
-    'image_from_image',
-    'image_text',
-    'image_text_ex',
-    'image_format',
-    'image_to_pot',
-    'image_crop',
-    'image_alpha_crop',
-    'image_alpha_clear',
-    'image_alpha_mask',
-    'image_alpha_premultiply',
-    'image_resize',
-    'image_resize_nn',
-    'image_resize_canvas',
-    'image_mipmaps',
-    'image_dither',
-    'image_flip_vertical',
-    'image_flip_horizontal',
-    'image_rotate_cw',
-    'image_rotate_ccw',
-    'image_color_tint',
-    'image_color_invert',
-    'image_color_grayscale',
-    'image_color_contrast',
-    'image_color_brightness',
-    'image_color_replace',
-    'load_image_colors',
-    'load_image_palette',
-    'unload_image_colors',
-    'unload_image_palette',
-    'get_image_alpha_border',
-    'get_image_color',
-    'image_clear_background',
-    'image_draw_pixel',
-    'image_draw_pixel_v',
-    'image_draw_line',
-    'image_draw_line_v',
-    'image_draw_circle',
-    'image_draw_circle_v',
-    'image_draw_rectangle',
-    'image_draw_rectangle_v',
-    'image_draw_rectangle_rec',
-    'image_draw_rectangle_lines',
-    'image_draw',
-    'image_draw_text',
-    'image_draw_text_ex',
-    'load_texture',
-    'load_texture_from_image',
-    'load_texture_cubemap',
-    'load_render_texture',
-    'unload_texture',
-    'unload_render_texture',
-    'update_texture',
-    'update_texture_rec',
-    'gen_texture_mipmaps',
-    'set_texture_filter',
-    'set_texture_wrap',
-    'draw_texture',
-    'draw_texture_v',
-    'draw_texture_ex',
-    'draw_texture_rec',
-    'draw_texture_quad',
-    'draw_texture_tiled',
-    'draw_texture_pro',
-    'draw_texture_npatch',
-    'draw_texture_poly',
-    'fade',
-    'color_to_int',
-    'color_normalize',
-    'color_from_normalized',
-    'color_to_hsv',
-    'color_from_hsv',
-    'color_alpha',
-    'color_alpha_blend',
-    'get_color',
-    'get_pixel_color',
-    'set_pixel_color',
-    'get_pixel_data_size',
-    'get_font_default',
-    'load_font',
-    'load_font_ex',
-    'load_font_from_image',
-    'load_font_from_memory',
-    'load_font_data',
-    'gen_image_font_atlas',
-    'unload_font_data',
-    'unload_font',
-    'export_font_as_code',
-    'draw_fps',
-    'draw_text',
-    'draw_text_ex',
-    'draw_text_pro',
-    'draw_text_codepoint',
-    'draw_text_codepoints',
-    'measure_text',
-    'measure_text_ex',
-    'get_glyph_index',
-    'get_glyph_info',
-    'get_glyph_atlas_rec',
-    'load_codepoints',
-    'unload_codepoints',
-    'get_codepoint_count',
-    'get_codepoint',
-    'codepoint_to_utf8',
-    'text_codepoints_to_utf8',
-    'text_copy',
-    'text_is_equal',
-    'text_length',
-    'text_format',
-    'text_subtext',
-    'text_replace',
-    'text_insert',
-    'text_join',
-    'text_split',
-    'text_append',
-    'text_find_index',
-    'text_to_upper',
-    'text_to_lower',
-    'text_to_pascal',
-    'text_to_integer',
-    'draw_line3d',
-    'draw_point3d',
-    'draw_circle3d',
-    'draw_triangle3d',
-    'draw_triangle_strip3d',
-    'draw_cube',
-    'draw_cube_v',
-    'draw_cube_wires',
-    'draw_cube_wires_v',
-    'draw_cube_texture',
-    'draw_cube_texture_rec',
-    'draw_sphere',
-    'draw_sphere_ex',
-    'draw_sphere_wires',
-    'draw_cylinder',
-    'draw_cylinder_ex',
-    'draw_cylinder_wires',
-    'draw_cylinder_wires_ex',
-    'draw_plane',
-    'draw_ray',
-    'draw_grid',
-    'load_model',
-    'load_model_from_mesh',
-    'unload_model',
-    'unload_model_keep_meshes',
-    'get_model_bounding_box',
-    'draw_model',
-    'draw_model_ex',
-    'draw_model_wires',
-    'draw_model_wires_ex',
-    'draw_bounding_box',
-    'draw_billboard',
-    'draw_billboard_rec',
-    'draw_billboard_pro',
-    'upload_mesh',
-    'update_mesh_buffer',
-    'unload_mesh',
-    'draw_mesh',
-    'draw_mesh_instanced',
-    'export_mesh',
-    'get_mesh_bounding_box',
-    'gen_mesh_tangents',
-    'gen_mesh_poly',
-    'gen_mesh_plane',
-    'gen_mesh_cube',
-    'gen_mesh_sphere',
-    'gen_mesh_hemi_sphere',
-    'gen_mesh_cylinder',
-    'gen_mesh_cone',
-    'gen_mesh_torus',
-    'gen_mesh_knot',
-    'gen_mesh_heightmap',
-    'gen_mesh_cubicmap',
-    'load_materials',
-    'load_material_default',
-    'unload_material',
-    'set_material_texture',
-    'set_model_mesh_material',
-    'load_model_animations',
-    'update_model_animation',
-    'unload_model_animation',
-    'unload_model_animations',
-    'is_model_animation_valid',
-    'check_collision_spheres',
-    'check_collision_boxes',
-    'check_collision_box_sphere',
-    'get_ray_collision_sphere',
-    'get_ray_collision_box',
-    'get_ray_collision_mesh',
-    'get_ray_collision_triangle',
-    'get_ray_collision_quad',
-    'init_audio_device',
-    'close_audio_device',
-    'is_audio_device_ready',
-    'set_master_volume',
-    'load_wave',
-    'load_wave_from_memory',
-    'load_sound',
-    'load_sound_from_wave',
-    'update_sound',
-    'unload_wave',
-    'unload_sound',
-    'export_wave',
-    'export_wave_as_code',
-    'play_sound',
-    'stop_sound',
-    'pause_sound',
-    'resume_sound',
-    'play_sound_multi',
-    'stop_sound_multi',
-    'get_sounds_playing',
-    'is_sound_playing',
-    'set_sound_volume',
-    'set_sound_pitch',
-    'set_sound_pan',
-    'wave_copy',
-    'wave_crop',
-    'wave_format',
-    'load_wave_samples',
-    'unload_wave_samples',
-    'load_music_stream',
-    'load_music_stream_from_memory',
-    'unload_music_stream',
-    'play_music_stream',
-    'is_music_stream_playing',
-    'update_music_stream',
-    'stop_music_stream',
-    'pause_music_stream',
-    'resume_music_stream',
-    'seek_music_stream',
-    'set_music_volume',
-    'set_music_pitch',
-    'set_music_pan',
-    'get_music_time_length',
-    'get_music_time_played',
-    'load_audio_stream',
-    'unload_audio_stream',
-    'update_audio_stream',
-    'is_audio_stream_processed',
-    'play_audio_stream',
-    'pause_audio_stream',
-    'resume_audio_stream',
-    'is_audio_stream_playing',
-    'stop_audio_stream',
-    'set_audio_stream_volume',
-    'set_audio_stream_pitch',
-    'set_audio_stream_pan',
-    'set_audio_stream_buffer_size_default',
-    'set_audio_stream_callback',
-    'attach_audio_stream_processor',
-    'detach_audio_stream_processor',
-    'drawing',
-    'scissor_mode',
-    'blend_mode',
-    'mode2d',
-    'mode3d',
-    'shader_mode',
-    'texture_mode',
-    'vr_stereo_mode',
-    'clamp',
-    'lerp',
-    'normalize',
-    'remap',
-    'wrap',
-    'float_equals',
-    'vector2zero',
-    'vector2one',
-    'vector2add',
-    'vector2add_value',
-    'vector2subtract',
-    'vector2subtract_value',
-    'vector2length',
-    'vector2length_sqr',
-    'vector2dot_product',
-    'vector2distance',
-    'vector2distance_sqr',
-    'vector2angle',
-    'vector2scale',
-    'vector2multiply',
-    'vector2negate',
-    'vector2divide',
-    'vector2normalize',
-    'vector2transform',
-    'vector2lerp',
-    'vector2reflect',
-    'vector2rotate',
-    'vector2move_towards',
-    'vector2invert',
-    'vector2clamp',
-    'vector2clamp_value',
-    'vector2equals',
-    'vector3zero',
-    'vector3one',
-    'vector3add',
-    'vector3add_value',
-    'vector3subtract',
-    'vector3subtract_value',
-    'vector3scale',
-    'vector3multiply',
-    'vector3cross_product',
-    'vector3perpendicular',
-    'vector3length',
-    'vector3length_sqr',
-    'vector3dot_product',
-    'vector3distance',
-    'vector3distance_sqr',
-    'vector3angle',
-    'vector3negate',
-    'vector3divide',
-    'vector3normalize',
-    'vector3ortho_normalize',
-    'vector3transform',
-    'vector3rotate_by_quaternion',
-    'vector3rotate_by_axis_angle',
-    'vector3lerp',
-    'vector3reflect',
-    'vector3min',
-    'vector3max',
-    'vector3barycenter',
-    'vector3unproject',
-    'vector3to_float_v',
-    'vector3invert',
-    'vector3clamp',
-    'vector3clamp_value',
-    'vector3equals',
-    'vector3refract',
-    'matrix_determinant',
-    'matrix_trace',
-    'matrix_transpose',
-    'matrix_invert',
-    'matrix_identity',
-    'matrix_add',
-    'matrix_subtract',
-    'matrix_multiply',
-    'matrix_translate',
-    'matrix_rotate',
-    'matrix_rotate_x',
-    'matrix_rotate_y',
-    'matrix_rotate_z',
-    'matrix_rotate_xyz',
-    'matrix_rotate_zyx',
-    'matrix_scale',
-    'matrix_frustum',
-    'matrix_perspective',
-    'matrix_ortho',
-    'matrix_look_at',
-    'matrix_to_float_v',
-    'quaternion_add',
-    'quaternion_add_value',
-    'quaternion_subtract',
-    'quaternion_subtract_value',
-    'quaternion_identity',
-    'quaternion_length',
-    'quaternion_normalize',
-    'quaternion_invert',
-    'quaternion_multiply',
-    'quaternion_scale',
-    'quaternion_divide',
-    'quaternion_nlerp',
-    'quaternion_slerp',
-    'quaternion_from_vector3to_vector3',
-    'quaternion_to_matrix',
-    'quaternion_from_matrix',
-    'quaternion_from_axis_angle',
-    'quaternion_to_axis_angle',
-    'quaternion_from_euler',
-    'quaternion_to_euler',
-    'quaternion_transform',
-    'quaternion_equals',
-    'rlVertexBuffer',
-    'rlDrawCall',
-    'rlRenderBatch',
-    'Matrix',
-    'RLGL_VERSION',
-    'RL_DEFAULT_BATCH_BUFFER_ELEMENTS',
-    'RL_DEFAULT_BATCH_BUFFERS',
-    'RL_DEFAULT_BATCH_DRAWCALLS',
-    'RL_DEFAULT_BATCH_MAX_TEXTURE_UNITS',
-    'RL_MAX_MATRIX_STACK_SIZE',
-    'RL_MAX_SHADER_LOCATIONS',
-    'RL_CULL_DISTANCE_NEAR',
-    'RL_CULL_DISTANCE_FAR',
-    'RL_TEXTURE_WRAP_S',
-    'RL_TEXTURE_WRAP_T',
-    'RL_TEXTURE_MAG_FILTER',
-    'RL_TEXTURE_MIN_FILTER',
-    'RL_TEXTURE_FILTER_NEAREST',
-    'RL_TEXTURE_FILTER_LINEAR',
-    'RL_TEXTURE_FILTER_MIP_NEAREST',
-    'RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR',
-    'RL_TEXTURE_FILTER_LINEAR_MIP_NEAREST',
-    'RL_TEXTURE_FILTER_MIP_LINEAR',
-    'RL_TEXTURE_FILTER_ANISOTROPIC',
-    'RL_TEXTURE_WRAP_REPEAT',
-    'RL_TEXTURE_WRAP_CLAMP',
-    'RL_TEXTURE_WRAP_MIRROR_REPEAT',
-    'RL_TEXTURE_WRAP_MIRROR_CLAMP',
-    'RL_MODELVIEW',
-    'RL_PROJECTION',
-    'RL_TEXTURE',
-    'RL_LINES',
-    'RL_TRIANGLES',
-    'RL_QUADS',
-    'RL_UNSIGNED_BYTE',
-    'RL_FLOAT',
-    'RL_STREAM_DRAW',
-    'RL_STREAM_READ',
-    'RL_STREAM_COPY',
-    'RL_STATIC_DRAW',
-    'RL_STATIC_READ',
-    'RL_STATIC_COPY',
-    'RL_DYNAMIC_DRAW',
-    'RL_DYNAMIC_READ',
-    'RL_DYNAMIC_COPY',
-    'RL_FRAGMENT_SHADER',
-    'RL_VERTEX_SHADER',
-    'RL_COMPUTE_SHADER',
-    'rlGlVersion',
-    'OPENGL_11',
-    'OPENGL_21',
-    'OPENGL_33',
-    'OPENGL_43',
-    'OPENGL_ES_20',
-    'rlFramebufferAttachType',
+    'PIXELFORMAT_UNCOMPRESSED_GRAYSCALE',
+    'PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA',
+    'PIXELFORMAT_UNCOMPRESSED_R16',
+    'PIXELFORMAT_UNCOMPRESSED_R16G16B16',
+    'PIXELFORMAT_UNCOMPRESSED_R16G16B16A16',
+    'PIXELFORMAT_UNCOMPRESSED_R32',
+    'PIXELFORMAT_UNCOMPRESSED_R32G32B32',
+    'PIXELFORMAT_UNCOMPRESSED_R32G32B32A32',
+    'PIXELFORMAT_UNCOMPRESSED_R4G4B4A4',
+    'PIXELFORMAT_UNCOMPRESSED_R5G5B5A1',
+    'PIXELFORMAT_UNCOMPRESSED_R5G6B5',
+    'PIXELFORMAT_UNCOMPRESSED_R8G8B8',
+    'PIXELFORMAT_UNCOMPRESSED_R8G8B8A8',
     'RL_ATTACHMENT_COLOR_CHANNEL0',
     'RL_ATTACHMENT_COLOR_CHANNEL1',
     'RL_ATTACHMENT_COLOR_CHANNEL2',
@@ -1113,250 +501,1132 @@ __all__ = [
     'RL_ATTACHMENT_COLOR_CHANNEL5',
     'RL_ATTACHMENT_COLOR_CHANNEL6',
     'RL_ATTACHMENT_COLOR_CHANNEL7',
-    'RL_ATTACHMENT_DEPTH',
-    'RL_ATTACHMENT_STENCIL',
-    'rlFramebufferAttachTextureType',
-    'RL_ATTACHMENT_CUBEMAP_POSITIVE_X',
     'RL_ATTACHMENT_CUBEMAP_NEGATIVE_X',
-    'RL_ATTACHMENT_CUBEMAP_POSITIVE_Y',
     'RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y',
-    'RL_ATTACHMENT_CUBEMAP_POSITIVE_Z',
     'RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z',
-    'RL_ATTACHMENT_TEXTURE2D',
+    'RL_ATTACHMENT_CUBEMAP_POSITIVE_X',
+    'RL_ATTACHMENT_CUBEMAP_POSITIVE_Y',
+    'RL_ATTACHMENT_CUBEMAP_POSITIVE_Z',
+    'RL_ATTACHMENT_DEPTH',
     'RL_ATTACHMENT_RENDERBUFFER',
-    'rlTraceLogLevel',
+    'RL_ATTACHMENT_STENCIL',
+    'RL_ATTACHMENT_TEXTURE2D',
+    'RL_BLEND_ADDITIVE',
+    'RL_BLEND_ADD_COLORS',
+    'RL_BLEND_ALPHA',
+    'RL_BLEND_ALPHA_PREMULTIPLY',
+    'RL_BLEND_CUSTOM',
+    'RL_BLEND_CUSTOM_SEPARATE',
+    'RL_BLEND_MULTIPLIED',
+    'RL_BLEND_SUBTRACT_COLORS',
+    'RL_CULL_FACE_BACK',
+    'RL_CULL_FACE_FRONT',
     'RL_LOG_ALL',
-    'RL_LOG_TRACE',
     'RL_LOG_DEBUG',
-    'RL_LOG_INFO',
-    'RL_LOG_WARNING',
     'RL_LOG_ERROR',
     'RL_LOG_FATAL',
+    'RL_LOG_INFO',
     'RL_LOG_NONE',
-    'rlPixelFormat',
-    'RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE',
-    'RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA',
-    'RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5',
-    'RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8',
-    'RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1',
-    'RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4',
-    'RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8',
-    'RL_PIXELFORMAT_UNCOMPRESSED_R32',
-    'RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32',
-    'RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32',
+    'RL_LOG_TRACE',
+    'RL_LOG_WARNING',
+    'RL_OPENGL_11',
+    'RL_OPENGL_21',
+    'RL_OPENGL_33',
+    'RL_OPENGL_43',
+    'RL_OPENGL_ES_20',
+    'RL_OPENGL_ES_30',
+    'RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA',
+    'RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA',
     'RL_PIXELFORMAT_COMPRESSED_DXT1_RGB',
     'RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA',
     'RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA',
     'RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA',
     'RL_PIXELFORMAT_COMPRESSED_ETC1_RGB',
-    'RL_PIXELFORMAT_COMPRESSED_ETC2_RGB',
     'RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA',
+    'RL_PIXELFORMAT_COMPRESSED_ETC2_RGB',
     'RL_PIXELFORMAT_COMPRESSED_PVRT_RGB',
     'RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA',
-    'RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA',
-    'RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA',
-    'rlTextureFilter',
-    'RL_TEXTURE_FILTER_POINT',
-    'RL_TEXTURE_FILTER_BILINEAR',
-    'RL_TEXTURE_FILTER_TRILINEAR',
-    'RL_TEXTURE_FILTER_ANISOTROPIC_4X',
-    'RL_TEXTURE_FILTER_ANISOTROPIC_8X',
-    'RL_TEXTURE_FILTER_ANISOTROPIC_16X',
-    'rlBlendMode',
-    'RL_BLEND_ALPHA',
-    'RL_BLEND_ADDITIVE',
-    'RL_BLEND_MULTIPLIED',
-    'RL_BLEND_ADD_COLORS',
-    'RL_BLEND_SUBTRACT_COLORS',
-    'RL_BLEND_ALPHA_PREMULTIPLY',
-    'RL_BLEND_CUSTOM',
-    'rlShaderLocationIndex',
-    'RL_SHADER_LOC_VERTEX_POSITION',
-    'RL_SHADER_LOC_VERTEX_TEXCOORD01',
-    'RL_SHADER_LOC_VERTEX_TEXCOORD02',
-    'RL_SHADER_LOC_VERTEX_NORMAL',
-    'RL_SHADER_LOC_VERTEX_TANGENT',
-    'RL_SHADER_LOC_VERTEX_COLOR',
-    'RL_SHADER_LOC_MATRIX_MVP',
-    'RL_SHADER_LOC_MATRIX_VIEW',
-    'RL_SHADER_LOC_MATRIX_PROJECTION',
-    'RL_SHADER_LOC_MATRIX_MODEL',
-    'RL_SHADER_LOC_MATRIX_NORMAL',
-    'RL_SHADER_LOC_VECTOR_VIEW',
+    'RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE',
+    'RL_PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA',
+    'RL_PIXELFORMAT_UNCOMPRESSED_R16',
+    'RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16',
+    'RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16',
+    'RL_PIXELFORMAT_UNCOMPRESSED_R32',
+    'RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32',
+    'RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32',
+    'RL_PIXELFORMAT_UNCOMPRESSED_R4G4B4A4',
+    'RL_PIXELFORMAT_UNCOMPRESSED_R5G5B5A1',
+    'RL_PIXELFORMAT_UNCOMPRESSED_R5G6B5',
+    'RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8',
+    'RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8',
+    'RL_SHADER_ATTRIB_FLOAT',
+    'RL_SHADER_ATTRIB_VEC2',
+    'RL_SHADER_ATTRIB_VEC3',
+    'RL_SHADER_ATTRIB_VEC4',
+    'RL_SHADER_LOC_COLOR_AMBIENT',
     'RL_SHADER_LOC_COLOR_DIFFUSE',
     'RL_SHADER_LOC_COLOR_SPECULAR',
-    'RL_SHADER_LOC_COLOR_AMBIENT',
     'RL_SHADER_LOC_MAP_ALBEDO',
-    'RL_SHADER_LOC_MAP_METALNESS',
-    'RL_SHADER_LOC_MAP_NORMAL',
-    'RL_SHADER_LOC_MAP_ROUGHNESS',
-    'RL_SHADER_LOC_MAP_OCCLUSION',
+    'RL_SHADER_LOC_MAP_BRDF',
+    'RL_SHADER_LOC_MAP_CUBEMAP',
     'RL_SHADER_LOC_MAP_EMISSION',
     'RL_SHADER_LOC_MAP_HEIGHT',
-    'RL_SHADER_LOC_MAP_CUBEMAP',
     'RL_SHADER_LOC_MAP_IRRADIANCE',
+    'RL_SHADER_LOC_MAP_METALNESS',
+    'RL_SHADER_LOC_MAP_NORMAL',
+    'RL_SHADER_LOC_MAP_OCCLUSION',
     'RL_SHADER_LOC_MAP_PREFILTER',
-    'RL_SHADER_LOC_MAP_BRDF',
-    'rlShaderUniformDataType',
+    'RL_SHADER_LOC_MAP_ROUGHNESS',
+    'RL_SHADER_LOC_MATRIX_MODEL',
+    'RL_SHADER_LOC_MATRIX_MVP',
+    'RL_SHADER_LOC_MATRIX_NORMAL',
+    'RL_SHADER_LOC_MATRIX_PROJECTION',
+    'RL_SHADER_LOC_MATRIX_VIEW',
+    'RL_SHADER_LOC_VECTOR_VIEW',
+    'RL_SHADER_LOC_VERTEX_COLOR',
+    'RL_SHADER_LOC_VERTEX_NORMAL',
+    'RL_SHADER_LOC_VERTEX_POSITION',
+    'RL_SHADER_LOC_VERTEX_TANGENT',
+    'RL_SHADER_LOC_VERTEX_TEXCOORD01',
+    'RL_SHADER_LOC_VERTEX_TEXCOORD02',
     'RL_SHADER_UNIFORM_FLOAT',
-    'RL_SHADER_UNIFORM_VEC2',
-    'RL_SHADER_UNIFORM_VEC3',
-    'RL_SHADER_UNIFORM_VEC4',
     'RL_SHADER_UNIFORM_INT',
     'RL_SHADER_UNIFORM_IVEC2',
     'RL_SHADER_UNIFORM_IVEC3',
     'RL_SHADER_UNIFORM_IVEC4',
     'RL_SHADER_UNIFORM_SAMPLER2D',
-    'rlShaderAttributeDataType',
-    'RL_SHADER_ATTRIB_FLOAT',
-    'RL_SHADER_ATTRIB_VEC2',
-    'RL_SHADER_ATTRIB_VEC3',
-    'RL_SHADER_ATTRIB_VEC4',
-    'rl_matrix_mode',
-    'rl_push_matrix',
-    'rl_pop_matrix',
-    'rl_load_identity',
-    'rl_translatef',
-    'rl_rotatef',
-    'rl_scalef',
-    'rl_mult_matrixf',
-    'rl_frustum',
-    'rl_ortho',
-    'rl_viewport',
-    'rl_begin',
-    'rl_end',
-    'rl_vertex2i',
-    'rl_vertex2f',
-    'rl_vertex3f',
-    'rl_tex_coord2f',
-    'rl_normal3f',
-    'rl_color4ub',
-    'rl_color3f',
-    'rl_color4f',
-    'rl_enable_vertex_array',
-    'rl_disable_vertex_array',
-    'rl_enable_vertex_buffer',
-    'rl_disable_vertex_buffer',
-    'rl_enable_vertex_buffer_element',
-    'rl_disable_vertex_buffer_element',
-    'rl_enable_vertex_attribute',
-    'rl_disable_vertex_attribute',
-    'rl_active_texture_slot',
-    'rl_enable_texture',
-    'rl_disable_texture',
-    'rl_enable_texture_cubemap',
-    'rl_disable_texture_cubemap',
-    'rl_texture_parameters',
-    'rl_enable_shader',
-    'rl_disable_shader',
-    'rl_enable_framebuffer',
-    'rl_disable_framebuffer',
+    'RL_SHADER_UNIFORM_VEC2',
+    'RL_SHADER_UNIFORM_VEC3',
+    'RL_SHADER_UNIFORM_VEC4',
+    'RL_TEXTURE_FILTER_ANISOTROPIC_16X',
+    'RL_TEXTURE_FILTER_ANISOTROPIC_4X',
+    'RL_TEXTURE_FILTER_ANISOTROPIC_8X',
+    'RL_TEXTURE_FILTER_BILINEAR',
+    'RL_TEXTURE_FILTER_POINT',
+    'RL_TEXTURE_FILTER_TRILINEAR',
+    'SHADER_ATTRIB_FLOAT',
+    'SHADER_ATTRIB_VEC2',
+    'SHADER_ATTRIB_VEC3',
+    'SHADER_ATTRIB_VEC4',
+    'SHADER_LOC_COLOR_AMBIENT',
+    'SHADER_LOC_COLOR_DIFFUSE',
+    'SHADER_LOC_COLOR_SPECULAR',
+    'SHADER_LOC_MAP_ALBEDO',
+    'SHADER_LOC_MAP_BRDF',
+    'SHADER_LOC_MAP_CUBEMAP',
+    'SHADER_LOC_MAP_EMISSION',
+    'SHADER_LOC_MAP_HEIGHT',
+    'SHADER_LOC_MAP_IRRADIANCE',
+    'SHADER_LOC_MAP_METALNESS',
+    'SHADER_LOC_MAP_NORMAL',
+    'SHADER_LOC_MAP_OCCLUSION',
+    'SHADER_LOC_MAP_PREFILTER',
+    'SHADER_LOC_MAP_ROUGHNESS',
+    'SHADER_LOC_MATRIX_MODEL',
+    'SHADER_LOC_MATRIX_MVP',
+    'SHADER_LOC_MATRIX_NORMAL',
+    'SHADER_LOC_MATRIX_PROJECTION',
+    'SHADER_LOC_MATRIX_VIEW',
+    'SHADER_LOC_VECTOR_VIEW',
+    'SHADER_LOC_VERTEX_COLOR',
+    'SHADER_LOC_VERTEX_NORMAL',
+    'SHADER_LOC_VERTEX_POSITION',
+    'SHADER_LOC_VERTEX_TANGENT',
+    'SHADER_LOC_VERTEX_TEXCOORD01',
+    'SHADER_LOC_VERTEX_TEXCOORD02',
+    'SHADER_UNIFORM_FLOAT',
+    'SHADER_UNIFORM_INT',
+    'SHADER_UNIFORM_IVEC2',
+    'SHADER_UNIFORM_IVEC3',
+    'SHADER_UNIFORM_IVEC4',
+    'SHADER_UNIFORM_SAMPLER2D',
+    'SHADER_UNIFORM_VEC2',
+    'SHADER_UNIFORM_VEC3',
+    'SHADER_UNIFORM_VEC4',
+    'TEXTURE_FILTER_ANISOTROPIC_16X',
+    'TEXTURE_FILTER_ANISOTROPIC_4X',
+    'TEXTURE_FILTER_ANISOTROPIC_8X',
+    'TEXTURE_FILTER_BILINEAR',
+    'TEXTURE_FILTER_POINT',
+    'TEXTURE_FILTER_TRILINEAR',
+    'TEXTURE_WRAP_CLAMP',
+    'TEXTURE_WRAP_MIRROR_CLAMP',
+    'TEXTURE_WRAP_MIRROR_REPEAT',
+    'TEXTURE_WRAP_REPEAT',
+
+    # defines
+    'BEIGE',
+    'BLACK',
+    'BLANK',
+    'BLUE',
+    'BROWN',
+    'DARKBLUE',
+    'DARKBROWN',
+    'DARKGRAY',
+    'DARKGREEN',
+    'DARKPURPLE',
+    'DEG2RAD',
+    'EPSILON',
+    'GOLD',
+    'GRAY',
+    'GREEN',
+    'LIGHTGRAY',
+    'LIME',
+    'MAGENTA',
+    'MAROON',
+    'MATERIAL_MAP_DIFFUSE',
+    'MATERIAL_MAP_SPECULAR',
+    'MOUSE_LEFT_BUTTON',
+    'MOUSE_MIDDLE_BUTTON',
+    'MOUSE_RIGHT_BUTTON',
+    'ORANGE',
+    'PI',
+    'PINK',
+    'PURPLE',
+    'RAD2DEG',
+    'RAYLIB_VERSION',
+    'RAYLIB_VERSION_MAJOR',
+    'RAYLIB_VERSION_MINOR',
+    'RAYLIB_VERSION_PATCH',
+    'RAYWHITE',
+    'RED',
+    'RLGL_VERSION',
+    'RL_BLEND_COLOR',
+    'RL_BLEND_DST_ALPHA',
+    'RL_BLEND_DST_RGB',
+    'RL_BLEND_EQUATION',
+    'RL_BLEND_EQUATION_ALPHA',
+    'RL_BLEND_EQUATION_RGB',
+    'RL_BLEND_SRC_ALPHA',
+    'RL_BLEND_SRC_RGB',
+    'RL_COMPUTE_SHADER',
+    'RL_CONSTANT_ALPHA',
+    'RL_CONSTANT_COLOR',
+    'RL_CULL_DISTANCE_FAR',
+    'RL_CULL_DISTANCE_NEAR',
+    'RL_DEFAULT_BATCH_BUFFERS',
+    'RL_DEFAULT_BATCH_BUFFER_ELEMENTS',
+    'RL_DEFAULT_BATCH_DRAWCALLS',
+    'RL_DEFAULT_BATCH_MAX_TEXTURE_UNITS',
+    'RL_DST_ALPHA',
+    'RL_DST_COLOR',
+    'RL_DYNAMIC_COPY',
+    'RL_DYNAMIC_DRAW',
+    'RL_DYNAMIC_READ',
+    'RL_FLOAT',
+    'RL_FRAGMENT_SHADER',
+    'RL_FUNC_ADD',
+    'RL_FUNC_REVERSE_SUBTRACT',
+    'RL_FUNC_SUBTRACT',
+    'RL_LINES',
+    'RL_MAX',
+    'RL_MAX_MATRIX_STACK_SIZE',
+    'RL_MAX_SHADER_LOCATIONS',
+    'RL_MIN',
+    'RL_MODELVIEW',
+    'RL_ONE',
+    'RL_ONE_MINUS_CONSTANT_ALPHA',
+    'RL_ONE_MINUS_CONSTANT_COLOR',
+    'RL_ONE_MINUS_DST_ALPHA',
+    'RL_ONE_MINUS_DST_COLOR',
+    'RL_ONE_MINUS_SRC_ALPHA',
+    'RL_ONE_MINUS_SRC_COLOR',
+    'RL_PROJECTION',
+    'RL_QUADS',
+    'RL_SHADER_LOC_MAP_DIFFUSE',
+    'RL_SHADER_LOC_MAP_SPECULAR',
+    'RL_SRC_ALPHA',
+    'RL_SRC_ALPHA_SATURATE',
+    'RL_SRC_COLOR',
+    'RL_STATIC_COPY',
+    'RL_STATIC_DRAW',
+    'RL_STATIC_READ',
+    'RL_STREAM_COPY',
+    'RL_STREAM_DRAW',
+    'RL_STREAM_READ',
+    'RL_TEXTURE',
+    'RL_TEXTURE_FILTER_ANISOTROPIC',
+    'RL_TEXTURE_FILTER_LINEAR',
+    'RL_TEXTURE_FILTER_LINEAR_MIP_NEAREST',
+    'RL_TEXTURE_FILTER_MIP_LINEAR',
+    'RL_TEXTURE_FILTER_MIP_NEAREST',
+    'RL_TEXTURE_FILTER_NEAREST',
+    'RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR',
+    'RL_TEXTURE_MAG_FILTER',
+    'RL_TEXTURE_MIN_FILTER',
+    'RL_TEXTURE_MIPMAP_BIAS_RATIO',
+    'RL_TEXTURE_WRAP_CLAMP',
+    'RL_TEXTURE_WRAP_MIRROR_CLAMP',
+    'RL_TEXTURE_WRAP_MIRROR_REPEAT',
+    'RL_TEXTURE_WRAP_REPEAT',
+    'RL_TEXTURE_WRAP_S',
+    'RL_TEXTURE_WRAP_T',
+    'RL_TRIANGLES',
+    'RL_UNSIGNED_BYTE',
+    'RL_VERTEX_SHADER',
+    'RL_ZERO',
+    'SHADER_LOC_MAP_DIFFUSE',
+    'SHADER_LOC_MAP_SPECULAR',
+    'SKYBLUE',
+    'VIOLET',
+    'WHITE',
+    'YELLOW',
+
+    # callbacks
+    'AudioCallback',
+    'LoadFileDataCallback',
+    'LoadFileTextCallback',
+    'SaveFileDataCallback',
+    'SaveFileTextCallback',
+    'TraceLogCallback',
+
+    # functions
+    'attach_audio_mixed_processor',
+    'attach_audio_stream_processor',
+    'begin_blend_mode',
+    'begin_drawing',
+    'begin_mode2d',
+    'begin_mode3d',
+    'begin_scissor_mode',
+    'begin_shader_mode',
+    'begin_texture_mode',
+    'begin_vr_stereo_mode',
+    'change_directory',
+    'check_collision_box_sphere',
+    'check_collision_boxes',
+    'check_collision_circle_rec',
+    'check_collision_circles',
+    'check_collision_lines',
+    'check_collision_point_circle',
+    'check_collision_point_line',
+    'check_collision_point_poly',
+    'check_collision_point_rec',
+    'check_collision_point_triangle',
+    'check_collision_recs',
+    'check_collision_spheres',
+    'clamp',
+    'clear_background',
+    'clear_window_state',
+    'close_audio_device',
+    'close_window',
+    'codepoint_to_utf8',
+    'color_alpha',
+    'color_alpha_blend',
+    'color_brightness',
+    'color_contrast',
+    'color_from_hsv',
+    'color_from_normalized',
+    'color_normalize',
+    'color_tint',
+    'color_to_hsv',
+    'color_to_int',
+    'compress_data',
+    'decode_data_base64',
+    'decompress_data',
+    'detach_audio_mixed_processor',
+    'detach_audio_stream_processor',
+    'directory_exists',
+    'disable_cursor',
+    'disable_event_waiting',
+    'draw_billboard',
+    'draw_billboard_pro',
+    'draw_billboard_rec',
+    'draw_bounding_box',
+    'draw_capsule',
+    'draw_capsule_wires',
+    'draw_circle',
+    'draw_circle3d',
+    'draw_circle_gradient',
+    'draw_circle_lines',
+    'draw_circle_lines_v',
+    'draw_circle_sector',
+    'draw_circle_sector_lines',
+    'draw_circle_v',
+    'draw_cube',
+    'draw_cube_v',
+    'draw_cube_wires',
+    'draw_cube_wires_v',
+    'draw_cylinder',
+    'draw_cylinder_ex',
+    'draw_cylinder_wires',
+    'draw_cylinder_wires_ex',
+    'draw_ellipse',
+    'draw_ellipse_lines',
+    'draw_fps',
+    'draw_grid',
+    'draw_line',
+    'draw_line3d',
+    'draw_line_bezier',
+    'draw_line_ex',
+    'draw_line_strip',
+    'draw_line_v',
+    'draw_mesh',
+    'draw_mesh_instanced',
+    'draw_model',
+    'draw_model_ex',
+    'draw_model_wires',
+    'draw_model_wires_ex',
+    'draw_pixel',
+    'draw_pixel_v',
+    'draw_plane',
+    'draw_point3d',
+    'draw_poly',
+    'draw_poly_lines',
+    'draw_poly_lines_ex',
+    'draw_ray',
+    'draw_rectangle',
+    'draw_rectangle_gradient_ex',
+    'draw_rectangle_gradient_h',
+    'draw_rectangle_gradient_v',
+    'draw_rectangle_lines',
+    'draw_rectangle_lines_ex',
+    'draw_rectangle_pro',
+    'draw_rectangle_rec',
+    'draw_rectangle_rounded',
+    'draw_rectangle_rounded_lines',
+    'draw_rectangle_v',
+    'draw_ring',
+    'draw_ring_lines',
+    'draw_sphere',
+    'draw_sphere_ex',
+    'draw_sphere_wires',
+    'draw_spline_basis',
+    'draw_spline_bezier_cubic',
+    'draw_spline_bezier_quadratic',
+    'draw_spline_catmull_rom',
+    'draw_spline_linear',
+    'draw_spline_segment_basis',
+    'draw_spline_segment_bezier_cubic',
+    'draw_spline_segment_bezier_quadratic',
+    'draw_spline_segment_catmull_rom',
+    'draw_spline_segment_linear',
+    'draw_text',
+    'draw_text_codepoint',
+    'draw_text_codepoints',
+    'draw_text_ex',
+    'draw_text_pro',
+    'draw_texture',
+    'draw_texture_ex',
+    'draw_texture_npatch',
+    'draw_texture_pro',
+    'draw_texture_rec',
+    'draw_texture_v',
+    'draw_triangle',
+    'draw_triangle3d',
+    'draw_triangle_fan',
+    'draw_triangle_lines',
+    'draw_triangle_strip',
+    'draw_triangle_strip3d',
+    'enable_cursor',
+    'enable_event_waiting',
+    'encode_data_base64',
+    'end_blend_mode',
+    'end_drawing',
+    'end_mode2d',
+    'end_mode3d',
+    'end_scissor_mode',
+    'end_shader_mode',
+    'end_texture_mode',
+    'end_vr_stereo_mode',
+    'export_automation_event_list',
+    'export_data_as_code',
+    'export_font_as_code',
+    'export_image',
+    'export_image_as_code',
+    'export_image_to_memory',
+    'export_mesh',
+    'export_wave',
+    'export_wave_as_code',
+    'fade',
+    'file_exists',
+    'float_equals',
+    'gen_image_cellular',
+    'gen_image_checked',
+    'gen_image_color',
+    'gen_image_font_atlas',
+    'gen_image_gradient_linear',
+    'gen_image_gradient_radial',
+    'gen_image_gradient_square',
+    'gen_image_perlin_noise',
+    'gen_image_text',
+    'gen_image_white_noise',
+    'gen_mesh_cone',
+    'gen_mesh_cube',
+    'gen_mesh_cubicmap',
+    'gen_mesh_cylinder',
+    'gen_mesh_heightmap',
+    'gen_mesh_hemi_sphere',
+    'gen_mesh_knot',
+    'gen_mesh_plane',
+    'gen_mesh_poly',
+    'gen_mesh_sphere',
+    'gen_mesh_tangents',
+    'gen_mesh_torus',
+    'gen_texture_mipmaps',
+    'get_application_directory',
+    'get_camera_matrix',
+    'get_camera_matrix2d',
+    'get_char_pressed',
+    'get_clipboard_text',
+    'get_codepoint',
+    'get_codepoint_count',
+    'get_codepoint_next',
+    'get_codepoint_previous',
+    'get_collision_rec',
+    'get_color',
+    'get_current_monitor',
+    'get_directory_path',
+    'get_file_extension',
+    'get_file_length',
+    'get_file_mod_time',
+    'get_file_name',
+    'get_file_name_without_ext',
+    'get_font_default',
+    'get_fps',
+    'get_frame_time',
+    'get_gamepad_axis_count',
+    'get_gamepad_axis_movement',
+    'get_gamepad_button_pressed',
+    'get_gamepad_name',
+    'get_gesture_detected',
+    'get_gesture_drag_angle',
+    'get_gesture_drag_vector',
+    'get_gesture_hold_duration',
+    'get_gesture_pinch_angle',
+    'get_gesture_pinch_vector',
+    'get_glyph_atlas_rec',
+    'get_glyph_index',
+    'get_glyph_info',
+    'get_image_alpha_border',
+    'get_image_color',
+    'get_key_pressed',
+    'get_master_volume',
+    'get_mesh_bounding_box',
+    'get_model_bounding_box',
+    'get_monitor_count',
+    'get_monitor_height',
+    'get_monitor_name',
+    'get_monitor_physical_height',
+    'get_monitor_physical_width',
+    'get_monitor_position',
+    'get_monitor_refresh_rate',
+    'get_monitor_width',
+    'get_mouse_delta',
+    'get_mouse_position',
+    'get_mouse_ray',
+    'get_mouse_wheel_move',
+    'get_mouse_wheel_move_v',
+    'get_mouse_x',
+    'get_mouse_y',
+    'get_music_time_length',
+    'get_music_time_played',
+    'get_pixel_color',
+    'get_pixel_data_size',
+    'get_prev_directory_path',
+    'get_random_value',
+    'get_ray_collision_box',
+    'get_ray_collision_mesh',
+    'get_ray_collision_quad',
+    'get_ray_collision_sphere',
+    'get_ray_collision_triangle',
+    'get_render_height',
+    'get_render_width',
+    'get_screen_height',
+    'get_screen_to_world2d',
+    'get_screen_width',
+    'get_shader_location',
+    'get_shader_location_attrib',
+    'get_spline_point_basis',
+    'get_spline_point_bezier_cubic',
+    'get_spline_point_bezier_quad',
+    'get_spline_point_catmull_rom',
+    'get_spline_point_linear',
+    'get_time',
+    'get_touch_point_count',
+    'get_touch_point_id',
+    'get_touch_position',
+    'get_touch_x',
+    'get_touch_y',
+    'get_window_handle',
+    'get_window_position',
+    'get_window_scale_dpi',
+    'get_working_directory',
+    'get_world_to_screen',
+    'get_world_to_screen2d',
+    'get_world_to_screen_ex',
+    'hide_cursor',
+    'image_alpha_clear',
+    'image_alpha_crop',
+    'image_alpha_mask',
+    'image_alpha_premultiply',
+    'image_blur_gaussian',
+    'image_clear_background',
+    'image_color_brightness',
+    'image_color_contrast',
+    'image_color_grayscale',
+    'image_color_invert',
+    'image_color_replace',
+    'image_color_tint',
+    'image_copy',
+    'image_crop',
+    'image_dither',
+    'image_draw',
+    'image_draw_circle',
+    'image_draw_circle_lines',
+    'image_draw_circle_lines_v',
+    'image_draw_circle_v',
+    'image_draw_line',
+    'image_draw_line_v',
+    'image_draw_pixel',
+    'image_draw_pixel_v',
+    'image_draw_rectangle',
+    'image_draw_rectangle_lines',
+    'image_draw_rectangle_rec',
+    'image_draw_rectangle_v',
+    'image_draw_text',
+    'image_draw_text_ex',
+    'image_flip_horizontal',
+    'image_flip_vertical',
+    'image_format',
+    'image_from_image',
+    'image_mipmaps',
+    'image_resize',
+    'image_resize_canvas',
+    'image_resize_nn',
+    'image_rotate',
+    'image_rotate_ccw',
+    'image_rotate_cw',
+    'image_text',
+    'image_text_ex',
+    'image_to_pot',
+    'init_audio_device',
+    'init_window',
+    'is_audio_device_ready',
+    'is_audio_stream_playing',
+    'is_audio_stream_processed',
+    'is_audio_stream_ready',
+    'is_cursor_hidden',
+    'is_cursor_on_screen',
+    'is_file_dropped',
+    'is_file_extension',
+    'is_font_ready',
+    'is_gamepad_available',
+    'is_gamepad_button_down',
+    'is_gamepad_button_pressed',
+    'is_gamepad_button_released',
+    'is_gamepad_button_up',
+    'is_gesture_detected',
+    'is_image_ready',
+    'is_key_down',
+    'is_key_pressed',
+    'is_key_pressed_repeat',
+    'is_key_released',
+    'is_key_up',
+    'is_material_ready',
+    'is_model_animation_valid',
+    'is_model_ready',
+    'is_mouse_button_down',
+    'is_mouse_button_pressed',
+    'is_mouse_button_released',
+    'is_mouse_button_up',
+    'is_music_ready',
+    'is_music_stream_playing',
+    'is_path_file',
+    'is_render_texture_ready',
+    'is_shader_ready',
+    'is_sound_playing',
+    'is_sound_ready',
+    'is_texture_ready',
+    'is_wave_ready',
+    'is_window_focused',
+    'is_window_fullscreen',
+    'is_window_hidden',
+    'is_window_maximized',
+    'is_window_minimized',
+    'is_window_ready',
+    'is_window_resized',
+    'is_window_state',
+    'lerp',
+    'load_audio_stream',
+    'load_automation_event_list',
+    'load_codepoints',
+    'load_directory_files',
+    'load_directory_files_ex',
+    'load_dropped_files',
+    'load_file_data',
+    'load_file_text',
+    'load_font',
+    'load_font_data',
+    'load_font_ex',
+    'load_font_from_image',
+    'load_font_from_memory',
+    'load_image',
+    'load_image_anim',
+    'load_image_colors',
+    'load_image_from_memory',
+    'load_image_from_screen',
+    'load_image_from_texture',
+    'load_image_palette',
+    'load_image_raw',
+    'load_image_svg',
+    'load_material_default',
+    'load_materials',
+    'load_model',
+    'load_model_animations',
+    'load_model_from_mesh',
+    'load_music_stream',
+    'load_music_stream_from_memory',
+    'load_random_sequence',
+    'load_render_texture',
+    'load_shader',
+    'load_shader_from_memory',
+    'load_sound',
+    'load_sound_alias',
+    'load_sound_from_wave',
+    'load_texture',
+    'load_texture_cubemap',
+    'load_texture_from_image',
+    'load_utf8',
+    'load_vr_stereo_config',
+    'load_wave',
+    'load_wave_from_memory',
+    'load_wave_samples',
+    'matrix_add',
+    'matrix_determinant',
+    'matrix_frustum',
+    'matrix_identity',
+    'matrix_invert',
+    'matrix_look_at',
+    'matrix_multiply',
+    'matrix_ortho',
+    'matrix_perspective',
+    'matrix_rotate',
+    'matrix_rotate_x',
+    'matrix_rotate_xyz',
+    'matrix_rotate_y',
+    'matrix_rotate_z',
+    'matrix_rotate_zyx',
+    'matrix_scale',
+    'matrix_subtract',
+    'matrix_to_float_v',
+    'matrix_trace',
+    'matrix_translate',
+    'matrix_transpose',
+    'maximize_window',
+    'measure_text',
+    'measure_text_ex',
+    'mem_alloc',
+    'mem_free',
+    'mem_realloc',
+    'minimize_window',
+    'normalize',
+    'open_url',
+    'pause_audio_stream',
+    'pause_music_stream',
+    'pause_sound',
+    'play_audio_stream',
+    'play_automation_event',
+    'play_music_stream',
+    'play_sound',
+    'poll_input_events',
+    'quaternion_add',
+    'quaternion_add_value',
+    'quaternion_divide',
+    'quaternion_equals',
+    'quaternion_from_axis_angle',
+    'quaternion_from_euler',
+    'quaternion_from_matrix',
+    'quaternion_from_vector3_to_vector3',
+    'quaternion_identity',
+    'quaternion_invert',
+    'quaternion_length',
+    'quaternion_lerp',
+    'quaternion_multiply',
+    'quaternion_nlerp',
+    'quaternion_normalize',
+    'quaternion_scale',
+    'quaternion_slerp',
+    'quaternion_subtract',
+    'quaternion_subtract_value',
+    'quaternion_to_axis_angle',
+    'quaternion_to_euler',
+    'quaternion_to_matrix',
+    'quaternion_transform',
+    'remap',
+    'restore_window',
+    'resume_audio_stream',
+    'resume_music_stream',
+    'resume_sound',
     'rl_active_draw_buffers',
-    'rl_enable_color_blend',
-    'rl_disable_color_blend',
-    'rl_enable_depth_test',
-    'rl_disable_depth_test',
-    'rl_enable_depth_mask',
-    'rl_disable_depth_mask',
-    'rl_enable_backface_culling',
-    'rl_disable_backface_culling',
-    'rl_enable_scissor_test',
-    'rl_disable_scissor_test',
-    'rl_scissor',
-    'rl_enable_wire_mode',
-    'rl_disable_wire_mode',
-    'rl_set_line_width',
-    'rl_get_line_width',
-    'rl_enable_smooth_lines',
-    'rl_disable_smooth_lines',
-    'rl_enable_stereo_render',
-    'rl_disable_stereo_render',
-    'rl_is_stereo_render_enabled',
+    'rl_active_texture_slot',
+    'rl_begin',
+    'rl_bind_image_texture',
+    'rl_bind_shader_buffer',
+    'rl_blit_framebuffer',
+    'rl_check_errors',
+    'rl_check_render_batch_limit',
     'rl_clear_color',
     'rl_clear_screen_buffers',
-    'rl_check_errors',
-    'rl_set_blend_mode',
-    'rl_set_blend_factors',
-    'rlgl_init',
-    'rlgl_close',
-    'rl_load_extensions',
-    'rl_get_version',
-    'rl_set_framebuffer_width',
-    'rl_get_framebuffer_width',
-    'rl_set_framebuffer_height',
+    'rl_color_3ff',
+    'rl_color_4_uub',
+    'rl_color_4ff',
+    'rl_compile_shader',
+    'rl_compute_shader_dispatch',
+    'rl_copy_shader_buffer',
+    'rl_cubemap_parameters',
+    'rl_disable_backface_culling',
+    'rl_disable_color_blend',
+    'rl_disable_depth_mask',
+    'rl_disable_depth_test',
+    'rl_disable_framebuffer',
+    'rl_disable_scissor_test',
+    'rl_disable_shader',
+    'rl_disable_smooth_lines',
+    'rl_disable_stereo_render',
+    'rl_disable_texture',
+    'rl_disable_texture_cubemap',
+    'rl_disable_vertex_array',
+    'rl_disable_vertex_attribute',
+    'rl_disable_vertex_buffer',
+    'rl_disable_vertex_buffer_element',
+    'rl_disable_wire_mode',
+    'rl_draw_render_batch',
+    'rl_draw_render_batch_active',
+    'rl_draw_vertex_array',
+    'rl_draw_vertex_array_elements',
+    'rl_draw_vertex_array_elements_instanced',
+    'rl_draw_vertex_array_instanced',
+    'rl_enable_backface_culling',
+    'rl_enable_color_blend',
+    'rl_enable_depth_mask',
+    'rl_enable_depth_test',
+    'rl_enable_framebuffer',
+    'rl_enable_point_mode',
+    'rl_enable_scissor_test',
+    'rl_enable_shader',
+    'rl_enable_smooth_lines',
+    'rl_enable_stereo_render',
+    'rl_enable_texture',
+    'rl_enable_texture_cubemap',
+    'rl_enable_vertex_array',
+    'rl_enable_vertex_attribute',
+    'rl_enable_vertex_buffer',
+    'rl_enable_vertex_buffer_element',
+    'rl_enable_wire_mode',
+    'rl_end',
+    'rl_framebuffer_attach',
+    'rl_framebuffer_complete',
+    'rl_frustum',
+    'rl_gen_texture_mipmaps',
     'rl_get_framebuffer_height',
-    'rl_get_texture_id_default',
+    'rl_get_framebuffer_width',
+    'rl_get_gl_texture_formats',
+    'rl_get_line_width',
+    'rl_get_location_attrib',
+    'rl_get_location_uniform',
+    'rl_get_matrix_modelview',
+    'rl_get_matrix_projection',
+    'rl_get_matrix_projection_stereo',
+    'rl_get_matrix_transform',
+    'rl_get_matrix_view_offset_stereo',
+    'rl_get_pixel_format_name',
+    'rl_get_shader_buffer_size',
     'rl_get_shader_id_default',
     'rl_get_shader_locs_default',
+    'rl_get_texture_id_default',
+    'rl_get_version',
+    'rl_is_stereo_render_enabled',
+    'rl_load_compute_shader_program',
+    'rl_load_draw_cube',
+    'rl_load_draw_quad',
+    'rl_load_extensions',
+    'rl_load_framebuffer',
+    'rl_load_identity',
     'rl_load_render_batch',
-    'rl_unload_render_batch',
-    'rl_draw_render_batch',
-    'rl_set_render_batch_active',
-    'rl_draw_render_batch_active',
-    'rl_check_render_batch_limit',
-    'rl_set_texture',
+    'rl_load_shader_buffer',
+    'rl_load_shader_code',
+    'rl_load_shader_program',
+    'rl_load_texture',
+    'rl_load_texture_cubemap',
+    'rl_load_texture_depth',
     'rl_load_vertex_array',
     'rl_load_vertex_buffer',
     'rl_load_vertex_buffer_element',
-    'rl_update_vertex_buffer',
-    'rl_update_vertex_buffer_elements',
-    'rl_unload_vertex_array',
-    'rl_unload_vertex_buffer',
-    'rl_set_vertex_attribute',
-    'rl_set_vertex_attribute_divisor',
-    'rl_set_vertex_attribute_default',
-    'rl_draw_vertex_array',
-    'rl_draw_vertex_array_elements',
-    'rl_draw_vertex_array_instanced',
-    'rl_draw_vertex_array_elements_instanced',
-    'rl_load_texture',
-    'rl_load_texture_depth',
-    'rl_load_texture_cubemap',
-    'rl_update_texture',
-    'rl_get_gl_texture_formats',
-    'rl_get_pixel_format_name',
-    'rl_unload_texture',
-    'rl_gen_texture_mipmaps',
-    'rl_read_texture_pixels',
+    'rl_matrix_mode',
+    'rl_mult_matrixf',
+    'rl_normal_3ff',
+    'rl_ortho',
+    'rl_pop_matrix',
+    'rl_push_matrix',
     'rl_read_screen_pixels',
-    'rl_load_framebuffer',
-    'rl_framebuffer_attach',
-    'rl_framebuffer_complete',
-    'rl_unload_framebuffer',
-    'rl_load_shader_code',
-    'rl_compile_shader',
-    'rl_load_shader_program',
-    'rl_unload_shader_program',
-    'rl_get_location_uniform',
-    'rl_get_location_attrib',
+    'rl_read_shader_buffer',
+    'rl_read_texture_pixels',
+    'rl_rotatef',
+    'rl_scalef',
+    'rl_scissor',
+    'rl_set_blend_factors',
+    'rl_set_blend_factors_separate',
+    'rl_set_blend_mode',
+    'rl_set_cull_face',
+    'rl_set_framebuffer_height',
+    'rl_set_framebuffer_width',
+    'rl_set_line_width',
+    'rl_set_matrix_modelview',
+    'rl_set_matrix_projection',
+    'rl_set_matrix_projection_stereo',
+    'rl_set_matrix_view_offset_stereo',
+    'rl_set_render_batch_active',
+    'rl_set_shader',
+    'rl_set_texture',
     'rl_set_uniform',
     'rl_set_uniform_matrix',
     'rl_set_uniform_sampler',
-    'rl_set_shader',
-    'rl_load_compute_shader_program',
-    'rl_compute_shader_dispatch',
-    'rl_load_shader_buffer',
+    'rl_set_vertex_attribute',
+    'rl_set_vertex_attribute_default',
+    'rl_set_vertex_attribute_divisor',
+    'rl_tex_coord_2ff',
+    'rl_texture_parameters',
+    'rl_translatef',
+    'rl_unload_framebuffer',
+    'rl_unload_render_batch',
     'rl_unload_shader_buffer',
-    'rl_update_shader_buffer_elements',
-    'rl_get_shader_buffer_size',
-    'rl_read_shader_buffer_elements',
-    'rl_bind_shader_buffer',
-    'rl_copy_buffers_elements',
-    'rl_bind_image_texture',
-    'rl_get_matrix_modelview',
-    'rl_get_matrix_projection',
-    'rl_get_matrix_transform',
-    'rl_get_matrix_projection_stereo',
-    'rl_get_matrix_view_offset_stereo',
-    'rl_set_matrix_projection',
-    'rl_set_matrix_modelview',
-    'rl_set_matrix_projection_stereo',
-    'rl_set_matrix_view_offset_stereo',
-    'rl_load_draw_cube',
-    'rl_load_draw_quad',
+    'rl_unload_shader_program',
+    'rl_unload_texture',
+    'rl_unload_vertex_array',
+    'rl_unload_vertex_buffer',
+    'rl_update_shader_buffer',
+    'rl_update_texture',
+    'rl_update_vertex_buffer',
+    'rl_update_vertex_buffer_elements',
+    'rl_vertex_2ff',
+    'rl_vertex_2ii',
+    'rl_vertex_3ff',
+    'rl_viewport',
+    'rlgl_close',
+    'rlgl_init',
+    'save_file_data',
+    'save_file_text',
+    'seek_music_stream',
+    'set_audio_stream_buffer_size_default',
+    'set_audio_stream_callback',
+    'set_audio_stream_pan',
+    'set_audio_stream_pitch',
+    'set_audio_stream_volume',
+    'set_automation_event_base_frame',
+    'set_automation_event_list',
+    'set_clipboard_text',
+    'set_config_flags',
+    'set_exit_key',
+    'set_gamepad_mappings',
+    'set_gestures_enabled',
+    'set_load_file_data_callback',
+    'set_load_file_text_callback',
+    'set_master_volume',
+    'set_material_texture',
+    'set_model_mesh_material',
+    'set_mouse_cursor',
+    'set_mouse_offset',
+    'set_mouse_position',
+    'set_mouse_scale',
+    'set_music_pan',
+    'set_music_pitch',
+    'set_music_volume',
+    'set_pixel_color',
+    'set_random_seed',
+    'set_save_file_data_callback',
+    'set_save_file_text_callback',
+    'set_shader_value',
+    'set_shader_value_matrix',
+    'set_shader_value_texture',
+    'set_shader_value_v',
+    'set_shapes_texture',
+    'set_sound_pan',
+    'set_sound_pitch',
+    'set_sound_volume',
+    'set_target_fps',
+    'set_text_line_spacing',
+    'set_texture_filter',
+    'set_texture_wrap',
+    'set_trace_log_callback',
+    'set_trace_log_level',
+    'set_window_focused',
+    'set_window_icon',
+    'set_window_icons',
+    'set_window_max_size',
+    'set_window_min_size',
+    'set_window_monitor',
+    'set_window_opacity',
+    'set_window_position',
+    'set_window_size',
+    'set_window_state',
+    'set_window_title',
+    'show_cursor',
+    'start_automation_event_recording',
+    'stop_audio_stream',
+    'stop_automation_event_recording',
+    'stop_music_stream',
+    'stop_sound',
+    'swap_screen_buffer',
+    'take_screenshot',
+    'text_append',
+    'text_copy',
+    'text_find_index',
+    'text_format',
+    'text_insert',
+    'text_is_equal',
+    'text_join',
+    'text_length',
+    'text_replace',
+    'text_split',
+    'text_subtext',
+    'text_to_integer',
+    'text_to_lower',
+    'text_to_pascal',
+    'text_to_upper',
+    'toggle_borderless_windowed',
+    'toggle_fullscreen',
+    'trace_log',
+    'unload_audio_stream',
+    'unload_automation_event_list',
+    'unload_codepoints',
+    'unload_directory_files',
+    'unload_dropped_files',
+    'unload_file_data',
+    'unload_file_text',
+    'unload_font',
+    'unload_font_data',
+    'unload_image',
+    'unload_image_colors',
+    'unload_image_palette',
+    'unload_material',
+    'unload_mesh',
+    'unload_model',
+    'unload_model_animation',
+    'unload_model_animations',
+    'unload_music_stream',
+    'unload_random_sequence',
+    'unload_render_texture',
+    'unload_shader',
+    'unload_sound',
+    'unload_sound_alias',
+    'unload_texture',
+    'unload_utf8',
+    'unload_vr_stereo_config',
+    'unload_wave',
+    'unload_wave_samples',
+    'update_audio_stream',
+    'update_camera',
+    'update_camera_pro',
+    'update_mesh_buffer',
+    'update_model_animation',
+    'update_music_stream',
+    'update_sound',
+    'update_texture',
+    'update_texture_rec',
+    'upload_mesh',
+    'vector2_add',
+    'vector2_add_value',
+    'vector2_angle',
+    'vector2_clamp',
+    'vector2_clamp_value',
+    'vector2_distance',
+    'vector2_distance_sqr',
+    'vector2_divide',
+    'vector2_dot_product',
+    'vector2_equals',
+    'vector2_invert',
+    'vector2_length',
+    'vector2_length_sqr',
+    'vector2_lerp',
+    'vector2_line_angle',
+    'vector2_move_towards',
+    'vector2_multiply',
+    'vector2_negate',
+    'vector2_normalize',
+    'vector2_one',
+    'vector2_reflect',
+    'vector2_rotate',
+    'vector2_scale',
+    'vector2_subtract',
+    'vector2_subtract_value',
+    'vector2_transform',
+    'vector2_zero',
+    'vector3_add',
+    'vector3_add_value',
+    'vector3_angle',
+    'vector3_barycenter',
+    'vector3_clamp',
+    'vector3_clamp_value',
+    'vector3_cross_product',
+    'vector3_distance',
+    'vector3_distance_sqr',
+    'vector3_divide',
+    'vector3_dot_product',
+    'vector3_equals',
+    'vector3_invert',
+    'vector3_length',
+    'vector3_length_sqr',
+    'vector3_lerp',
+    'vector3_max',
+    'vector3_min',
+    'vector3_multiply',
+    'vector3_negate',
+    'vector3_normalize',
+    'vector3_one',
+    'vector3_ortho_normalize',
+    'vector3_perpendicular',
+    'vector3_project',
+    'vector3_reflect',
+    'vector3_refract',
+    'vector3_reject',
+    'vector3_rotate_by_axis_angle',
+    'vector3_rotate_by_quaternion',
+    'vector3_scale',
+    'vector3_subtract',
+    'vector3_subtract_value',
+    'vector3_to_float_v',
+    'vector3_transform',
+    'vector3_unproject',
+    'vector3_zero',
+    'wait_time',
+    'wave_copy',
+    'wave_crop',
+    'wave_format',
+    'window_should_close',
+    'wrap',
+
+    # contexts
+    'blend_mode',
+    'drawing',
+    'mode2d',
+    'mode3d',
+    'rl_backface_culling',
+    'rl_color_blend',
+    'rl_depth_mask',
+    'rl_depth_test',
+    'rl_framebuffer',
+    'rl_gl',
+    'rl_scissor_test',
+    'rl_shader',
+    'rl_smooth_lines',
+    'rl_stereo_render',
+    'rl_texture',
+    'rl_texture_cubemap',
+    'rl_vertex_array',
+    'rl_vertex_attribute',
+    'rl_vertex_buffer',
+    'rl_vertex_buffer_element',
+    'rl_wire_mode',
+    'scissor_mode',
+    'shader_mode',
+    'texture_mode',
+    'vr_stereo_mode',
 ]
 
+# endregion (exports)
+
 # region LIBRARY LOADING
+
 
 # region CDLLEX
 
@@ -1412,108 +1682,236 @@ if sys.platform == 'win32':
 
 # endregion (cdllex)
 
+_dotraylib_used = False
+_dotraylib_loadinfo = []
 
-_lib_fname = {
-    'win32': 'raylib.dll',
-    'linux': 'libraylib.so.4.2.0',
-    'darwin': 'libraylib.4.2.0.dylib'
+def _check_dotraylib(lib, platform, bitness, default=None):
+    """Checks for the .raylib file in the current working directory
+
+    The presence of this file allows the loading of binaries other than those
+    provided by raylib. Example of .raylib file contents:
+
+    ```json
+    {
+        "raylib": {
+            "win32": {
+                "32bit": "path/to/raylib/filename.dll",
+                "64bit": "path/to/raylib/filename.dll"
+            },
+            "linux": {
+                "32bit": "path/to/raylib/filename.so",
+                "64bit": "path/to/raylib/filename.so"
+            },
+            "darwin": {
+                "64bit": "path/to/raylib/filename.dylib"
+            }
+        }
+    }
+    ```
+    """
+
+    global _dotraylib_loadinfo, _dotraylib_used
+    _dotraylib = os.path.join(os.getcwd(), '.raylib')
+
+    if os.path.exists(_dotraylib) and os.path.isfile(_dotraylib):
+        _dotraylib_used = True
+
+        with open(_dotraylib, 'r', encoding='utf8') as fp:
+            try:
+                _dotraylib_config = json.load(fp)
+                _libpath = _dotraylib_config.get(lib, {}).get(platform, {}).get(bitness, default)
+                _dotraylib_loadinfo.append("INFO: .raylib loaded successfully")
+                return _libpath
+
+            except json.JSONDecodeError:
+                _dotraylib_loadinfo.append("ERROR: Could not decode .raylib file")
+    else:
+        _dotraylib_loadinfo.append("INFO: .raylib file not available")
+    return default
+
+
+def _load_library(lib_name, is_extension, basedir, **bin_fnames):
+    global _dotraylib_loadinfo, _dotraylib_used
+
+    _lib_fname = {
+        'win32': bin_fnames.get('win32', 'no_file_specified.dll'),
+        'linux': bin_fnames.get('linux', 'no_file_specified.so'),
+        'darwin': bin_fnames.get('darwin', 'no_file_specified.dylib')
+    }
+
+    _dotraylib_used = False
+    _lib_platform = sys.platform
+
+    if _lib_platform == 'win32':
+        _bitness = platform.architecture()[0]
+    elif _lib_platform == 'darwin':
+        _bitness = '64bit'
+    else:
+        _bitness = '64bit' if sys.maxsize > 2 ** 32 else '32bit'
+
+    if is_extension:
+        _lib_default = None
+    else:
+        _lib_default = os.path.join(*(d.format(os.path.dirname(__file__)) for d in basedir), _bitness, _lib_fname[_lib_platform])
+
+    _lib_default = _check_dotraylib(lib_name, _lib_platform, _bitness, _lib_default)
+
+    if not _lib_default:
+        if is_extension:
+            _dotraylib_loadinfo.append("ERROR: Platform ({}), bitness ({}) or valid filename not specified in .raylib file for {} extension".format(lib_name, _lib_platform, _bitness))
+        else:
+            _dotraylib_loadinfo.append("ERROR: Platform ({}), bitness ({}) or valid filename not specified in .raylib file for {}".format(lib_name, _lib_platform, _bitness))
+
+        _lib_fname_abspath = ''
+        _ok = False
+    else:
+        _lib_fname_abspath = os.path.normcase(os.path.normpath(_lib_default))
+        _ok = True
+
+    _cwd_info = os.getcwd()
+    _load_info = "\n            ".join(_dotraylib_loadinfo) if _dotraylib_loadinfo else "does not apply"
+
+    print(
+        """Library loading info:
+        platform: {}
+        bitness: {}
+        current working dir: {}
+        .raylib used: {}
+        .raylib status: {}
+        absolute path: {}
+        is extension: {}
+        path exists: {}
+        path leads to a file: {}
+        """.format(
+            _lib_platform,
+            _bitness,
+            _cwd_info,
+            'yes' if _dotraylib_used else 'no',
+            _load_info,
+            _lib_fname_abspath,
+            'yes' if is_extension else 'no',
+            'yes' if os.path.exists(_lib_fname_abspath) else 'no',
+            'yes' if os.path.isfile(_lib_fname_abspath) else 'no'
+        )
+    )
+
+    if not _ok:
+        print("Failed to load Shared library", lib_name)
+        sys.exit(1)
+
+    lib_ = None
+    if _lib_platform == 'win32':
+
+        try:
+            lib_ = CDLLEx(_lib_fname_abspath, LOAD_WITH_ALTERED_SEARCH_PATH)
+        except OSError as e:
+            print("Unable to load {}: {}".format(_lib_fname[_lib_platform], e.args))
+            lib_ = None
+    else:
+        lib_ = CDLL(_lib_fname_abspath)
+
+    if lib_ is None:
+        print("Failed to load Shared library", lib_name)
+        sys.exit(1)
+    else:
+        print("Shared library loaded succesfully", lib_)
+
+    return lib_
+
+
+rlapi = _load_library('raylib', False, ['{}/bin'], win32='raylib.dll', linux='libraylib.so.5.0.0', darwin='libraylib.5.0.0.dylib')
+
+# endregion (library loading)
+
+print('\nraylib-py v{RAYLIB_VERSION} is initializing.\n')
+
+# region GLOBALS
+
+# Used to store temporarily out param argument passed to functions
+# so that the values can be retrieved following the call
+_in_out = []
+
+# TypeVar for generic Array class
+_T = TypeVar('_T')
+
+RE_C_FMT_STRING = re.compile(r"%(?P<flags>[ \-+#0])?(?P<width>\d+|\*)?(?P<precision>\.[*\d])?(?P<length>hh|h|ll|l|j|z|t|L)?(?P<spec>[diuoxXfFeEgGaAcspn])")
+
+FMT_SPEC_TABLE = {
+    'd': {'*': c_int,          'hh': c_byte,   'h': c_short,          'l': c_long,          'll': c_longlong,          'j': None, 'z': c_size_t,          't': None, 'L': None},
+    'i': {'*': c_int,          'hh': c_byte,   'h': c_short,          'l': c_long,          'll': c_longlong,          'j': None, 'z': c_size_t,          't': None, 'L': None},
+    'u': {'*': c_uint,         'hh': c_ubyte,  'h': c_ushort,         'l': c_ulong,         'll': c_ulonglong,         'j': None, 'z': c_size_t,          't': None, 'L': None},
+    'o': {'*': c_uint,         'hh': c_ubyte,  'h': c_ushort,         'l': c_ulong,         'll': c_ulonglong,         'j': None, 'z': c_size_t,          't': None, 'L': None},
+    'x': {'*': c_uint,         'hh': c_ubyte,  'h': c_ushort,         'l': c_ulong,         'll': c_ulonglong,         'j': None, 'z': c_size_t,          't': None, 'L': None},
+    'X': {'*': c_uint,         'hh': c_ubyte,  'h': c_ushort,         'l': c_ulong,         'll': c_ulonglong,         'j': None, 'z': c_size_t,          't': None, 'L': None},
+    'f': {'*': c_double,       'hh': None,     'h': None,             'l': None,            'll': None,                'j': None, 'z': None,              't': None, 'L': c_longdouble},
+    'F': {'*': c_double,       'hh': None,     'h': None,             'l': None,            'll': None,                'j': None, 'z': None,              't': None, 'L': c_longdouble},
+    'e': {'*': c_double,       'hh': None,     'h': None,             'l': None,            'll': None,                'j': None, 'z': None,              't': None, 'L': c_longdouble},
+    'E': {'*': c_double,       'hh': None,     'h': None,             'l': None,            'll': None,                'j': None, 'z': None,              't': None, 'L': c_longdouble},
+    'g': {'*': c_double,       'hh': None,     'h': None,             'l': None,            'll': None,                'j': None, 'z': None,              't': None, 'L': c_longdouble},
+    'G': {'*': c_double,       'hh': None,     'h': None,             'l': None,            'll': None,                'j': None, 'z': None,              't': None, 'L': c_longdouble},
+    'a': {'*': c_double,       'hh': None,     'h': None,             'l': None,            'll': None,                'j': None, 'z': None,              't': None, 'L': c_longdouble},
+    'A': {'*': c_double,       'hh': None,     'h': None,             'l': None,            'll': None,                'j': None, 'z': None,              't': None, 'L': c_longdouble},
+    'c': {'*': c_int,          'hh': None,     'h': None,             'l': c_wchar,         'll': None,                'j': None, 'z': None,              't': None, 'L': None},
+    's': {'*': c_char_p,       'hh': None,     'h': None,             'l': c_wchar_p,       'll': None,                'j': None, 'z': None,              't': None, 'L': None},
+    'p': {'*': c_void_p,       'hh': None,     'h': None,             'l': None,            'll': None,                'j': None, 'z': None,              't': None, 'L': None},
+    'n': {'*': POINTER(c_int), 'hh': c_char_p, 'h': POINTER(c_short), 'l': POINTER(c_long), 'll': POINTER(c_longlong), 'j': None, 'z': POINTER(c_size_t), 't': None, 'L': None},
 }
 
-_lib_platform = sys.platform
-
-if _lib_platform == 'win32':
-    _bitness = platform.architecture()[0]
-else:
-    _bitness = '64bit' if sys.maxsize > 2 ** 32 else '32bit'
-
-_lib_fname_abspath = os.path.join(os.path.dirname(__file__), 'bin', _bitness, _lib_fname[_lib_platform])
-_lib_fname_abspath = os.path.normcase(os.path.normpath(_lib_fname_abspath))
-
-print(
-    """Library loading info:
-    platform: {}
-    bitness: {}
-    absolute path: {}
-    exists: {}
-    is file: {}
-    """.format(
-        _lib_platform,
-        _bitness,
-        _lib_fname_abspath,
-        'yes' if os.path.exists(_lib_fname_abspath) else 'no',
-        'yes' if os.path.isfile(_lib_fname_abspath) else 'no'
-    )
-)
-
-rlapi = None
-if _lib_platform == 'win32':
-
-    try:
-        rlapi = CDLLEx(_lib_fname_abspath, LOAD_WITH_ALTERED_SEARCH_PATH)
-    except OSError:
-        print("Unable to load {}.".format(_lib_fname[_lib_platform]))
-        rlapi = None
-else:
-    rlapi = CDLL(_lib_fname_abspath)
-
-if rlapi is None:
-    print("Failed to load shared library.")
-    exit()
-else:
-    print("Shared library loaded succesfully.", rlapi)
-
-
-
-Bool = c_bool
-BoolPtr = POINTER(c_bool)
-Byte = c_byte
-BytePtr = POINTER(c_byte)
-Char = c_char
-CharPtr = POINTER(c_char)
-Short = c_short
-ShortPtr = POINTER(c_short)
-Int = c_long
-IntPtr = POINTER(c_long)
-Long = c_long
-LongPtr = POINTER(c_long)
-LongLong = c_longlong
-LongLongPtr = POINTER(c_longlong)
-UChar = c_ubyte
-UCharPtr = POINTER(c_ubyte)
-UByte = c_ubyte
-UBytePtr = POINTER(c_ubyte)
-UShort = c_ushort
-UShortPtr = POINTER(c_ushort)
-UInt = c_ulong
-UIntPtr = POINTER(c_ulong)
-ULong = c_ulong
-ULongPtr = POINTER(c_ulong)
-ULongLong = c_ulonglong
-ULongLongPtr = POINTER(c_ulonglong)
-Float = c_float
-FloatPtr = POINTER(c_float)
-Double = c_double
-DoublePtr = POINTER(c_double)
-VoidPtr = c_void_p
-VoidPtrPtr = POINTER(c_void_p)
-CharPtr = c_char_p
-CharPtrPtr = POINTER(c_char_p)
-
+_fmt_cache = {}
 
 # Vector component swizzling helppers
-_VEC2_GET_SWZL = re.compile(r'[xy]{,4}')
-_VEC3_GET_SWZL = re.compile(r'[xyz]{,4}')
-_VEC4_GET_SWZL = re.compile(r'[xyzw]{,4}')
-_RGBA_GET_SWZL = re.compile(r'[rgba]{4}')
-_RECT_GET_SWZL = re.compile(r'(width|height|[xywh]{4})')
+RE_VEC2_GET_SWZL = re.compile(r'[xy]{,4}')
+RE_VEC3_GET_SWZL = re.compile(r'[xyz]{,4}')
+RE_VEC4_GET_SWZL = re.compile(r'[xyzw]{,4}')
+RE_RGBA_GET_SWZL = re.compile(r'[rgba]{1,4}')
+RE_RECT_GET_SWZL = re.compile(r'(width|height|[xywhcmrb]{,4})')
 
-_VEC2_SET_SWZL = re.compile(r'[xy]{,2}')
-_VEC3_SET_SWZL = re.compile(r'[xyz]{,3}')
-_VEC4_SET_SWZL = re.compile(r'[xyzw]{,4}')
-_RGBA_SET_SWZL = re.compile(r'[rgba]{1,4}')
-_RECT_SET_SWZL = re.compile(r'(width|height|[xywh]{1,4})')
+RE_VEC2_SET_SWZL = re.compile(r'[xy]{,2}')
+RE_VEC3_SET_SWZL = re.compile(r'[xyz]{,3}')
+RE_VEC4_SET_SWZL = re.compile(r'[xyzw]{,4}')
+RE_RGBA_SET_SWZL = re.compile(r'[rgba]{1,4}')
+RE_RECT_SET_SWZL = re.compile(r'(width|height|[xywhcmrb]{,4})')
+# endregion (globals)
 
-# region FUNCTIONS
+# region UTILS
+
+# region INTERNAL
+
+
+def _extract_argtypes(format_string):
+    """Generator function to extract all specifiers as ctypes types from the format string
+    
+    (yielded items are tuples of slice, str and a ctypes type or None)
+    """
+    # type: (str) -> Iterator[tuple[slice, str, Any]]
+    for m in RE_C_FMT_STRING.finditer(format_string):
+        spec = m.group('spec')
+        length = m.group('length') or '*'
+        ctypes_type = FMT_SPEC_TABLE.get(spec, {}).get(length)
+        yield slice(*m.span()), m[0], ctypes_type
+
+
+def _transform_fmt(format_string, *args):
+    n = len(args)
+    vals = []
+    sentinel = object()
+
+    for i, (slc, str_, ctype) in enumerate(_extract_argtypes(format_string[:])):
+        try:
+            val = ctype(args[i])
+        except Exception:
+            val = sentinel
+
+        if i >= n or ctype is None or val is sentinel:
+            left = format_string[:slc.start]
+            right = format_string[slc.stop:]
+            middle = '<?fmt?>'
+            format_string = left + middle + right
+            continue
+
+        vals.append(val)
+
+    return [format_string, *vals]
 
 
 def _clsname(obj):
@@ -1542,27 +1940,6 @@ def _str_in2(values):
 
 def _str_out(value):
     return value.decode('utf-8', 'ignore') if isinstance(value, bytes) else value
-
-
-def _arr_in(typ, data):
-    if isinstance(data, POINTER(typ)):
-        return data
-    return (typ * len(data))(*data)
-
-
-def _arr2_in(typ, data):
-    arr = typ * len(data[0])
-    return (arr * len(data))(*data)
-
-
-def _arr_out(data):
-    return data.values
-
-
-def _ptr_out(ptr, length=0):
-    [ptr.contents] if length == 1 else ([] if not length else ptr[:length])
-
-# region TYPE CAST FUNCS
 
 
 def _float(value):
@@ -1608,3502 +1985,224 @@ def _color(seq):
         return seq
     r, g, b, q = seq
     rng = 0, 255
-    return Color(_int(r, rng), _int(r, rng), _int(b, rng), _int(q, rng))
-
-# endregion (type cast funcs)
+    return Color(_int(r, rng), _int(g, rng), _int(b, rng), _int(q, rng))
 
 
-def _wrap(api, argtypes, restype):
-    api.argtypes = argtypes
-    api.restype = restype
+def _array_in(sequence, type_ctype=None):
+    if isinstance(sequence, BaseArray):
+        return sequence
+    else:
+        return (type_ctype * len(sequence))(*sequence)
+
+
+def _clear_in_out():
+    global _in_out
+
+    _in_out.clear()
+
+
+def _push_in_out(ctype_pointer_type):
+    global _in_out
+
+    _in_out.append(ctype_pointer_type)
+
+
+def _wrap(api, res_type, *arg_types):
+    """Configure the paramters and return types for the wrapped C function and returns it"""
+    api.argtypes = arg_types
+    api.restype = res_type
     return api
 
-# endregion (functions)
+# endregion (internal)
 
 
-# Struct not exposed in raylib.h
-class rAudioBufferPtr(Structure):
+BaseArray = Array
+
+class Array(Generic[_T]):
+    """Generic class defined only for type hinting/annotation purposes (e.g. Array[Color])."""
     pass
 
 
-# Struct not exposed in raylib.h
-class rAudioProcessorPtr(Structure):
-    pass
+def clear_format_string_cache():
+    global _fmt_cache
 
+    _fmt_cache.clear()
 
 
-class Vector2(Structure):
-    '''Vector2, 2 components'''
-    _fields_ = [
-        ('x', Float),
-        ('y', Float),
-    ]
+def pop_out_param(default=None):
+    """Pops and returns the out param argument passed to the last call, or the default value otherwise"""
+    global _in_out
 
+    if len(_in_out):
+        return _in_out.pop()
+    return default
 
-    @classmethod
-    def array_of(cls, vector2_sequence):
-        '''Creates and returns an array of Vector2s'''
-        arr = cls * len(vector2_sequence)
-        return arr(*vector2_sequence)
 
-    @classmethod
-    def one():
-        # type: () -> Vector2
-        """Vector with components value 1.0f"""
-        result = _Vector2One()
-        return result
+def float_array(sequence):
+    """Factory function to create and return an array of floats"""
+    if isinstance(sequence, Array):
+        return sequence
 
+    return (Float * len(sequence))(*sequence)
 
-    def __init__(self, x=None, y=None):
-        # type: (float, float) -> None
-        '''Initializes this Vector2 struct'''
-        super(Vector2, self).__init__(
-            x or 0.0,
-            y or 0.0
-        )
 
+def double_array(sequence):
+    """Factory function to create and return an array of doubles"""
+    if isinstance(sequence, Array):
+        return sequence
 
-    @property
-    def byref(self):
-        '''Gets a reference to this Vector2 instance'''
-        return byref(self)
+    return (Double * len(sequence))(*sequence)
 
 
-    def __len__(self):
-        return 2
+def int_array(sequence):
+    """Factory function to create and return an array of signed int numbers"""
+    if isinstance(sequence, Array):
+        return sequence
+    elif isinstance(sequence, str):
+        sequence = [ord(ch) for ch in sequence]
 
-    def __getitem__(self, key):
-        return (self.x, self.y).__getitem__(key)
+    return (Int * len(sequence))(*sequence)
 
-    def __getattr__(self, attr):
-        m = _VEC2_GET_SWZL.match(attr)
-        if not m:
-            raise AttributeError("Vector2 object does not have attribute '{}'.".format(attr))
-        cls = {1: float, 2: Vector2, 3: Vector3, 4: Vector4}.get(len(attr))
-        v = self.todict()
-        return cls(*(v[ch] for ch in attr))
 
-    def __setattr__(self, attr, value):
-        m = _VEC2_SET_SWZL.match(attr)
-        if not m:
-            raise AttributeError("Vector2 object does not have attribute '{}'.".format(attr))
-        if len(attr) == 1:
-            super(Vector2, self).__setattr__(attr, float(value))
-        else:
-            for i, ch in enumerate(attr):
-                super(Vector2, self).__setattr__(ch, float(value[i]))
+def uint_array(sequence):
+    """Factory function to create and return an array of unsigned int numbers"""
+    if isinstance(sequence, Array):
+        return sequence
+    elif isinstance(sequence, str):
+        sequence = [ord(ch) for ch in sequence]
 
-    def todict(self):
-        '''Returns a dict mapping this Vector2's components'''
-        return {'x': self.x, 'y': self.y}
+    return (UInt * len(sequence))(*sequence)
 
-    def fromdict(self, d):
-        '''Apply the mapping `d` to this Vector2's components'''
-        self.x = float(d.get('x', self.x))
-        self.y = float(d.get('y', self.y))
 
+def short_array(sequence):
+    """Factory function to create and return an array of signed short numbers"""
+    if isinstance(sequence, Array):
+        return sequence
+    elif isinstance(sequence, str):
+        sequence = [ord(ch) for ch in sequence]
 
-    def __str__(self):
-        return "({}, {})".format(self.x, self.y)
+    return (Short * len(sequence))(*sequence)
 
-    def __repr__(self):
-        return "Vector2{}".format(self.__str__())
 
-    @property
-    def length(self):
-        # type: (Vector2) -> float
-        """Calculate vector length"""
-        result = _Vector2Length(self)
-        return result
+def ushort_array(sequence):
+    """Factory function to create and return an array of unsigned short numbers"""
+    if isinstance(sequence, Array):
+        return sequence
+    elif isinstance(sequence, str):
+        sequence = [ord(ch) for ch in sequence]
 
-    @property
-    def length_sqr(self):
-        # type: (Vector2) -> float
-        """Calculate vector square length"""
-        result = _Vector2LengthSqr(self)
-        return result
+    return (UShort * len(sequence))(*sequence)
 
-    def dot_product(self, v2):
-        # type: (Vector2, Vector2) -> float
-        """Calculate two vectors dot product"""
-        result = _Vector2DotProduct(self, _vec2(v2))
-        return result
 
-    def distance(self, v2):
-        # type: (Vector2, Vector2) -> float
-        """Calculate distance between two vectors"""
-        result = _Vector2Distance(self, _vec2(v2))
-        return result
+def byte_array(sequence):
+    """Factory function to create and return an array of signed byte numbers"""
+    if isinstance(sequence, Array):
+        return sequence
+    elif isinstance(sequence, str):
+        sequence = [ord(ch) for ch in sequence]
 
-    def distance_sqr(self, v2):
-        # type: (Vector2, Vector2) -> float
-        """Calculate square distance between two vectors"""
-        result = _Vector2DistanceSqr(self, _vec2(v2))
-        return result
+    return (Byte * len(sequence))(*sequence)
 
-    def angle(self, v2):
-        # type: (Vector2, Vector2) -> float
-        """Calculate angle from two vectors"""
-        result = _Vector2Angle(self, _vec2(v2))
-        return result
 
-    def normalize(self):
-        # type: (Vector2) -> Vector2
-        """Normalize provided vector"""
-        self.xy = _Vector2Normalize(self)
-        return self
+def ubyte_array(sequence):
+    """Factory function to create and return an array of unsigned byte numbers"""
+    if isinstance(sequence, Array):
+        return sequence
+    elif isinstance(sequence, str):
+        sequence = [ord(ch) for ch in sequence]
 
-    def transform(self, mat):
-        # type: (Vector2, Matrix) -> Vector2
-        """Transforms a Vector2 by a given Matrix"""
-        self.xy = _Vector2Transform(self, mat)
-        return self
+    return (UByte * len(sequence))(*sequence)
 
-    def lerp(self, v2, amount):
-        # type: (Vector2, Vector2, float) -> Vector2
-        """Calculate linear interpolation between two vectors"""
-        self.xy = _Vector2Lerp(self, _vec2(v2), float(amount))
-        return self
 
-    def reflect(self, normal):
-        # type: (Vector2, Vector2) -> Vector2
-        """Calculate reflected vector to normal"""
-        self.xy = _Vector2Reflect(self, _vec2(normal))
-        return self
+def string_array(sequence, encoding='utf8', errors='ignore'):
+    """Factory function to create and return an array of char * (a char **)"""
+    if isinstance(sequence, Array):
+        return sequence
+    elsequence = [s.encode(encoding, ignore) for s in sequence]
 
-    def rotate(self, angle):
-        # type: (Vector2, float) -> Vector2
-        """Rotate vector by angle"""
-        self.xy = _Vector2Rotate(self, float(angle))
-        return self
+    return (CharPtr * len(sequence))(*sequence)
 
-    def move_towards(self, target, max_distance):
-        # type: (Vector2, Vector2, float) -> Vector2
-        """Move Vector towards target"""
-        self.xy = _Vector2MoveTowards(self, _vec2(target), float(max_distance))
-        return self
 
-    def clamp(self, min_, max_):
-        # type: (Vector2, Vector2, Vector2) -> Vector2
-        """Clamp the components of the vector between min and max values specified by the given vectors"""
-        self.xy = _Vector2Clamp(self, _vec2(min_), _vec2(max_))
-        return self
+# endregion (utils)
 
-    def clamp_value(self, min_, max_):
-        # type: (Vector2, float, float) -> Vector2
-        """Clamp the magnitude of the vector between two min and max values"""
-        self.xy = _Vector2ClampValue(self, float(min_), float(max_))
-        return self
+# region C TYPES
 
 
-# Pointer type to Vector2s
-Vector2Ptr = POINTER(Vector2)
+# Type wrapper for `bool`
+Bool = c_bool
 
+# Type wrapper for `char`
+Char = c_char
 
+# Type wrapper for `char *`
+CharPtr = c_char_p
 
-class Vector3(Structure):
-    '''Vector3, 3 components'''
-    _fields_ = [
-        ('x', Float),
-        ('y', Float),
-        ('z', Float),
-    ]
+# Type wrapper for `char **`
+CharPtrPtr = POINTER(c_char_p)
 
+# Type wrapper for `char[32]`
+Char32 = c_char * 32
 
-    @classmethod
-    def array_of(cls, vector3_sequence):
-        '''Creates and returns an array of Vector3s'''
-        arr = cls * len(vector3_sequence)
-        return arr(*vector3_sequence)
+# Type wrapper for `double`
+Double = c_double
 
-    @classmethod
-    def one():
-        # type: () -> Vector3
-        """Vector with components value 1.0f"""
-        result = _Vector3One()
-        return result
+# Type wrapper for `float`
+Float = c_float
 
+# Type wrapper for `float *`
+FloatPtr = POINTER(c_float)
 
-    def __init__(self, x=None, y=None, z=None):
-        # type: (float, float, float) -> None
-        '''Initializes this Vector3 struct'''
-        super(Vector3, self).__init__(
-            x or 0.0,
-            y or 0.0,
-            z or 0.0
-        )
+# Type wrapper for `float[16]`
+Float16 = c_float * 16
 
+# Type wrapper for `float[2]`
+Float2 = c_float * 2
 
-    @property
-    def byref(self):
-        '''Gets a reference to this Vector3 instance'''
-        return byref(self)
+# Type wrapper for `float[3]`
+Float3 = c_float * 3
 
+# Type wrapper for `float[4]`
+Float4 = c_float * 4
 
-    def __len__(self):
-        return 3
+# Type wrapper for `int`
+Int = c_int
 
-    def __getitem__(self, key):
-        return (self.x, self.y, self.z).__getitem__(key)
+# Type wrapper for `int *`
+IntPtr = POINTER(c_int)
 
-    def __getattr__(self, attr):
-        m = _VEC3_GET_SWZL.match(attr)
-        if not m:
-            raise AttributeError("Vector3 object does not have attribute '{}'.".format(attr))
-        cls = {1: float, 2: Vector2, 3: Vector3, 4: Vector4}.get(len(attr))
-        v = self.todict()
-        return cls(*(v[ch] for ch in attr))
+# Type wrapper for `int[4]`
+Int4 = c_int * 4
 
-    def __setattr__(self, attr, value):
-        m = _VEC3_SET_SWZL.match(attr)
-        if not m:
-            raise AttributeError("Vector3 object does not have attribute '{}'.".format(attr))
-        if len(attr) == 1:
-            super(Vector3, self).__setattr__(attr, float(value))
-        else:
-            for i, ch in enumerate(attr):
-                super(Vector3, self).__setattr__(ch, float(value[i]))
+# Type wrapper for `long`
+Long = c_long
 
-    def todict(self):
-        '''Returns a dict mapping this Vector3's components'''
-        return {'x': self.x, 'y': self.y, 'z': self.z}
+# Type wrapper for `unsigned char`
+UChar = c_ubyte
 
-    def fromdict(self, d):
-        '''Apply the mapping `d` to this Vector3's components'''
-        self.x = float(d.get('x', self.x))
-        self.y = float(d.get('y', self.y))
-        self.z = float(d.get('z', self.z))
+# Type wrapper for `unsigned char *`
+UCharPtr = c_ubyte
 
-    def __str__(self):
-        return "({}, {}, {})".format(self.x, self.y, self.z)
+# Type wrapper for `unsigned int`
+UInt = c_uint
 
-    def __repr__(self):
-        return "Vector3{}".format(self.__str__())
+# Type wrapper for `unsigned int *`
+UIntPtr = POINTER(c_uint)
 
-    @property
-    def length(self):
-        # type: (Vector3) -> float
-        """Calculate vector length"""
-        result = _Vector3Length(self)
-        return result
+# Type wrapper for `unsigned int[4]`
+UInt4 = c_uint * 4
 
-    @property
-    def length_sqr(self):
-        # type: (Vector3) -> float
-        """Calculate vector square length"""
-        result = _Vector3LengthSqr(self)
-        return result
+# Type wrapper for `unsigned short *`
+UShortPtr = POINTER(c_ushort)
 
-    def cross_product(self, v2):
-        # type: (Vector3, Vector3) -> float
-        """Calculate two vectors cross product"""
-        result = _Vector3CrossProduct(self, _vec3(v2))
-        return result
+# Type wrapper for `void *`
+VoidPtr = c_void_p
 
-    def perpendicular(self):
-        # type: (Vector3) -> Vector3
-        """Calculate one vector perpendicular vector"""
-        self.xyz = _Vector3Perpendicular(self)
-        return self
+# endregion (c types)
 
-    def dot_product(self, v2):
-        # type: (Vector3, Vector3) -> float
-        """Calculate two vectors dot product"""
-        result = _Vector3DotProduct(self, _vec3(v2))
-        return result
+# region ENUMERATIONS
 
-    def distance(self, v2):
-        # type: (Vector3, Vector3) -> float
-        """Calculate distance between two vectors"""
-        result = _Vector3Distance(self, _vec3(v2))
-        return result
-
-    def distance_sqr(self, v2):
-        # type: (Vector3, Vector3) -> float
-        """Calculate square distance between two vectors"""
-        result = _Vector3DistanceSqr(self, _vec3(v2))
-        return result
-
-    def angle(self, v2):
-        # type: (Vector3, Vector3) -> float
-        """Calculate angle between two vectors"""
-        result = _Vector3Angle(self, _vec3(v2))
-        return result
-
-    def normalize(self):
-        # type: (Vector3) -> Vector3
-        """Normalize provided vector"""
-        self.xyz = _Vector3Normalize(self)
-        return self
-
-    def ortho_normalize(self, v2):
-        # type: (Vector3Ptr, Vector3Ptr) -> Vector3
-        """Makes vectors normalized and orthogonal to each other"""
-        self.xyz = _Vector3OrthoNormalize(self, _vec3(v2))
-        return self
-
-    def transform(self, mat):
-        # type: (Vector3, Matrix) -> Vector3
-        """Transforms a Vector3 by a given Matrix"""
-        self.xyz = _Vector3Transform(self, mat)
-        return self
-
-    def rotate_by_quaternion(self, q):
-        # type: (Vector3, Quaternion) -> Vector3
-        """Transform a vector by quaternion rotation"""
-        self.xyz = _Vector3RotateByQuaternion(self, q)
-        return self
-
-    def rotate_by_axis_angle(self, axis, angle):
-        # type: (Vector3, Vector3, float) -> Vector3
-        """Rotates a vector around an axis"""
-        self.xyz = _Vector3RotateByAxisAngle(self, _vec3(axis), float(angle))
-        return self
-
-    def lerp(self, v2, amount):
-        # type: (Vector3, Vector3, float) -> Vector3
-        """Calculate linear interpolation between two vectors"""
-        self.xyz = _Vector3Lerp(self, _vec3(v2), float(amount))
-        return self
-
-    def reflect(self, normal):
-        # type: (Vector3, Vector3) -> Vector3
-        """Calculate reflected vector to normal"""
-        self.xyz = _Vector3Reflect(self, _vec3(normal))
-        return self
-
-    def min(self, v2):
-        # type: (Vector3, Vector3) -> Vector3
-        """Get min value for each pair of components"""
-        self.xyz = _Vector3Min(self, _vec3(v2))
-        return self
-
-    def max(self, v2):
-        # type: (Vector3, Vector3) -> Vector3
-        """Get max value for each pair of components"""
-        self.xyz = _Vector3Max(self, _vec3(v2))
-        return self
-
-    def barycenter(self, a, b, c):
-        # type: (Vector3, Vector3, Vector3, Vector3) -> Vector3
-        """Compute barycenter coordinates (u, v, w) for point p with respect to triangle (a, b, c). Assumes P is on the plane of the triangle"""
-        self.xyz = _Vector3Barycenter(self, _vec3(a), _vec3(b), _vec3(c))
-        return self
-
-    def unproject(self, projection, view):
-        # type: (Vector3, Matrix, Matrix) -> Vector3
-        """Projects a Vector3 from screen space into object space"""
-        self.xyz = _Vector3Unproject(self, projection, view)
-        return self
-
-    def to_float_v(self):
-        # type: (Vector3) -> Seq[float]
-        """Get Vector3 as float array"""
-        result = _Vector3ToFloatV(self)
-        return result
-
-    def clamp(self, min_, max_):
-        # type: (Vector3, Vector3, Vector3) -> Vector3
-        """Clamp the components of the vector between min and max values specified by the given vectors"""
-        self.xyz = _Vector3Clamp(self, _vec3(min_), _vec3(max_))
-        return self
-
-    def clamp_value(self, min_, max_):
-        # type: (Vector3, float, float) -> Vector3
-        """Clamp the magnitude of the vector between two values"""
-        self.xyz = _Vector3ClampValue(self, float(min_), float(max_))
-        return self
-
-    def refract(self, n, r):
-        # type: (Vector3, Vector3, float) -> int
-        """Compute the direction of a refracted ray where v specifies the normalized direction of the incoming ray, n specifies the normalized normal vector of the interface of two optical media, and r specifies the ratio of the refractive index of the medium from where the ray comes to the refractive index of the medium on the other side of the surface"""
-        result = _Vector3Refract(self, _vec3(n), float(r))
-        return result
-
-
-# Pointer type to Vector3s
-Vector3Ptr = POINTER(Vector3)
-
-
-
-class Vector4(Structure):
-    '''Vector4, 4 components'''
-    _fields_ = [
-        ('x', Float),
-        ('y', Float),
-        ('z', Float),
-        ('w', Float),
-    ]
-
-
-    @classmethod
-    def array_of(cls, vector4_sequence):
-        '''Creates and returns an array of Vector4s'''
-        arr = cls * len(vector4_sequence)
-        return arr(*vector4_sequence)
-
-
-    def __init__(self, x=None, y=None, z=None, w=None):
-        # type: (float, float, float, float) -> None
-        '''Initializes this Vector4 struct'''
-        super(Vector4, self).__init__(
-            x or 0.0,
-            y or 0.0,
-            z or 0.0,
-            w or 0.0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Vector4 instance'''
-        return byref(self)
-
-
-    def __len__(self):
-        return 4
-
-    def __getitem__(self, key):
-        return (self.x, self.y. self.z, self.w).__getitem__(key)
-
-    def __getattr__(self, attr):
-        m = _VEC4_GET_SWZL.match(attr)
-        if not m:
-            raise AttributeError("Vector4 object does not have attribute '{}'.".format(attr))
-        cls = {1: float, 2: Vector2, 3: Vector3, 4: Vector4}.get(len(attr))
-        v = self.todict()
-        return cls(*(v[ch] for ch in attr))
-
-    def __setattr__(self, attr, value):
-        m = _VEC4_SET_SWZL.match(attr)
-        if not m:
-            raise AttributeError("Vector4 object does not have attribute '{}'.".format(attr))
-        if len(attr) == 1:
-            super(Vector4, self).__setattr__(attr, float(value))
-        else:
-            for i, ch in enumerate(attr):
-                super(Vector4, self).__setattr__(ch, float(value[i]))
-
-    def todict(self):
-        '''Returns a dict mapping this Vector4's components'''
-        return {'x': self.x, 'y': self.y, 'z': self.z, 'w': self.w}
-
-    def fromdict(self, d):
-        '''Apply the mapping `d` to this Vector4's components'''
-        self.x = float(d.get('x', self.x))
-        self.y = float(d.get('y', self.y))
-        self.z = float(d.get('z', self.z))
-        self.w = float(d.get('w', self.w))
-
-
-    def __str__(self):
-        return "({}, {}, {}, {})".format(self.x, self.y, self.z, self.w)
-
-    def __repr__(self):
-        return "Vector4{}".format(self.__str__())
-
-
-# Pointer type to Vector4s
-Vector4Ptr = POINTER(Vector4)
-
-
-# Quaternion, 4 components (Vector4 alias)
-Quaternion = Vector4
-QuaternionPtr = Vector4Ptr
-
-class Matrix(Structure):
-    '''Matrix, 4x4 components, column major, OpenGL style, right handed'''
-    _fields_ = [
-        ('m0', Float),
-        ('m4', Float),
-        ('m8', Float),
-        ('m12', Float),
-        ('m1', Float),
-        ('m5', Float),
-        ('m9', Float),
-        ('m13', Float),
-        ('m2', Float),
-        ('m6', Float),
-        ('m10', Float),
-        ('m14', Float),
-        ('m3', Float),
-        ('m7', Float),
-        ('m11', Float),
-        ('m15', Float),
-    ]
-
-
-    @classmethod
-    def array_of(cls, matrix_sequence):
-        '''Creates and returns an array of Matrixs'''
-        arr = cls * len(matrix_sequence)
-        return arr(*matrix_sequence)
-
-    @classmethod
-    def identity():
-        # type: () -> Matrix
-        """Get identity matrix"""
-        result = _MatrixIdentity()
-        return result
-
-    @classmethod
-    def translate(cls, x, y, z):
-        # type: (float, float, float) -> Matrix
-        """Get translation matrix"""
-        result = _MatrixTranslate(float(x), float(y), float(z))
-        return result
-
-    @classmethod
-    def rotate(cls, axis, angle):
-        # type: (Vector3, float) -> Matrix
-        """Create rotation matrix from axis and angle. Angle should be provided in radians"""
-        result = _MatrixRotate(_vec3(axis), float(angle))
-        return result
-
-    @classmethod
-    def rotate_x(cls, angle):
-        # type: (float) -> Matrix
-        """Get x-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateX(float(angle))
-        return result
-
-    @classmethod
-    def rotate_y(cls, angle):
-        # type: (float) -> Matrix
-        """Get y-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateY(float(angle))
-        return result
-
-    @classmethod
-    def rotate_z(cls, angle):
-        # type: (float) -> Matrix
-        """Get z-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateZ(float(angle))
-        return result
-
-    @classmethod
-    def rotate_xyz(cls, angle):
-        # type: (Vector3) -> Matrix
-        """Get xyz-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateXYZ(_vec3(angle))
-        return result
-
-    @classmethod
-    def rotate_zyx(cls, angle):
-        # type: (Vector3) -> Matrix
-        """Get zyx-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateZYX(_vec3(angle))
-        return result
-
-    @classmethod
-    def scale(cls, x, y, z):
-        # type: (float, float, float) -> Matrix
-        """Get scaling matrix"""
-        result = _MatrixScale(float(x), float(y), float(z))
-        return result
-
-    @classmethod
-    def frustum(cls, left, right, bottom, top, near, far):
-        # type: (float, float, float, float, float, float) -> Matrix
-        """Get perspective projection matrix"""
-        result = _MatrixFrustum(float(left), float(right), float(bottom), float(top), float(near), float(far))
-        return result
-
-    @classmethod
-    def perspective(cls, fovy, aspect, near, far):
-        # type: (float, float, float, float) -> Matrix
-        """Get perspective projection matrix. Fovy angle must be provided in radians"""
-        result = _MatrixPerspective(float(fovy), float(aspect), float(near), float(far))
-        return result
-
-    @classmethod
-    def ortho(cls, left, right, bottom, top, near, far):
-        # type: (float, float, float, float, float, float) -> Matrix
-        """Get orthographic projection matrix"""
-        result = _MatrixOrtho(float(left), float(right), float(bottom), float(top), float(near), float(far))
-        return result
-
-    @classmethod
-    def look_at(cls, eye, target, up):
-        # type: (Vector3, Vector3, Vector3) -> Matrix
-        """Get camera look-at matrix (view matrix)"""
-        result = _MatrixLookAt(_vec3(eye), _vec3(target), _vec3(up))
-        return result
-
-
-    def __init__(self, m0=None,
-                 m4=None,
-                 m8=None,
-                 m12=None,
-                 m1=None,
-                 m5=None,
-                 m9=None,
-                 m13=None,
-                 m2=None,
-                 m6=None,
-                 m10=None,
-                 m14=None,
-                 m3=None,
-                 m7=None,
-                 m11=None,
-                 m15=None):
-        # type: (float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float) -> None
-        '''Initializes this Matrix struct'''
-        super(Matrix, self).__init__(
-            m0 or 0.0,
-            m4 or 0.0,
-            m8 or 0.0,
-            m12 or 0.0,
-            m1 or 0.0,
-            m5 or 0.0,
-            m9 or 0.0,
-            m13 or 0.0,
-            m2 or 0.0,
-            m6 or 0.0,
-            m10 or 0.0,
-            m14 or 0.0,
-            m3 or 0.0,
-            m7 or 0.0,
-            m11 or 0.0,
-            m15 or 0.0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Matrix instance'''
-        return byref(self)
-
-
-    def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
-
-    def __repr__(self):
-        return self.__str__()
-
-    def determinant(self):
-        # type: (Matrix) -> float
-        """Compute matrix determinant"""
-        result = _MatrixDeterminant(self)
-        return result
-
-    def trace(self):
-        # type: (Matrix) -> float
-        """Get the trace of the matrix (sum of the values along the diagonal)"""
-        result = _MatrixTrace(self)
-        return result
-
-    def transpose(self):
-        # type: (Matrix) -> Matrix
-        """Get the trace of the matrix (sum of the values along the diagonal)"""
-        result = _MatrixTranspose(self)
-        return result
-
-    def invert(self):
-        # type: (Matrix) -> Matrix
-        """Invert provided matrix"""
-        result = _MatrixInvert(self)
-        return result
-
-
-# Pointer type to Matrixs
-MatrixPtr = POINTER(Matrix)
-
-
-
-class Color(Structure):
-    '''Color, 4 components, R8G8B8A8 (32bit)'''
-    _fields_ = [
-        ('r', UChar),
-        ('g', UChar),
-        ('b', UChar),
-        ('a', UChar),
-    ]
-
-
-    @classmethod
-    def array_of(cls, color_sequence):
-        '''Creates and returns an array of Colors'''
-        arr = cls * len(color_sequence)
-        return arr(*color_sequence)
-
-
-    def __init__(self, r=None, g=None, b=None, a=None):
-        # type: (int, int, int, int) -> None
-        '''Initializes this Color struct'''
-        super(Color, self).__init__(
-            r or 0,
-            g or 0,
-            b or 0,
-            a or 0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Color instance'''
-        return byref(self)
-
-
-    def __len__(self):
-        return 4
-
-    def __getitem__(self, key):
-        return (self.r, self.g, self.b, self.a).__getitem__(key)
-
-    def __getattr__(self, attr):
-        m = _RGBA_GET_SWZL.match(attr)
-        if not m:
-            raise AttributeError("Color object does not have attribute '{}'.".format(attr))
-        cls = {1: int, 4: Color}.get(len(attr))
-        v = self.todict()
-        return cls(*(v[ch] for ch in attr))
-
-    def __setattr__(self, attr, value):
-        m = _RGBA_SET_SWZL.match(attr)
-        if not m:
-            raise AttributeError("Color object does not have attribute '{}'.".format(attr))
-        if len(attr) == 1:
-            super(Color, self).__setattr__(attr, int(value))
-        else:
-            for i, ch in enumerate(attr):
-                super(Color, self).__setattr__(ch, int(value[i]))
-
-    def todict(self):
-        '''Returns a dict mapping this Color's components'''
-        return {'r': self.r, 'g': self.g, 'b': self.b, 'a': self.a}
-
-    def fromdict(self, d):
-        '''Apply the mapping `d` to this Color's components'''
-        self.r = int(d.get('r', self.r))
-        self.g = int(d.get('g', self.g))
-        self.b = int(d.get('b', self.b))
-        self.a = int(d.get('a', self.a))
-
-
-    def __str__(self):
-        return "({: 3}, {: 3}, {: 3}, {: 3})".format(self.r, self.g, self.b, self.a)
-
-    def __repr__(self):
-        return "Color{}".format(self.__str__())
-
-    def fade(self, alpha):
-        # type: (Color, float) -> Color
-        """Get color with alpha applied, alpha goes from 0.0f to 1.0f"""
-        result = _Fade(self, float(alpha))
-        return result
-
-    def to_int(self):
-        # type: (Color) -> int
-        """Get hexadecimal value for a Color"""
-        result = _ColorToInt(self)
-        return result
-
-    def to_hsv(self):
-        # type: (Color) -> Vector3
-        """Get HSV values for a Color, hue [0..360], saturation/value [0..1]"""
-        result = _ColorToHSV(self)
-        return result
-
-    def from_hsv(self, saturation, value):
-        # type: (float, float, float) -> Color
-        """Get a Color from HSV values, hue [0..360], saturation/value [0..1]"""
-        result = _ColorFromHSV(self, float(saturation), float(value))
-        return result
-
-    def alpha(self, alpha):
-        # type: (Color, float) -> Color
-        """Get color with alpha applied, alpha goes from 0.0f to 1.0f"""
-        result = _ColorAlpha(self, float(alpha))
-        return result
-
-    def alpha_blend(self, src, tint):
-        # type: (Color, Color, Color) -> Color
-        """Get src alpha-blended into dst color with tint"""
-        result = _ColorAlphaBlend(self, _color(src), _color(tint))
-        return result
-
-
-# Pointer type to Colors
-ColorPtr = POINTER(Color)
-
-
-
-class Rectangle(Structure):
-    '''Rectangle, 4 components'''
-    _fields_ = [
-        ('x', Float),
-        ('y', Float),
-        ('width', Float),
-        ('height', Float),
-    ]
-
-
-    @classmethod
-    def array_of(cls, rectangle_sequence):
-        '''Creates and returns an array of Rectangles'''
-        arr = cls * len(rectangle_sequence)
-        return arr(*rectangle_sequence)
-
-
-    def __init__(self, x=None, y=None, width=None, height=None):
-        # type: (float, float, float, float) -> None
-        '''Initializes this Rectangle struct'''
-        super(Rectangle, self).__init__(
-            x or 0.0,
-            y or 0.0,
-            width or 0.0,
-            height or 0.0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Rectangle instance'''
-        return byref(self)
-
-
-    def __len__(self):
-        return 4
-
-    def __getitem__(self, key):
-        return (self.x, self.y. self.width, self.height).__getitem__(key)
-
-    def __getattr__(self, attr):
-        m = _RECT_GET_SWZL.match(attr)
-        if not m:
-            raise AttributeError("Rectangle object does not have attribute '{}'.".format(attr))
-        cls = {1: float, 4: Rectangle}.get(len(attr))
-        v = self.todict()
-        return cls(*(v[ch] for ch in attr))
-
-    def __setattr__(self, attr, value):
-        m = _RECT_SET_SWZL.match(attr)
-        if not m:
-            raise AttributeError("Rectangle object does not have attribute '{}'.".format(attr))
-        if attr in ('width', 'height') or len(attr) == 1:
-            super(Rectangle, self).__setattr__(attr, float(value))
-        else:
-            for i, ch in enumerate(attr):
-                super(Rectangle, self).__setattr__(ch, float(value[i]))
-
-    def todict(self):
-        '''Returns a dict mapping this Rectangle's components'''
-        return {'x': self.x, 'y': self.y, 'w': self.width, 'h': self.height}
-
-    def fromdict(self, d):
-        '''Apply the mapping `d` to this Rectangle's components'''
-        self.x = float(d.get('x', self.x))
-        self.y = float(d.get('y', self.y))
-        self.width = float(d.get('w', self.width))
-        self.height = float(d.get('h', self.height))
-
-
-
-# Pointer type to Rectangles
-RectanglePtr = POINTER(Rectangle)
-
-
-
-class Image(Structure):
-    '''Image, pixel data stored in CPU memory (RAM)'''
-    _fields_ = [
-        ('data', VoidPtr),
-        ('width', Int),
-        ('height', Int),
-        ('mipmaps', Int),
-        ('format', Int),
-    ]
-
-
-    @classmethod
-    def array_of(cls, image_sequence):
-        '''Creates and returns an array of Images'''
-        arr = cls * len(image_sequence)
-        return arr(*image_sequence)
-
-    @classmethod
-    def load(cls, file_name):
-        # type: (Union[str, CharPtr]) -> Image
-        """Load image from file into CPU memory (RAM)"""
-        result = _LoadImage(_str_in(file_name))
-        return result
-
-    @classmethod
-    def load_raw(cls, file_name, width, height, format, header_size):
-        # type: (Union[str, CharPtr], int, int, int, int) -> Image
-        """Load image from RAW file data"""
-        result = _LoadImageRaw(_str_in(file_name), int(width), int(height), int(format), int(header_size))
-        return result
-
-    @classmethod
-    def load_anim(cls, file_name, frames):
-        # type: (Union[str, CharPtr], Union[Seq[int], IntPtr]) -> Image
-        """Load image sequence from file (frames appended to image.data)"""
-        result = _LoadImageAnim(_str_in(file_name), frames)
-        return result
-
-    @classmethod
-    def load_from_memory(cls, file_type, file_data, data_size):
-        # type: (Union[str, CharPtr], Union[Seq[int], UCharPtr], int) -> Image
-        """Load image from memory buffer, fileType refers to extension: i.e. '.png'"""
-        result = _LoadImageFromMemory(_str_in(file_type), _str_in(file_data), int(data_size))
-        return result
-
-    @classmethod
-    def load_from_texture(cls, texture):
-        # type: (Texture2D) -> Image
-        """Load image from GPU texture data"""
-        result = _LoadImageFromTexture(texture)
-        return result
-
-    @classmethod
-    def load_from_screen():
-        # type: () -> Image
-        """Load image from screen buffer and (screenshot)"""
-        result = _LoadImageFromScreen()
-        return result
-
-    @classmethod
-    def gen_color(cls, width, height, color):
-        # type: (int, int, Color) -> Image
-        """Generate image: plain color"""
-        result = _GenImageColor(int(width), int(height), _color(color))
-        return result
-
-    @classmethod
-    def gen_gradient_h(cls, width, height, left, right):
-        # type: (int, int, Color, Color) -> Image
-        """Generate image: horizontal gradient"""
-        result = _GenImageGradientH(int(width), int(height), _color(left), _color(right))
-        return result
-
-    @classmethod
-    def gen_gradient_v(cls, width, height, top, bottom):
-        # type: (int, int, Color, Color) -> Image
-        """Generate image: vertical gradient"""
-        result = _GenImageGradientV(int(width), int(height), _color(top), _color(bottom))
-        return result
-
-    @classmethod
-    def gen_gradient_radial(cls, width, height, density, inner, outer):
-        # type: (int, int, float, Color, Color) -> Image
-        """Generate image: radial gradient"""
-        result = _GenImageGradientRadial(int(width), int(height), float(density), _color(inner), _color(outer))
-        return result
-
-    @classmethod
-    def gen_checked(cls, width, height, checks_x, checks_y, col1, col2):
-        # type: (int, int, int, int, Color, Color) -> Image
-        """Generate image: checked"""
-        result = _GenImageChecked(int(width), int(height), int(checks_x), int(checks_y), _color(col1), _color(col2))
-        return result
-
-    @classmethod
-    def gen_white_noise(cls, width, height, factor):
-        # type: (int, int, float) -> Image
-        """Generate image: white noise"""
-        result = _GenImageWhiteNoise(int(width), int(height), float(factor))
-        return result
-
-    @classmethod
-    def gen_cellular(cls, width, height, tile_size):
-        # type: (int, int, int) -> Image
-        """Generate image: cellular algorithm, bigger tileSize means bigger cells"""
-        result = _GenImageCellular(int(width), int(height), int(tile_size))
-        return result
-
-    @classmethod
-    def from_image(cls, image, rec):
-        # type: (Image, Rectangle) -> Image
-        """Create an image from another image piece"""
-        result = _ImageFromImage(image, _rect(rec))
-        return result
-
-    @classmethod
-    def text(cls, text, font_size, color):
-        # type: (Union[str, CharPtr], int, Color) -> Image
-        """Create an image from text (default font)"""
-        result = _ImageText(_str_in(text), int(font_size), _color(color))
-        return result
-
-    @classmethod
-    def text_ex(cls, font, text, font_size, spacing, tint):
-        # type: (Font, Union[str, CharPtr], float, float, Color) -> Image
-        """Create an image from text (custom sprite font)"""
-        result = _ImageTextEx(font, _str_in(text), float(font_size), float(spacing), _color(tint))
-        return result
-
-
-    def __init__(self, data=None,
-                 width=None,
-                 height=None,
-                 mipmaps=None,
-                 format=None):
-        # type: (bytes, int, int, int, int) -> None
-        '''Initializes this Image struct'''
-        super(Image, self).__init__(
-            data,
-            width or 0,
-            height or 0,
-            mipmaps or 0,
-            format or 0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Image instance'''
-        return byref(self)
-
-
-    def unload(self):
-        # type: (Image) -> None
-        """Unload image from CPU memory (RAM)"""
-        _UnloadImage(self)
-
-    def export(self, file_name):
-        # type: (Image, Union[str, CharPtr]) -> bool
-        """Export image data to file, returns true on success"""
-        result = _ExportImage(self, _str_in(file_name))
-        return result
-
-    def export_as_code(self, file_name):
-        # type: (Image, Union[str, CharPtr]) -> bool
-        """Export image as code file defining an array of bytes, returns true on success"""
-        result = _ExportImageAsCode(self, _str_in(file_name))
-        return result
-
-    def copy(self):
-        # type: (Image) -> Image
-        """Create an image duplicate (useful for transformations)"""
-        result = _ImageCopy(self)
-        return result
-
-    def format(self, new_format):
-        # type: (ImagePtr, int) -> None
-        """Convert image data to desired format"""
-        _ImageFormat(self.byref, int(new_format))
-
-    def to_pot(self, fill):
-        # type: (ImagePtr, Color) -> None
-        """Convert image to POT (power-of-two)"""
-        _ImageToPOT(self.byref, _color(fill))
-
-    def crop(self, crop):
-        # type: (ImagePtr, Rectangle) -> None
-        """Crop an image to a defined rectangle"""
-        _ImageCrop(self.byref, _rect(crop))
-
-    def alpha_crop(self, threshold):
-        # type: (ImagePtr, float) -> None
-        """Crop image depending on alpha value"""
-        _ImageAlphaCrop(self.byref, float(threshold))
-
-    def alpha_clear(self, color, threshold):
-        # type: (ImagePtr, Color, float) -> None
-        """Clear alpha channel to desired color"""
-        _ImageAlphaClear(self.byref, _color(color), float(threshold))
-
-    def alpha_mask(self, alpha_mask):
-        # type: (ImagePtr, Image) -> None
-        """Apply alpha mask to image"""
-        _ImageAlphaMask(self.byref, alpha_mask)
-
-    def alpha_premultiply(self):
-        # type: (ImagePtr) -> None
-        """Premultiply alpha channel"""
-        _ImageAlphaPremultiply(self.byref)
-
-    def resize(self, new_width, new_height):
-        # type: (ImagePtr, int, int) -> None
-        """Resize image (Bicubic scaling algorithm)"""
-        _ImageResize(self.byref, int(new_width), int(new_height))
-
-    def resize_nn(self, new_width, new_height):
-        # type: (ImagePtr, int, int) -> None
-        """Resize image (Nearest-Neighbor scaling algorithm)"""
-        _ImageResizeNN(self.byref, int(new_width), int(new_height))
-
-    def resize_canvas(self, new_width, new_height, offset_x, offset_y, fill):
-        # type: (ImagePtr, int, int, int, int, Color) -> None
-        """Resize canvas and fill with color"""
-        _ImageResizeCanvas(self.byref, int(new_width), int(new_height), int(offset_x), int(offset_y), _color(fill))
-
-    def mipmaps(self):
-        # type: (ImagePtr) -> None
-        """Compute all mipmap levels for a provided image"""
-        _ImageMipmaps(self.byref)
-
-    def dither(self, r_bpp, g_bpp, b_bpp, a_bpp):
-        # type: (ImagePtr, int, int, int, int) -> None
-        """Dither image data to 16bpp or lower (Floyd-Steinberg dithering)"""
-        _ImageDither(self.byref, int(r_bpp), int(g_bpp), int(b_bpp), int(a_bpp))
-
-    def flip_vertical(self):
-        # type: (ImagePtr) -> None
-        """Flip image vertically"""
-        _ImageFlipVertical(self.byref)
-
-    def flip_horizontal(self):
-        # type: (ImagePtr) -> None
-        """Flip image horizontally"""
-        _ImageFlipHorizontal(self.byref)
-
-    def rotate_cw(self):
-        # type: (ImagePtr) -> None
-        """Rotate image clockwise 90deg"""
-        _ImageRotateCW(self.byref)
-
-    def rotate_ccw(self):
-        # type: (ImagePtr) -> None
-        """Rotate image counter-clockwise 90deg"""
-        _ImageRotateCCW(self.byref)
-
-    def color_tint(self, color):
-        # type: (ImagePtr, Color) -> None
-        """Modify image color: tint"""
-        _ImageColorTint(self.byref, _color(color))
-
-    def color_invert(self):
-        # type: (ImagePtr) -> None
-        """Modify image color: invert"""
-        _ImageColorInvert(self.byref)
-
-    def color_grayscale(self):
-        # type: (ImagePtr) -> None
-        """Modify image color: grayscale"""
-        _ImageColorGrayscale(self.byref)
-
-    def color_contrast(self, contrast):
-        # type: (ImagePtr, float) -> None
-        """Modify image color: contrast (-100 to 100)"""
-        _ImageColorContrast(self.byref, float(contrast))
-
-    def color_brightness(self, brightness):
-        # type: (ImagePtr, int) -> None
-        """Modify image color: brightness (-255 to 255)"""
-        _ImageColorBrightness(self.byref, int(brightness))
-
-    def color_replace(self, color, replace):
-        # type: (ImagePtr, Color, Color) -> None
-        """Modify image color: replace color"""
-        _ImageColorReplace(self.byref, _color(color), _color(replace))
-
-    def clear_background(self, color):
-        # type: (ImagePtr, Color) -> None
-        """Clear image background with given color"""
-        _ImageClearBackground(self.byref, _color(color))
-
-    def draw_pixel(self, pos_x, pos_y, color):
-        # type: (ImagePtr, int, int, Color) -> None
-        """Draw pixel within an image"""
-        _ImageDrawPixel(self.byref, int(pos_x), int(pos_y), _color(color))
-
-    def draw_pixel_v(self, position, color):
-        # type: (ImagePtr, Vector2, Color) -> None
-        """Draw pixel within an image (Vector version)"""
-        _ImageDrawPixelV(self.byref, _vec2(position), _color(color))
-
-    def draw_line(self, start_pos_x, start_pos_y, end_pos_x, end_pos_y, color):
-        # type: (ImagePtr, int, int, int, int, Color) -> None
-        """Draw line within an image"""
-        _ImageDrawLine(self.byref, int(start_pos_x), int(start_pos_y), int(end_pos_x), int(end_pos_y), _color(color))
-
-    def draw_line_v(self, start, end, color):
-        # type: (ImagePtr, Vector2, Vector2, Color) -> None
-        """Draw line within an image (Vector version)"""
-        _ImageDrawLineV(self.byref, _vec2(start), _vec2(end), _color(color))
-
-    def draw_circle(self, center_x, center_y, radius, color):
-        # type: (ImagePtr, int, int, int, Color) -> None
-        """Draw circle within an image"""
-        _ImageDrawCircle(self.byref, int(center_x), int(center_y), int(radius), _color(color))
-
-    def draw_circle_v(self, center, radius, color):
-        # type: (ImagePtr, Vector2, int, Color) -> None
-        """Draw circle within an image (Vector version)"""
-        _ImageDrawCircleV(self.byref, _vec2(center), int(radius), _color(color))
-
-    def draw_rectangle(self, pos_x, pos_y, width, height, color):
-        # type: (ImagePtr, int, int, int, int, Color) -> None
-        """Draw rectangle within an image"""
-        _ImageDrawRectangle(self.byref, int(pos_x), int(pos_y), int(width), int(height), _color(color))
-
-    def draw_rectangle_v(self, position, size, color):
-        # type: (ImagePtr, Vector2, Vector2, Color) -> None
-        """Draw rectangle within an image (Vector version)"""
-        _ImageDrawRectangleV(self.byref, _vec2(position), _vec2(size), _color(color))
-
-    def draw_rectangle_rec(self, rec, color):
-        # type: (ImagePtr, Rectangle, Color) -> None
-        """Draw rectangle within an image"""
-        _ImageDrawRectangleRec(self.byref, _rect(rec), _color(color))
-
-    def draw_rectangle_lines(self, rec, thick, color):
-        # type: (ImagePtr, Rectangle, int, Color) -> None
-        """Draw rectangle lines within an image"""
-        _ImageDrawRectangleLines(self.byref, _rect(rec), int(thick), _color(color))
-
-    def draw(self, src, src_rec, dst_rec, tint):
-        # type: (ImagePtr, Image, Rectangle, Rectangle, Color) -> None
-        """Draw a source image within a destination image (tint applied to source)"""
-        _ImageDraw(self.byref, src, _rect(src_rec), _rect(dst_rec), _color(tint))
-
-    def draw_text(self, text, pos_x, pos_y, font_size, color):
-        # type: (ImagePtr, Union[str, CharPtr], int, int, int, Color) -> None
-        """Draw text (using default font) within an image (destination)"""
-        _ImageDrawText(self.byref, _str_in(text), int(pos_x), int(pos_y), int(font_size), _color(color))
-
-    def draw_text_ex(self, font, text, position, font_size, spacing, tint):
-        # type: (ImagePtr, Font, Union[str, CharPtr], Vector2, float, float, Color) -> None
-        """Draw text (custom sprite font) within an image (destination)"""
-        _ImageDrawTextEx(self.byref, font, _str_in(text), _vec2(position), float(font_size), float(spacing), _color(tint))
-
-    def load_colors(self):
-        # type: (Image) -> ColorPtr
-        """Load color data from image as a Color array (RGBA - 32bit)"""
-        result = _ptr_out(_LoadImageColors(self))
-        return result
-
-    def load_palette(self, max_palette_size):
-        # type: (Image, int) -> ColorPtr
-        """Load colors palette from image as a Color array (RGBA - 32bit)"""
-        color_count = Int(0)
-        result = _ptr_out(_LoadImagePalette(self, int(max_palette_size), byref(color_count)), color_count.value)
-        return result
-
-    def get_alpha_border(self, threshold):
-        # type: (Image, float) -> Rectangle
-        """Get image alpha border rectangle"""
-        result = _GetImageAlphaBorder(self, float(threshold))
-        return result
-
-    def get_color(self, x, y):
-        # type: (Image, int, int) -> Color
-        """Get image pixel color at (x, y) position"""
-        result = _GetImageColor(self, int(x), int(y))
-        return result
-
-    @staticmethod
-    def unload_colors(colors):
-        # type: (ColorPtr) -> None
-        """Unload color data loaded with LoadImageColors()"""
-        _UnloadImageColors(_color(colors))
-
-    @staticmethod
-    def unload_palette(colors):
-        # type: (ColorPtr) -> None
-        """Unload colors palette loaded with LoadImagePalette()"""
-        _UnloadImagePalette(_color(colors))
-
-
-# Pointer type to Images
-ImagePtr = POINTER(Image)
-
-
-
-class Texture(Structure):
-    '''Texture, tex data stored in GPU memory (VRAM)'''
-    _fields_ = [
-        ('id', UInt),
-        ('width', Int),
-        ('height', Int),
-        ('mipmaps', Int),
-        ('format', Int),
-    ]
-
-
-    @classmethod
-    def array_of(cls, texture_sequence):
-        '''Creates and returns an array of Textures'''
-        arr = cls * len(texture_sequence)
-        return arr(*texture_sequence)
-
-
-    def __init__(self, id=None,
-                 width=None,
-                 height=None,
-                 mipmaps=None,
-                 format=None):
-        # type: (int, int, int, int, int) -> None
-        '''Initializes this Texture struct'''
-        super(Texture, self).__init__(
-            id or 0,
-            width or 0,
-            height or 0,
-            mipmaps or 0,
-            format or 0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Texture instance'''
-        return byref(self)
-
-
-
-# Pointer type to Textures
-TexturePtr = POINTER(Texture)
-
-
-# Texture2D, same as Texture
-Texture2D = Texture
-Texture2DPtr = TexturePtr
-# TextureCubemap, same as Texture
-TextureCubemap = Texture
-TextureCubemapPtr = TexturePtr
-
-class RenderTexture(Structure):
-    '''RenderTexture, fbo for texture rendering'''
-    _fields_ = [
-        ('id', UInt),
-        ('texture', Texture),
-        ('depth', Texture),
-    ]
-
-
-    @classmethod
-    def array_of(cls, render_texture_sequence):
-        '''Creates and returns an array of RenderTextures'''
-        arr = cls * len(render_texture_sequence)
-        return arr(*render_texture_sequence)
-
-
-    def __init__(self, id=None, texture=None, depth=None):
-        # type: (int, Texture, Texture) -> None
-        '''Initializes this RenderTexture struct'''
-        super(RenderTexture, self).__init__(
-            id or 0,
-            texture or Texture(),
-            depth or Texture()
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this RenderTexture instance'''
-        return byref(self)
-
-
-
-# Pointer type to RenderTextures
-RenderTexturePtr = POINTER(RenderTexture)
-
-
-# RenderTexture2D, same as RenderTexture
-RenderTexture2D = RenderTexture
-RenderTexture2DPtr = RenderTexturePtr
-
-class NPatchInfo(Structure):
-    '''NPatchInfo, n-patch layout info'''
-    _fields_ = [
-        ('source', Rectangle),
-        ('left', Int),
-        ('top', Int),
-        ('right', Int),
-        ('bottom', Int),
-        ('layout', Int),
-    ]
-
-
-    @classmethod
-    def array_of(cls, npatch_info_sequence):
-        '''Creates and returns an array of NPatchInfos'''
-        arr = cls * len(npatch_info_sequence)
-        return arr(*npatch_info_sequence)
-
-
-    def __init__(self, source=None,
-                 left=None,
-                 top=None,
-                 right=None,
-                 bottom=None,
-                 layout=None):
-        # type: (Rectangle, int, int, int, int, int) -> None
-        '''Initializes this NPatchInfo struct'''
-        super(NPatchInfo, self).__init__(
-            source or Rectangle(),
-            left or 0,
-            top or 0,
-            right or 0,
-            bottom or 0,
-            layout or 0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this NPatchInfo instance'''
-        return byref(self)
-
-
-
-# Pointer type to NPatchInfos
-NPatchInfoPtr = POINTER(NPatchInfo)
-
-
-
-class GlyphInfo(Structure):
-    '''GlyphInfo, font characters glyphs info'''
-    _fields_ = [
-        ('value', Int),
-        ('offset_x', Int),
-        ('offset_y', Int),
-        ('advance_x', Int),
-        ('image', Image),
-    ]
-
-
-    @classmethod
-    def array_of(cls, glyph_info_sequence):
-        '''Creates and returns an array of GlyphInfos'''
-        arr = cls * len(glyph_info_sequence)
-        return arr(*glyph_info_sequence)
-
-
-    def __init__(self, value=None,
-                 offset_x=None,
-                 offset_y=None,
-                 advance_x=None,
-                 image=None):
-        # type: (int, int, int, int, Image) -> None
-        '''Initializes this GlyphInfo struct'''
-        super(GlyphInfo, self).__init__(
-            value or 0,
-            offset_x or 0,
-            offset_y or 0,
-            advance_x or 0,
-            image or Image()
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this GlyphInfo instance'''
-        return byref(self)
-
-
-
-# Pointer type to GlyphInfos
-GlyphInfoPtr = POINTER(GlyphInfo)
-
-
-
-class Font(Structure):
-    '''Font, font texture and GlyphInfo array data'''
-    _fields_ = [
-        ('base_size', Int),
-        ('glyph_count', Int),
-        ('glyph_padding', Int),
-        ('texture', Texture2D),
-        ('recs', RectanglePtr),
-        ('glyphs', GlyphInfoPtr),
-    ]
-
-
-    @classmethod
-    def array_of(cls, font_sequence):
-        '''Creates and returns an array of Fonts'''
-        arr = cls * len(font_sequence)
-        return arr(*font_sequence)
-
-    @classmethod
-    def load(cls, file_name):
-        # type: (Union[str, CharPtr]) -> Font
-        """Load font from file into GPU memory (VRAM)"""
-        result = _LoadFont(_str_in(file_name))
-        return result
-
-    @classmethod
-    def load_ex(cls, file_name, font_size, font_chars, glyph_count):
-        # type: (Union[str, CharPtr], int, Union[Seq[int], IntPtr], int) -> Font
-        """Load font from file with extended parameters, use NULL for fontChars and 0 for glyphCount to load the default character set"""
-        result = _LoadFontEx(_str_in(file_name), int(font_size), font_chars, int(glyph_count))
-        return result
-
-    @classmethod
-    def load_from_image(cls, image, key, first_char):
-        # type: (Image, Color, int) -> Font
-        """Load font from Image (XNA style)"""
-        result = _LoadFontFromImage(image, _color(key), int(first_char))
-        return result
-
-    @classmethod
-    def load_from_memory(cls, file_type, file_data, data_size, font_size, font_chars, glyph_count):
-        # type: (Union[str, CharPtr], Union[Seq[int], UCharPtr], int, int, Union[Seq[int], IntPtr], int) -> Font
-        """Load font from memory buffer, fileType refers to extension: i.e. '.ttf'"""
-        result = _LoadFontFromMemory(_str_in(file_type), _str_in(file_data), int(data_size), int(font_size), font_chars, int(glyph_count))
-        return result
-
-
-    def __init__(self, base_size=None,
-                 glyph_count=None,
-                 glyph_padding=None,
-                 texture=None,
-                 recs=None,
-                 glyphs=None):
-        # type: (int, int, int, Texture2D, RectanglePtr, GlyphInfoPtr) -> None
-        '''Initializes this Font struct'''
-        super(Font, self).__init__(
-            base_size or 0,
-            glyph_count or 0,
-            glyph_padding or 0,
-            texture or Texture2D(),
-            recs,
-            glyphs
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Font instance'''
-        return byref(self)
-
-
-    def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
-
-    def __repr__(self):
-        return self.__str__()
-
-    def unload(self):
-        # type: (Font) -> None
-        """Unload font from GPU memory (VRAM)"""
-        _UnloadFont(self)
-
-    def draw_text_ex(self, text, position, font_size, spacing, tint):
-        # type: (Font, Union[str, CharPtr], Vector2, float, float, Color) -> None
-        """Draw text using font and additional parameters"""
-        _DrawTextEx(self, _str_in(text), _vec2(position), float(font_size), float(spacing), _color(tint))
-
-    def draw_text_pro(self, text, position, origin, rotation, font_size, spacing, tint):
-        # type: (Font, Union[str, CharPtr], Vector2, Vector2, float, float, float, Color) -> None
-        """Draw text using Font and pro parameters (rotation)"""
-        _DrawTextPro(self, _str_in(text), _vec2(position), _vec2(origin), float(rotation), float(font_size), float(spacing), _color(tint))
-
-    def draw_text_codepoint(self, codepoint, position, font_size, tint):
-        # type: (Font, int, Vector2, float, Color) -> None
-        """Draw one character (codepoint)"""
-        _DrawTextCodepoint(self, int(codepoint), _vec2(position), float(font_size), _color(tint))
-
-    def draw_text_codepoints(self, codepoints, position, font_size, spacing, tint):
-        # type: (Font, Union[Seq[int], IntPtr], Vector2, float, float, Color) -> None
-        """Draw multiple character (codepoint)"""
-        _DrawTextCodepoints(self, _str_in(codepoints), len(codepoints), _vec2(position), float(font_size), float(spacing), _color(tint))
-
-    def measure_text_ex(self, text, font_size, spacing):
-        # type: (Font, Union[str, CharPtr], float, float) -> Vector2
-        """Measure string size for Font"""
-        result = _MeasureTextEx(self, _str_in(text), float(font_size), float(spacing))
-        return result
-
-    def get_glyph_index(self, codepoint):
-        # type: (Font, int) -> int
-        """Get glyph index position in font for a codepoint (unicode character), fallback to '?' if not found"""
-        result = _GetGlyphIndex(self, int(codepoint))
-        return result
-
-    def get_glyph_info(self, codepoint):
-        # type: (Font, int) -> GlyphInfo
-        """Get glyph font info data for a codepoint (unicode character), fallback to '?' if not found"""
-        result = _GetGlyphInfo(self, int(codepoint))
-        return result
-
-    def get_glyph_atlas_rec(self, codepoint):
-        # type: (Font, int) -> Rectangle
-        """Get glyph rectangle in font atlas for a codepoint (unicode character), fallback to '?' if not found"""
-        result = _GetGlyphAtlasRec(self, int(codepoint))
-        return result
-
-    @staticmethod
-    def load_data(file_data, data_size, font_size, font_chars, glyph_count, type):
-        # type: (Union[Seq[int], UCharPtr], int, int, Union[Seq[int], IntPtr], int, int) -> GlyphInfoPtr
-        """Load font data for further use"""
-        result = _ptr_out(_LoadFontData(_str_in(file_data), int(data_size), int(font_size), font_chars, int(glyph_count), int(type)))
-        return result
-
-    @staticmethod
-    def unload_data(chars, glyph_count):
-        # type: (GlyphInfoPtr, int) -> None
-        """Unload font chars info data (RAM)"""
-        _UnloadFontData(chars, int(glyph_count))
-
-
-# Pointer type to Fonts
-FontPtr = POINTER(Font)
-
-
-
-class Camera3D(Structure):
-    '''Camera, defines position/orientation in 3d space'''
-    _fields_ = [
-        ('position', Vector3),
-        ('target', Vector3),
-        ('up', Vector3),
-        ('fovy', Float),
-        ('projection', Int),
-    ]
-
-
-    @classmethod
-    def array_of(cls, camera3d_sequence):
-        '''Creates and returns an array of Camera3Ds'''
-        arr = cls * len(camera3d_sequence)
-        return arr(*camera3d_sequence)
-
-
-    def __init__(self, position=None,
-                 target=None,
-                 up=None,
-                 fovy=None,
-                 projection=None):
-        # type: (Vector3, Vector3, Vector3, float, int) -> None
-        '''Initializes this Camera3D struct'''
-        super(Camera3D, self).__init__(
-            position or Vector3(),
-            target or Vector3(),
-            up or Vector3(),
-            fovy or 0.0,
-            projection or 0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Camera3D instance'''
-        return byref(self)
-
-
-    def __enter__(self):
-        _BeginMode3D(self)
-
-    def __leave__(self, exc_type, exc_value, traceback):
-        _EndMode3D()
-
-    def set_mode(self, mode):
-        # type: (Camera, int) -> None
-        """Set camera mode (multiple camera modes available)"""
-        _SetCameraMode(self, int(mode))
-
-
-# Pointer type to Camera3Ds
-Camera3DPtr = POINTER(Camera3D)
-
-
-# Camera type fallback, defaults to Camera3D
-Camera = Camera3D
-CameraPtr = Camera3DPtr
-
-class Camera2D(Structure):
-    '''Camera2D, defines position/orientation in 2d space'''
-    _fields_ = [
-        ('offset', Vector2),
-        ('target', Vector2),
-        ('rotation', Float),
-        ('zoom', Float),
-    ]
-
-
-    @classmethod
-    def array_of(cls, camera2d_sequence):
-        '''Creates and returns an array of Camera2Ds'''
-        arr = cls * len(camera2d_sequence)
-        return arr(*camera2d_sequence)
-
-
-    def __init__(self, offset=None, target=None, rotation=None, zoom=None):
-        # type: (Vector2, Vector2, float, float) -> None
-        '''Initializes this Camera2D struct'''
-        super(Camera2D, self).__init__(
-            offset or Vector2(),
-            target or Vector2(),
-            rotation or 0.0,
-            zoom or 0.0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Camera2D instance'''
-        return byref(self)
-
-
-    def __enter__(self):
-        _BeginMode2D(self)
-
-    def __leave__(self, exc_type, exc_value, traceback):
-        _EndMode2D()
-
-
-# Pointer type to Camera2Ds
-Camera2DPtr = POINTER(Camera2D)
-
-
-
-class Mesh(Structure):
-    '''Mesh, vertex data and vao/vbo'''
-    _fields_ = [
-        ('vertex_count', Int),
-        ('triangle_count', Int),
-        ('vertices', FloatPtr),
-        ('texcoords', FloatPtr),
-        ('texcoords2', FloatPtr),
-        ('normals', FloatPtr),
-        ('tangents', FloatPtr),
-        ('colors', UCharPtr),
-        ('indices', UShortPtr),
-        ('anim_vertices', FloatPtr),
-        ('anim_normals', FloatPtr),
-        ('bone_ids', UCharPtr),
-        ('bone_weights', FloatPtr),
-        ('vao_id', UInt),
-        ('vbo_id', UIntPtr),
-    ]
-
-
-    @classmethod
-    def array_of(cls, mesh_sequence):
-        '''Creates and returns an array of Meshs'''
-        arr = cls * len(mesh_sequence)
-        return arr(*mesh_sequence)
-
-    @classmethod
-    def gen_poly(cls, sides, radius):
-        # type: (int, float) -> Mesh
-        """Generate polygonal mesh"""
-        result = _GenMeshPoly(int(sides), float(radius))
-        return result
-
-    @classmethod
-    def gen_plane(cls, width, length, res_x, res_z):
-        # type: (float, float, int, int) -> Mesh
-        """Generate plane mesh (with subdivisions)"""
-        result = _GenMeshPlane(float(width), float(length), int(res_x), int(res_z))
-        return result
-
-    @classmethod
-    def gen_cube(cls, width, height, length):
-        # type: (float, float, float) -> Mesh
-        """Generate cuboid mesh"""
-        result = _GenMeshCube(float(width), float(height), float(length))
-        return result
-
-    @classmethod
-    def gen_sphere(cls, radius, rings, slices):
-        # type: (float, int, int) -> Mesh
-        """Generate sphere mesh (standard sphere)"""
-        result = _GenMeshSphere(float(radius), int(rings), int(slices))
-        return result
-
-    @classmethod
-    def gen_hemi_sphere(cls, radius, rings, slices):
-        # type: (float, int, int) -> Mesh
-        """Generate half-sphere mesh (no bottom cap)"""
-        result = _GenMeshHemiSphere(float(radius), int(rings), int(slices))
-        return result
-
-    @classmethod
-    def gen_cylinder(cls, radius, height, slices):
-        # type: (float, float, int) -> Mesh
-        """Generate cylinder mesh"""
-        result = _GenMeshCylinder(float(radius), float(height), int(slices))
-        return result
-
-    @classmethod
-    def gen_cone(cls, radius, height, slices):
-        # type: (float, float, int) -> Mesh
-        """Generate cone/pyramid mesh"""
-        result = _GenMeshCone(float(radius), float(height), int(slices))
-        return result
-
-    @classmethod
-    def gen_torus(cls, radius, size, rad_seg, sides):
-        # type: (float, float, int, int) -> Mesh
-        """Generate torus mesh"""
-        result = _GenMeshTorus(float(radius), float(size), int(rad_seg), int(sides))
-        return result
-
-    @classmethod
-    def gen_knot(cls, radius, size, rad_seg, sides):
-        # type: (float, float, int, int) -> Mesh
-        """Generate trefoil knot mesh"""
-        result = _GenMeshKnot(float(radius), float(size), int(rad_seg), int(sides))
-        return result
-
-    @classmethod
-    def gen_heightmap(cls, heightmap, size):
-        # type: (Image, Vector3) -> Mesh
-        """Generate heightmap mesh from image data"""
-        result = _GenMeshHeightmap(heightmap, _vec3(size))
-        return result
-
-    @classmethod
-    def gen_cubicmap(cls, cubicmap, cube_size):
-        # type: (Image, Vector3) -> Mesh
-        """Generate cubes-based map mesh from image data"""
-        result = _GenMeshCubicmap(cubicmap, _vec3(cube_size))
-        return result
-
-
-    def __init__(self, vertex_count=None,
-                 triangle_count=None,
-                 vertices=None,
-                 texcoords=None,
-                 texcoords2=None,
-                 normals=None,
-                 tangents=None,
-                 colors=None,
-                 indices=None,
-                 anim_vertices=None,
-                 anim_normals=None,
-                 bone_ids=None,
-                 bone_weights=None,
-                 vao_id=None,
-                 vbo_id=None):
-        # type: (int, int, Union[Seq[float], FloatPtr], Union[Seq[float], FloatPtr], Union[Seq[float], FloatPtr], Union[Seq[float], FloatPtr], Union[Seq[float], FloatPtr], Union[Seq[int], UCharPtr], Union[Seq[int], UShortPtr], Union[Seq[float], FloatPtr], Union[Seq[float], FloatPtr], Union[Seq[int], UCharPtr], Union[Seq[float], FloatPtr], int, Union[Seq[int], UIntPtr]) -> None
-        '''Initializes this Mesh struct'''
-        super(Mesh, self).__init__(
-            vertex_count or 0,
-            triangle_count or 0,
-            vertices,
-            texcoords,
-            texcoords2,
-            normals,
-            tangents,
-            colors,
-            indices,
-            anim_vertices,
-            anim_normals,
-            bone_ids,
-            bone_weights,
-            vao_id or 0,
-            vbo_id
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Mesh instance'''
-        return byref(self)
-
-
-    def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
-
-    def __repr__(self):
-        return self.__str__()
-
-    def upload(self, dynamic):
-        # type: (MeshPtr, bool) -> None
-        """Upload mesh vertex data in GPU and provide VAO/VBO ids"""
-        _UploadMesh(self.byref, bool(dynamic))
-
-    def update_buffer(self, index, data, data_size, offset):
-        # type: (Mesh, int, bytes, int, int) -> None
-        """Update mesh vertex data in GPU for a specific buffer index"""
-        _UpdateMeshBuffer(self, int(index), data, int(data_size), int(offset))
-
-    def unload(self):
-        # type: (Mesh) -> None
-        """Unload mesh data from CPU and GPU"""
-        _UnloadMesh(self)
-
-    def draw(self, material, transform):
-        # type: (Mesh, Material, Matrix) -> None
-        """Draw a 3d mesh with material and transform"""
-        _DrawMesh(self, material, transform)
-
-    def draw_instanced(self, material, transforms, instances):
-        # type: (Mesh, Material, MatrixPtr, int) -> None
-        """Draw multiple mesh instances with material and different transforms"""
-        _DrawMeshInstanced(self, material, transforms, int(instances))
-
-    def export(self, file_name):
-        # type: (Mesh, Union[str, CharPtr]) -> bool
-        """Export mesh data to file, returns true on success"""
-        result = _ExportMesh(self, _str_in(file_name))
-        return result
-
-    def get_bounding_box(self):
-        # type: (Mesh) -> BoundingBox
-        """Compute mesh bounding box limits"""
-        result = _GetMeshBoundingBox(self)
-        return result
-
-    def gen_tangents(self):
-        # type: (MeshPtr) -> None
-        """Compute mesh tangents"""
-        _GenMeshTangents(self.byref)
-
-
-# Pointer type to Meshs
-MeshPtr = POINTER(Mesh)
-
-
-
-class Shader(Structure):
-    '''Shader'''
-    _fields_ = [
-        ('id', UInt),
-        ('locs', IntPtr),
-    ]
-
-
-    @classmethod
-    def array_of(cls, shader_sequence):
-        '''Creates and returns an array of Shaders'''
-        arr = cls * len(shader_sequence)
-        return arr(*shader_sequence)
-
-    @classmethod
-    def load(cls, vs_file_name, fs_file_name):
-        # type: (Union[str, CharPtr], Union[str, CharPtr]) -> Shader
-        """Load shader from files and bind default locations"""
-        result = _LoadShader(_str_in(vs_file_name), _str_in(fs_file_name))
-        return result
-
-    @classmethod
-    def load_from_memory(cls, vs_code, fs_code):
-        # type: (Union[str, CharPtr], Union[str, CharPtr]) -> Shader
-        """Load shader from code strings and bind default locations"""
-        result = _LoadShaderFromMemory(_str_in(vs_code), _str_in(fs_code))
-        return result
-
-
-    def __init__(self, id=None, locs=None):
-        # type: (int, Union[Seq[int], IntPtr]) -> None
-        '''Initializes this Shader struct'''
-        super(Shader, self).__init__(
-            id or 0,
-            locs
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Shader instance'''
-        return byref(self)
-
-
-    def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __enter__(self):
-        _BeginShaderMode(self)
-
-    def __leave__(self, exc_type, exc_value, traceback):
-        _EndShaderMode()
-
-    def get_location(self, uniform_name):
-        # type: (Shader, Union[str, CharPtr]) -> int
-        """Get shader uniform location"""
-        result = _GetShaderLocation(self, _str_in(uniform_name))
-        return result
-
-    def get_location_attrib(self, attrib_name):
-        # type: (Shader, Union[str, CharPtr]) -> int
-        """Get shader attribute location"""
-        result = _GetShaderLocationAttrib(self, _str_in(attrib_name))
-        return result
-
-    def set_value(self, loc_index, value, uniform_type):
-        # type: (Shader, int, bytes, int) -> None
-        """Set shader uniform value"""
-        _SetShaderValue(self, int(loc_index), value, int(uniform_type))
-
-    def set_value_v(self, loc_index, value, uniform_type, count):
-        # type: (Shader, int, bytes, int, int) -> None
-        """Set shader uniform value vector"""
-        _SetShaderValueV(self, int(loc_index), value, int(uniform_type), int(count))
-
-    def set_value_matrix(self, loc_index, mat):
-        # type: (Shader, int, Matrix) -> None
-        """Set shader uniform value (matrix 4x4)"""
-        _SetShaderValueMatrix(self, int(loc_index), mat)
-
-    def set_value_texture(self, loc_index, texture):
-        # type: (Shader, int, Texture2D) -> None
-        """Set shader uniform value for texture (sampler2d)"""
-        _SetShaderValueTexture(self, int(loc_index), texture)
-
-    def unload(self):
-        # type: (Shader) -> None
-        """Unload shader from GPU memory (VRAM)"""
-        _UnloadShader(self)
-
-
-# Pointer type to Shaders
-ShaderPtr = POINTER(Shader)
-
-
-
-class MaterialMap(Structure):
-    '''MaterialMap'''
-    _fields_ = [
-        ('texture', Texture2D),
-        ('color', Color),
-        ('value', Float),
-    ]
-
-
-    @classmethod
-    def array_of(cls, material_map_sequence):
-        '''Creates and returns an array of MaterialMaps'''
-        arr = cls * len(material_map_sequence)
-        return arr(*material_map_sequence)
-
-
-    def __init__(self, texture=None, color=None, value=None):
-        # type: (Texture2D, Color, float) -> None
-        '''Initializes this MaterialMap struct'''
-        super(MaterialMap, self).__init__(
-            texture or Texture2D(),
-            color or Color(),
-            value or 0.0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this MaterialMap instance'''
-        return byref(self)
-
-
-
-# Pointer type to MaterialMaps
-MaterialMapPtr = POINTER(MaterialMap)
-
-
-
-class Material(Structure):
-    '''Material, includes shader and maps'''
-    _fields_ = [
-        ('shader', Shader),
-        ('maps', MaterialMapPtr),
-        ('params', Float * 4),
-    ]
-
-
-    @classmethod
-    def array_of(cls, material_sequence):
-        '''Creates and returns an array of Materials'''
-        arr = cls * len(material_sequence)
-        return arr(*material_sequence)
-
-    @classmethod
-    def load_materials(cls, file_name):
-        # type: (Union[str, CharPtr]) -> MaterialPtr
-        """Load materials from model file"""
-        material_count = Int(0)
-        result = _ptr_out(_LoadMaterials(_str_in(file_name), byref(material_count)), material_count.value)
-        return result
-
-    @classmethod
-    def load_default():
-        # type: () -> Material
-        """Load default material (Supports: DIFFUSE, SPECULAR, NORMAL maps)"""
-        result = _LoadMaterialDefault()
-        return result
-
-
-    def __init__(self, shader=None, maps=None, params=None):
-        # type: (Shader, MaterialMapPtr, Seq[float]) -> None
-        '''Initializes this Material struct'''
-        super(Material, self).__init__(
-            shader or Shader(),
-            maps,
-            params
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Material instance'''
-        return byref(self)
-
-
-    def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
-
-    def __repr__(self):
-        return self.__str__()
-
-    def unload(self):
-        # type: (Material) -> None
-        """Unload material from GPU memory (VRAM)"""
-        _UnloadMaterial(self)
-
-    def set_texture(self, map_type, texture):
-        # type: (MaterialPtr, int, Texture2D) -> None
-        """Set texture for a material map type (MATERIAL_MAP_DIFFUSE, MATERIAL_MAP_SPECULAR...)"""
-        _SetMaterialTexture(self, int(map_type), texture)
-
-
-# Pointer type to Materials
-MaterialPtr = POINTER(Material)
-
-
-
-class Transform(Structure):
-    '''Transform, vectex transformation data'''
-    _fields_ = [
-        ('translation', Vector3),
-        ('rotation', Quaternion),
-        ('scale', Vector3),
-    ]
-
-
-    @classmethod
-    def array_of(cls, transform_sequence):
-        '''Creates and returns an array of Transforms'''
-        arr = cls * len(transform_sequence)
-        return arr(*transform_sequence)
-
-
-    def __init__(self, translation=None, rotation=None, scale=None):
-        # type: (Vector3, Quaternion, Vector3) -> None
-        '''Initializes this Transform struct'''
-        super(Transform, self).__init__(
-            translation or Vector3(),
-            rotation or Quaternion(),
-            scale or Vector3()
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Transform instance'''
-        return byref(self)
-
-
-
-# Pointer type to Transforms
-TransformPtr = POINTER(Transform)
-
-
-
-class BoneInfo(Structure):
-    '''Bone, skeletal animation bone'''
-    _fields_ = [
-        ('name', CharPtr),
-        ('parent', Int),
-    ]
-
-
-    @classmethod
-    def array_of(cls, bone_info_sequence):
-        '''Creates and returns an array of BoneInfos'''
-        arr = cls * len(bone_info_sequence)
-        return arr(*bone_info_sequence)
-
-
-    def __init__(self, name=None, parent=None):
-        # type: (str, int) -> None
-        '''Initializes this BoneInfo struct'''
-        super(BoneInfo, self).__init__(
-            name,
-            parent or 0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this BoneInfo instance'''
-        return byref(self)
-
-
-
-# Pointer type to BoneInfos
-BoneInfoPtr = POINTER(BoneInfo)
-
-
-
-class Model(Structure):
-    '''Model, meshes, materials and animation data'''
-    _fields_ = [
-        ('transform', Matrix),
-        ('mesh_count', Int),
-        ('material_count', Int),
-        ('meshes', MeshPtr),
-        ('materials', MaterialPtr),
-        ('mesh_material', IntPtr),
-        ('bone_count', Int),
-        ('bones', BoneInfoPtr),
-        ('bind_pose', TransformPtr),
-    ]
-
-
-    @classmethod
-    def array_of(cls, model_sequence):
-        '''Creates and returns an array of Models'''
-        arr = cls * len(model_sequence)
-        return arr(*model_sequence)
-
-    @classmethod
-    def load(cls, file_name):
-        # type: (Union[str, CharPtr]) -> Model
-        """Load model from files (meshes and materials)"""
-        result = _LoadModel(_str_in(file_name))
-        return result
-
-    @classmethod
-    def load_from_mesh(cls, mesh):
-        # type: (Mesh) -> Model
-        """Load model from generated mesh (default material)"""
-        result = _LoadModelFromMesh(mesh)
-        return result
-
-
-    def __init__(self, transform=None,
-                 mesh_count=None,
-                 material_count=None,
-                 meshes=None,
-                 materials=None,
-                 mesh_material=None,
-                 bone_count=None,
-                 bones=None,
-                 bind_pose=None):
-        # type: (Matrix, int, int, MeshPtr, MaterialPtr, Union[Seq[int], IntPtr], int, BoneInfoPtr, TransformPtr) -> None
-        '''Initializes this Model struct'''
-        super(Model, self).__init__(
-            transform or Matrix(),
-            mesh_count or 0,
-            material_count or 0,
-            meshes,
-            materials,
-            mesh_material,
-            bone_count or 0,
-            bones,
-            bind_pose
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Model instance'''
-        return byref(self)
-
-
-    def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
-
-    def __repr__(self):
-        return self.__str__()
-
-    def is_animation_valid(self, anim):
-        # type: (Model, ModelAnimation) -> bool
-        """Check model animation skeleton match"""
-        result = _IsModelAnimationValid(self, anim)
-        return result
-
-    def update_animation(self, anim, frame):
-        # type: (Model, ModelAnimation, int) -> None
-        """Update model animation pose"""
-        _UpdateModelAnimation(self, anim, int(frame))
-
-    def set_mesh_material(self, mesh_id, material_id):
-        # type: (ModelPtr, int, int) -> None
-        """Set material for a mesh"""
-        _SetModelMeshMaterial(self.byref, int(mesh_id), int(material_id))
-
-    def unload(self):
-        # type: (Model) -> None
-        """Unload model (including meshes) from memory (RAM and/or VRAM)"""
-        _UnloadModel(self)
-
-    def unload_keep_meshes(self):
-        # type: (Model) -> None
-        """Unload model (but not meshes) from memory (RAM and/or VRAM)"""
-        _UnloadModelKeepMeshes(self)
-
-    def get_bounding_box(self):
-        # type: (Model) -> BoundingBox
-        """Compute model bounding box limits (considers all meshes)"""
-        result = _GetModelBoundingBox(self)
-        return result
-
-    def draw(self, position, scale, tint):
-        # type: (Model, Vector3, float, Color) -> None
-        """Draw a model (with texture if set)"""
-        _DrawModel(self, _vec3(position), float(scale), _color(tint))
-
-    def draw_ex(self, position, rotation_axis, rotation_angle, scale, tint):
-        # type: (Model, Vector3, Vector3, float, Vector3, Color) -> None
-        """Draw a model with extended parameters"""
-        _DrawModelEx(self, _vec3(position), _vec3(rotation_axis), float(rotation_angle), _vec3(scale), _color(tint))
-
-    def draw_wires(self, position, scale, tint):
-        # type: (Model, Vector3, float, Color) -> None
-        """Draw a model wires (with texture if set)"""
-        _DrawModelWires(self, _vec3(position), float(scale), _color(tint))
-
-    def draw_wires_ex(self, position, rotation_axis, rotation_angle, scale, tint):
-        # type: (Model, Vector3, Vector3, float, Vector3, Color) -> None
-        """Draw a model wires (with texture if set) with extended parameters"""
-        _DrawModelWiresEx(self, _vec3(position), _vec3(rotation_axis), float(rotation_angle), _vec3(scale), _color(tint))
-
-
-# Pointer type to Models
-ModelPtr = POINTER(Model)
-
-
-
-class ModelAnimation(Structure):
-    '''ModelAnimation'''
-    _fields_ = [
-        ('bone_count', Int),
-        ('frame_count', Int),
-        ('bones', BoneInfoPtr),
-        ('frame_poses', TransformPtr),
-    ]
-
-
-    @classmethod
-    def array_of(cls, model_animation_sequence):
-        '''Creates and returns an array of ModelAnimations'''
-        arr = cls * len(model_animation_sequence)
-        return arr(*model_animation_sequence)
-
-
-    def __init__(self, bone_count=None, frame_count=None, bones=None, frame_poses=None):
-        # type: (int, int, BoneInfoPtr, TransformPtr) -> None
-        '''Initializes this ModelAnimation struct'''
-        super(ModelAnimation, self).__init__(
-            bone_count or 0,
-            frame_count or 0,
-            bones,
-            frame_poses
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this ModelAnimation instance'''
-        return byref(self)
-
-
-
-# Pointer type to ModelAnimations
-ModelAnimationPtr = POINTER(ModelAnimation)
-
-
-
-class Ray(Structure):
-    '''Ray, ray for raycasting'''
-    _fields_ = [
-        ('position', Vector3),
-        ('direction', Vector3),
-    ]
-
-
-    @classmethod
-    def array_of(cls, ray_sequence):
-        '''Creates and returns an array of Rays'''
-        arr = cls * len(ray_sequence)
-        return arr(*ray_sequence)
-
-
-    def __init__(self, position=None, direction=None):
-        # type: (Vector3, Vector3) -> None
-        '''Initializes this Ray struct'''
-        super(Ray, self).__init__(
-            position or Vector3(),
-            direction or Vector3()
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Ray instance'''
-        return byref(self)
-
-
-
-# Pointer type to Rays
-RayPtr = POINTER(Ray)
-
-
-
-class RayCollision(Structure):
-    '''RayCollision, ray hit information'''
-    _fields_ = [
-        ('hit', Bool),
-        ('distance', Float),
-        ('point', Vector3),
-        ('normal', Vector3),
-    ]
-
-
-    @classmethod
-    def array_of(cls, ray_collision_sequence):
-        '''Creates and returns an array of RayCollisions'''
-        arr = cls * len(ray_collision_sequence)
-        return arr(*ray_collision_sequence)
-
-
-    def __init__(self, hit=None, distance=None, point=None, normal=None):
-        # type: (bool, float, Vector3, Vector3) -> None
-        '''Initializes this RayCollision struct'''
-        super(RayCollision, self).__init__(
-            hit or False,
-            distance or 0.0,
-            point or Vector3(),
-            normal or Vector3()
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this RayCollision instance'''
-        return byref(self)
-
-
-
-# Pointer type to RayCollisions
-RayCollisionPtr = POINTER(RayCollision)
-
-
-
-class BoundingBox(Structure):
-    '''BoundingBox'''
-    _fields_ = [
-        ('min', Vector3),
-        ('max', Vector3),
-    ]
-
-
-    @classmethod
-    def array_of(cls, bounding_box_sequence):
-        '''Creates and returns an array of BoundingBoxs'''
-        arr = cls * len(bounding_box_sequence)
-        return arr(*bounding_box_sequence)
-
-
-    def __init__(self, min=None, max=None):
-        # type: (Vector3, Vector3) -> None
-        '''Initializes this BoundingBox struct'''
-        super(BoundingBox, self).__init__(
-            min or Vector3(),
-            max or Vector3()
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this BoundingBox instance'''
-        return byref(self)
-
-
-
-# Pointer type to BoundingBoxs
-BoundingBoxPtr = POINTER(BoundingBox)
-
-
-
-class Wave(Structure):
-    '''Wave, audio wave data'''
-    _fields_ = [
-        ('frame_count', UInt),
-        ('sample_rate', UInt),
-        ('sample_size', UInt),
-        ('channels', UInt),
-        ('data', VoidPtr),
-    ]
-
-
-    @classmethod
-    def array_of(cls, wave_sequence):
-        '''Creates and returns an array of Waves'''
-        arr = cls * len(wave_sequence)
-        return arr(*wave_sequence)
-
-    @classmethod
-    def load(cls, file_name):
-        # type: (Union[str, CharPtr]) -> Wave
-        """Load wave data from file"""
-        result = _LoadWave(_str_in(file_name))
-        return result
-
-    @classmethod
-    def load_from_memory(cls, file_type, file_data, data_size):
-        # type: (Union[str, CharPtr], Union[Seq[int], UCharPtr], int) -> Wave
-        """Load wave from memory buffer, fileType refers to extension: i.e. '.wav'"""
-        result = _LoadWaveFromMemory(_str_in(file_type), _str_in(file_data), int(data_size))
-        return result
-
-
-    def __init__(self, frame_count=None,
-                 sample_rate=None,
-                 sample_size=None,
-                 channels=None,
-                 data=None):
-        # type: (int, int, int, int, bytes) -> None
-        '''Initializes this Wave struct'''
-        super(Wave, self).__init__(
-            frame_count or 0,
-            sample_rate or 0,
-            sample_size or 0,
-            channels or 0,
-            data
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Wave instance'''
-        return byref(self)
-
-
-    def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
-
-    def __repr__(self):
-        return self.__str__()
-
-    def copy(self):
-        # type: (Wave) -> Wave
-        """Copy a wave to a new wave"""
-        result = _WaveCopy(self)
-        return result
-
-    def crop(self, init_sample, final_sample):
-        # type: (WavePtr, int, int) -> None
-        """Crop a wave to defined samples range"""
-        _WaveCrop(self.byref, int(init_sample), int(final_sample))
-
-    def format(self, sample_rate, sample_size, channels):
-        # type: (WavePtr, int, int, int) -> None
-        """Convert wave data to desired format"""
-        _WaveFormat(self.byref, int(sample_rate), int(sample_size), int(channels))
-
-    def format(self):
-        # type: (Wave) -> Union[Seq[float], FloatPtr]
-        """Load samples data from wave as a 32bit float data array"""
-        result = _ptr_out(_LoadWaveSamples(self.byref))
-        return result
-
-    def export(self, file_name):
-        # type: (Wave, Union[str, CharPtr]) -> bool
-        """Export wave data to file, returns true on success"""
-        result = _ExportWave(self, _str_in(file_name))
-        return result
-
-    def export_as_code(self, file_name):
-        # type: (Wave, Union[str, CharPtr]) -> bool
-        """Export wave sample data to code (.h), returns true on success"""
-        result = _ExportWaveAsCode(self, _str_in(file_name))
-        return result
-
-    def unload(self):
-        # type: (Wave) -> None
-        """Unload wave data"""
-        _UnloadWave(self)
-
-    def unload_samples(self):
-        # type: (Union[Seq[float], FloatPtr]) -> None
-        """Unload samples data loaded with LoadWaveSamples()"""
-        _UnloadWaveSamples(self)
-
-
-# Pointer type to Waves
-WavePtr = POINTER(Wave)
-
-
-
-class AudioStream(Structure):
-    '''AudioStream, custom audio stream'''
-    _fields_ = [
-        ('buffer', rAudioBufferPtr),
-        ('processor', rAudioProcessorPtr),
-        ('sample_rate', UInt),
-        ('sample_size', UInt),
-        ('channels', UInt),
-    ]
-
-
-    @classmethod
-    def array_of(cls, audio_stream_sequence):
-        '''Creates and returns an array of AudioStreams'''
-        arr = cls * len(audio_stream_sequence)
-        return arr(*audio_stream_sequence)
-
-    @classmethod
-    def load(cls, sample_rate, sample_size, channels):
-        # type: (int, int, int) -> AudioStream
-        """Load audio stream (to stream raw audio pcm data)"""
-        result = _LoadAudioStream(sample_rate, sample_size, channels)
-        return result
-
-
-    def __init__(self, buffer=None,
-                 processor=None,
-                 sample_rate=None,
-                 sample_size=None,
-                 channels=None):
-        # type: (rAudioBufferPtr, rAudioProcessorPtr, int, int, int) -> None
-        '''Initializes this AudioStream struct'''
-        super(AudioStream, self).__init__(
-            buffer,
-            processor,
-            sample_rate or 0,
-            sample_size or 0,
-            channels or 0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this AudioStream instance'''
-        return byref(self)
-
-
-    def __str__(self):
-        return "[{} Playing: {}]".format(self.__class__.__name__, _IsAudioStreamPlaying(self))
-
-    def __repr__(self):
-        return self.__str__()
-
-    def unload(self):
-        # type: (AudioStream) -> None
-        """Unload audio stream and free memory"""
-        _UnloadAudioStream(self)
-
-    def update(self, data, frame_count):
-        # type: (AudioStream, bytes, int) -> None
-        """Update audio stream buffers with data"""
-        _UpdateAudioStream(self, data, int(frame_count))
-
-    def is_processed(self):
-        # type: (AudioStream) -> bool
-        """Check if any audio stream buffers requires refill"""
-        result = _IsAudioStreamProcessed(self)
-        return result
-
-    def play(self):
-        # type: (AudioStream) -> None
-        """Play audio stream"""
-        _PlayAudioStream(self)
-
-    def pause(self):
-        # type: (AudioStream) -> None
-        """Pause audio stream"""
-        _PauseAudioStream(self)
-
-    def resume(self):
-        # type: (AudioStream) -> None
-        """Resume audio stream"""
-        _ResumeAudioStream(self)
-
-    def is_playing(self):
-        # type: (AudioStream) -> bool
-        """Check if audio stream is playing"""
-        result = _IsAudioStreamPlaying(self)
-        return result
-
-    def stop(self):
-        # type: (AudioStream) -> None
-        """Stop audio stream"""
-        _StopAudioStream(self)
-
-    def set_volume(self, volume):
-        # type: (AudioStream, float) -> None
-        """Set volume for audio stream (1.0 is max level)"""
-        _SetAudioStreamVolume(self, float(volume))
-
-    def set_pitch(self, pitch):
-        # type: (AudioStream, float) -> None
-        """Set pitch for audio stream (1.0 is base level)"""
-        _SetAudioStreamPitch(self, float(pitch))
-
-    def set_pan(self, pan):
-        # type: (AudioStream, float) -> None
-        """Set pan for audio stream (0.5 is centered)"""
-        _SetAudioStreamPan(self, float(pan))
-
-    def set_buffer_size_default(self):
-        # type: (int) -> None
-        """Default size for new audio streams"""
-        _SetAudioStreamBufferSizeDefault(self)
-
-    def set_callback(self, callback):
-        # type: (AudioStream, AudioCallback) -> None
-        """Audio thread callback to request new data"""
-        _SetAudioStreamCallback(self, callback)
-
-    def attach_processor(self, processor):
-        # type: (AudioStream, AudioCallback) -> None
-        """"""
-        _AttachAudioStreamProcessor(self, processor)
-
-    def detach_processor(self, processor):
-        # type: (AudioStream, AudioCallback) -> None
-        """"""
-        _DetachAudioStreamProcessor(self, processor)
-
-
-# Pointer type to AudioStreams
-AudioStreamPtr = POINTER(AudioStream)
-
-
-
-class Sound(Structure):
-    '''Sound'''
-    _fields_ = [
-        ('stream', AudioStream),
-        ('frame_count', UInt),
-    ]
-
-
-    @classmethod
-    def array_of(cls, sound_sequence):
-        '''Creates and returns an array of Sounds'''
-        arr = cls * len(sound_sequence)
-        return arr(*sound_sequence)
-
-    @classmethod
-    def load(cls, file_name):
-        # type: (Union[str, CharPtr]) -> Sound
-        """Load sound from file"""
-        result = _LoadSound(_str_in(file_name))
-        return result
-
-    @classmethod
-    def load_from_wave(cls, wave):
-        # type: (Wave) -> Sound
-        """Load sound from wave data"""
-        result = _LoadSoundFromWave(wave)
-        return result
-
-
-    def __init__(self, stream=None, frame_count=None):
-        # type: (AudioStream, int) -> None
-        '''Initializes this Sound struct'''
-        super(Sound, self).__init__(
-            stream or AudioStream(),
-            frame_count or 0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Sound instance'''
-        return byref(self)
-
-
-    def __str__(self):
-        return "[{} Playing: {}]".format(self.__class__.__name__, _IsSoundPlaying(self))
-
-    def __repr__(self):
-        return self.__str__()
-
-    def play(self):
-        # type: (Sound) -> None
-        """Play a sound"""
-        _PlaySound(self)
-
-    def stop(self):
-        # type: (Sound) -> None
-        """Stop playing a sound"""
-        _StopSound(self)
-
-    def pause(self):
-        # type: (Sound) -> None
-        """Pause a sound"""
-        _PauseSound(self)
-
-    def resume(self):
-        # type: (Sound) -> None
-        """Resume a paused sound"""
-        _ResumeSound(self)
-
-    def play_multi(self):
-        # type: (Sound) -> None
-        """Play a sound (using multichannel buffer pool)"""
-        _PlaySoundMulti(self)
-
-    def is_playing(self):
-        # type: (Sound) -> bool
-        """Check if a sound is currently playing"""
-        result = _IsSoundPlaying(self)
-        return result
-
-    def set_volume(self, volume):
-        # type: (Sound, float) -> None
-        """Set volume for a sound (1.0 is max level)"""
-        _SetSoundVolume(self, float(volume))
-
-    def set_pitch(self, pitch):
-        # type: (Sound, float) -> None
-        """Set pitch for a sound (1.0 is base level)"""
-        _SetSoundPitch(self, float(pitch))
-
-    def set_pan(self, pan):
-        # type: (Sound, float) -> None
-        """Set pan for a sound (0.5 is center)"""
-        _SetSoundPan(self, float(pan))
-
-    def unload(self):
-        # type: (Sound) -> None
-        """Unload sound"""
-        _UnloadSound(self)
-
-    def update(self, data, sample_count):
-        # type: (Sound, bytes, int) -> None
-        """Update sound buffer with new data"""
-        _UpdateSound(self, data, int(sample_count))
-
-    @staticmethod
-    def get_sounds_playing():
-        # type: () -> int
-        """Get number of sounds playing in the multichannel"""
-        result = _GetSoundsPlaying()
-        return result
-
-    @staticmethod
-    def stop_multi():
-        # type: () -> None
-        """Stop any sound playing (using multichannel buffer pool)"""
-        _StopSoundMulti()
-
-
-# Pointer type to Sounds
-SoundPtr = POINTER(Sound)
-
-
-
-class Music(Structure):
-    '''Music, audio stream, anything longer than ~10 seconds should be streamed'''
-    _fields_ = [
-        ('stream', AudioStream),
-        ('frame_count', UInt),
-        ('looping', Bool),
-        ('ctx_type', Int),
-        ('ctx_data', VoidPtr),
-    ]
-
-
-    @classmethod
-    def array_of(cls, music_sequence):
-        '''Creates and returns an array of Musics'''
-        arr = cls * len(music_sequence)
-        return arr(*music_sequence)
-
-
-    def __init__(self, stream=None,
-                 frame_count=None,
-                 looping=None,
-                 ctx_type=None,
-                 ctx_data=None):
-        # type: (AudioStream, int, bool, int, bytes) -> None
-        '''Initializes this Music struct'''
-        super(Music, self).__init__(
-            stream or AudioStream(),
-            frame_count or 0,
-            looping or False,
-            ctx_type or 0,
-            ctx_data
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Music instance'''
-        return byref(self)
-
-
-    def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
-
-    def __repr__(self):
-        return self.__str__()
-
-    def play(self):
-        # type: (Music) -> None
-        """Start music playing"""
-        _PlayMusicStream(self)
-
-    def is_playing(self):
-        # type: (Music) -> bool
-        """Check if music is playing"""
-        result = _IsMusicStreamPlaying(self)
-        return result
-
-    def update(self):
-        # type: (Music) -> None
-        """Updates buffers for music streaming"""
-        _UpdateMusicStream(self)
-
-    def stop(self):
-        # type: (Music) -> None
-        """Stop music playing"""
-        _StopMusicStream(self)
-
-    def pause(self):
-        # type: (Music) -> None
-        """Pause music playing"""
-        _PauseMusicStream(self)
-
-    def resume(self):
-        # type: (Music) -> None
-        """Resume playing paused music"""
-        _ResumeMusicStream(self)
-
-    def seek(self, position):
-        # type: (Music, float) -> None
-        """Seek music to a position (in seconds)"""
-        _SeekMusicStream(self, float(position))
-
-    def set_volume(self, volume):
-        # type: (Music, float) -> None
-        """Set volume for music (1.0 is max level)"""
-        _SetMusicVolume(self, float(volume))
-
-    def set_pitch(self, pitch):
-        # type: (Music, float) -> None
-        """Set pitch for a music (1.0 is base level)"""
-        _SetMusicPitch(self, float(pitch))
-
-    def set_pan(self, pan):
-        # type: (Music, float) -> None
-        """Set pan for a music (0.5 is center)"""
-        _SetMusicPan(self, float(pan))
-
-    def get_time_length(self):
-        # type: (Music) -> float
-        """Get music time length (in seconds)"""
-        result = _GetMusicTimeLength(self)
-        return result
-
-    def get_time_played(self):
-        # type: (Music) -> float
-        """Get current music time played (in seconds)"""
-        result = _GetMusicTimePlayed(self)
-        return result
-
-    @staticmethod
-    def load(file_name):
-        # type: (Union[str, CharPtr]) -> Music
-        """Load music stream from file"""
-        result = _LoadMusicStream(_str_in(file_name))
-        return result
-
-    @staticmethod
-    def load_from_memory(file_type, data, data_size):
-        # type: (Union[str, CharPtr], Union[Seq[int], UCharPtr], int) -> Music
-        """Load music stream from data"""
-        result = _LoadMusicStreamFromMemory(_str_in(file_type), _str_in(data), int(data_size))
-        return result
-
-
-# Pointer type to Musics
-MusicPtr = POINTER(Music)
-
-
-
-class VrDeviceInfo(Structure):
-    '''VrDeviceInfo, Head-Mounted-Display device parameters'''
-    _fields_ = [
-        ('h_resolution', Int),
-        ('v_resolution', Int),
-        ('h_screen_size', Float),
-        ('v_screen_size', Float),
-        ('v_screen_center', Float),
-        ('eye_to_screen_distance', Float),
-        ('lens_separation_distance', Float),
-        ('interpupillary_distance', Float),
-        ('lens_distortion_values', Float * 4),
-        ('chroma_ab_correction', Float * 4),
-    ]
-
-
-    @classmethod
-    def array_of(cls, vr_device_info_sequence):
-        '''Creates and returns an array of VrDeviceInfos'''
-        arr = cls * len(vr_device_info_sequence)
-        return arr(*vr_device_info_sequence)
-
-
-    def __init__(self, h_resolution=None,
-                 v_resolution=None,
-                 h_screen_size=None,
-                 v_screen_size=None,
-                 v_screen_center=None,
-                 eye_to_screen_distance=None,
-                 lens_separation_distance=None,
-                 interpupillary_distance=None,
-                 lens_distortion_values=None,
-                 chroma_ab_correction=None):
-        # type: (int, int, float, float, float, float, float, float, Seq[float], Seq[float]) -> None
-        '''Initializes this VrDeviceInfo struct'''
-        super(VrDeviceInfo, self).__init__(
-            h_resolution or 0,
-            v_resolution or 0,
-            h_screen_size or 0.0,
-            v_screen_size or 0.0,
-            v_screen_center or 0.0,
-            eye_to_screen_distance or 0.0,
-            lens_separation_distance or 0.0,
-            interpupillary_distance or 0.0,
-            lens_distortion_values,
-            chroma_ab_correction
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this VrDeviceInfo instance'''
-        return byref(self)
-
-
-
-# Pointer type to VrDeviceInfos
-VrDeviceInfoPtr = POINTER(VrDeviceInfo)
-
-
-
-class VrStereoConfig(Structure):
-    '''VrStereoConfig, VR stereo rendering configuration for simulator'''
-    _fields_ = [
-        ('projection', Matrix * 2),
-        ('view_offset', Matrix * 2),
-        ('left_lens_center', Float * 2),
-        ('right_lens_center', Float * 2),
-        ('left_screen_center', Float * 2),
-        ('right_screen_center', Float * 2),
-        ('scale', Float * 2),
-        ('scale_in', Float * 2),
-    ]
-
-
-    @classmethod
-    def array_of(cls, vr_stereo_config_sequence):
-        '''Creates and returns an array of VrStereoConfigs'''
-        arr = cls * len(vr_stereo_config_sequence)
-        return arr(*vr_stereo_config_sequence)
-
-
-    def __init__(self, projection=None,
-                 view_offset=None,
-                 left_lens_center=None,
-                 right_lens_center=None,
-                 left_screen_center=None,
-                 right_screen_center=None,
-                 scale=None,
-                 scale_in=None):
-        # type: (Seq[Matrix], Seq[Matrix], Seq[float], Seq[float], Seq[float], Seq[float], Seq[float], Seq[float]) -> None
-        '''Initializes this VrStereoConfig struct'''
-        super(VrStereoConfig, self).__init__(
-            projection,
-            view_offset,
-            left_lens_center,
-            right_lens_center,
-            left_screen_center,
-            right_screen_center,
-            scale,
-            scale_in
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this VrStereoConfig instance'''
-        return byref(self)
-
-
-    def __enter__(self):
-        _BeginVrStereoMode(self)
-
-    def __leave__(self, exc_type, exc_value, traceback):
-        _EndVrStereoMode()
-
-
-# Pointer type to VrStereoConfigs
-VrStereoConfigPtr = POINTER(VrStereoConfig)
-
-
-
-class FilePathList(Structure):
-    '''File path list'''
-    _fields_ = [
-        ('capacity', UInt),
-        ('count', UInt),
-        ('paths', CharPtrPtr),
-    ]
-
-
-    @classmethod
-    def array_of(cls, file_path_list_sequence):
-        '''Creates and returns an array of FilePathLists'''
-        arr = cls * len(file_path_list_sequence)
-        return arr(*file_path_list_sequence)
-
-
-    def __init__(self, capacity=None, count=None, paths=None):
-        # type: (int, int, Seq[Union[str, CharPtr]]) -> None
-        '''Initializes this FilePathList struct'''
-        super(FilePathList, self).__init__(
-            capacity or 0,
-            count or 0,
-            paths
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this FilePathList instance'''
-        return byref(self)
-
-
-
-# Pointer type to FilePathLists
-FilePathListPtr = POINTER(FilePathList)
-
-
-
-class rlVertexBuffer(Structure):
-    '''Dynamic vertex buffers (position + texcoords + colors + indices arrays)'''
-    _fields_ = [
-        ('element_count', Int),
-        ('vertices', FloatPtr),
-        ('texcoords', FloatPtr),
-        ('colors', UCharPtr),
-        ('indices', UIntPtr),
-        ('vao_id', UInt),
-        ('vbo_id', Int * 4),
-    ]
-
-
-    @classmethod
-    def array_of(cls, rl_vertex_buffer_sequence):
-        '''Creates and returns an array of rlVertexBuffers'''
-        arr = cls * len(rl_vertex_buffer_sequence)
-        return arr(*rl_vertex_buffer_sequence)
-
-
-    def __init__(self, element_count=None,
-                 vertices=None,
-                 texcoords=None,
-                 colors=None,
-                 indices=None,
-                 vao_id=None,
-                 vbo_id=None):
-        # type: (int, Union[Seq[float], FloatPtr], Union[Seq[float], FloatPtr], Union[Seq[int], UCharPtr], Union[Seq[int], UIntPtr], int, Seq[int]) -> None
-        '''Initializes this rlVertexBuffer struct'''
-        super(rlVertexBuffer, self).__init__(
-            element_count or 0,
-            vertices,
-            texcoords,
-            colors,
-            indices,
-            vao_id or 0,
-            vbo_id
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this rlVertexBuffer instance'''
-        return byref(self)
-
-
-
-# Pointer type to rlVertexBuffers
-rlVertexBufferPtr = POINTER(rlVertexBuffer)
-
-
-
-class rlDrawCall(Structure):
-    '''of those state-change happens (this is done in core module)'''
-    _fields_ = [
-        ('mode', Int),
-        ('vertex_count', Int),
-        ('vertex_alignment', Int),
-        ('texture_id', UInt),
-    ]
-
-
-    @classmethod
-    def array_of(cls, rl_draw_call_sequence):
-        '''Creates and returns an array of rlDrawCalls'''
-        arr = cls * len(rl_draw_call_sequence)
-        return arr(*rl_draw_call_sequence)
-
-
-    def __init__(self, mode=None, vertex_count=None, vertex_alignment=None, texture_id=None):
-        # type: (int, int, int, int) -> None
-        '''Initializes this rlDrawCall struct'''
-        super(rlDrawCall, self).__init__(
-            mode or 0,
-            vertex_count or 0,
-            vertex_alignment or 0,
-            texture_id or 0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this rlDrawCall instance'''
-        return byref(self)
-
-
-
-# Pointer type to rlDrawCalls
-rlDrawCallPtr = POINTER(rlDrawCall)
-
-
-
-class rlRenderBatch(Structure):
-    '''rlRenderBatch type'''
-    _fields_ = [
-        ('buffer_count', Int),
-        ('current_buffer', Int),
-        ('vertex_buffer', rlVertexBufferPtr),
-        ('draws', rlDrawCallPtr),
-        ('draw_counter', Int),
-        ('current_depth', Float),
-    ]
-
-
-    @classmethod
-    def array_of(cls, rl_render_batch_sequence):
-        '''Creates and returns an array of rlRenderBatchs'''
-        arr = cls * len(rl_render_batch_sequence)
-        return arr(*rl_render_batch_sequence)
-
-
-    def __init__(self, buffer_count=None,
-                 current_buffer=None,
-                 vertex_buffer=None,
-                 draws=None,
-                 draw_counter=None,
-                 current_depth=None):
-        # type: (int, int, rlVertexBufferPtr, rlDrawCallPtr, int, float) -> None
-        '''Initializes this rlRenderBatch struct'''
-        super(rlRenderBatch, self).__init__(
-            buffer_count or 0,
-            current_buffer or 0,
-            vertex_buffer,
-            draws,
-            draw_counter or 0,
-            current_depth or 0.0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this rlRenderBatch instance'''
-        return byref(self)
-
-
-
-# Pointer type to rlRenderBatchs
-rlRenderBatchPtr = POINTER(rlRenderBatch)
-
-
-
-class Matrix(Structure):
-    '''Matrix, 4x4 components, column major, OpenGL style, right handed'''
-    _fields_ = [
-        ('m0', Float),
-        ('m4', Float),
-        ('m8', Float),
-        ('m12', Float),
-        ('m1', Float),
-        ('m5', Float),
-        ('m9', Float),
-        ('m13', Float),
-        ('m2', Float),
-        ('m6', Float),
-        ('m10', Float),
-        ('m14', Float),
-        ('m3', Float),
-        ('m7', Float),
-        ('m11', Float),
-        ('m15', Float),
-    ]
-
-
-    @classmethod
-    def array_of(cls, matrix_sequence):
-        '''Creates and returns an array of Matrixs'''
-        arr = cls * len(matrix_sequence)
-        return arr(*matrix_sequence)
-
-    @classmethod
-    def identity():
-        # type: () -> Matrix
-        """Get identity matrix"""
-        result = _MatrixIdentity()
-        return result
-
-    @classmethod
-    def translate(cls, x, y, z):
-        # type: (float, float, float) -> Matrix
-        """Get translation matrix"""
-        result = _MatrixTranslate(float(x), float(y), float(z))
-        return result
-
-    @classmethod
-    def rotate(cls, axis, angle):
-        # type: (Vector3, float) -> Matrix
-        """Create rotation matrix from axis and angle. Angle should be provided in radians"""
-        result = _MatrixRotate(_vec3(axis), float(angle))
-        return result
-
-    @classmethod
-    def rotate_x(cls, angle):
-        # type: (float) -> Matrix
-        """Get x-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateX(float(angle))
-        return result
-
-    @classmethod
-    def rotate_y(cls, angle):
-        # type: (float) -> Matrix
-        """Get y-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateY(float(angle))
-        return result
-
-    @classmethod
-    def rotate_z(cls, angle):
-        # type: (float) -> Matrix
-        """Get z-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateZ(float(angle))
-        return result
-
-    @classmethod
-    def rotate_xyz(cls, angle):
-        # type: (Vector3) -> Matrix
-        """Get xyz-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateXYZ(_vec3(angle))
-        return result
-
-    @classmethod
-    def rotate_zyx(cls, angle):
-        # type: (Vector3) -> Matrix
-        """Get zyx-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateZYX(_vec3(angle))
-        return result
-
-    @classmethod
-    def scale(cls, x, y, z):
-        # type: (float, float, float) -> Matrix
-        """Get scaling matrix"""
-        result = _MatrixScale(float(x), float(y), float(z))
-        return result
-
-    @classmethod
-    def frustum(cls, left, right, bottom, top, near, far):
-        # type: (float, float, float, float, float, float) -> Matrix
-        """Get perspective projection matrix"""
-        result = _MatrixFrustum(float(left), float(right), float(bottom), float(top), float(near), float(far))
-        return result
-
-    @classmethod
-    def perspective(cls, fovy, aspect, near, far):
-        # type: (float, float, float, float) -> Matrix
-        """Get perspective projection matrix. Fovy angle must be provided in radians"""
-        result = _MatrixPerspective(float(fovy), float(aspect), float(near), float(far))
-        return result
-
-    @classmethod
-    def ortho(cls, left, right, bottom, top, near, far):
-        # type: (float, float, float, float, float, float) -> Matrix
-        """Get orthographic projection matrix"""
-        result = _MatrixOrtho(float(left), float(right), float(bottom), float(top), float(near), float(far))
-        return result
-
-    @classmethod
-    def look_at(cls, eye, target, up):
-        # type: (Vector3, Vector3, Vector3) -> Matrix
-        """Get camera look-at matrix (view matrix)"""
-        result = _MatrixLookAt(_vec3(eye), _vec3(target), _vec3(up))
-        return result
-
-
-    def __init__(self, m0=None,
-                 m4=None,
-                 m8=None,
-                 m12=None,
-                 m1=None,
-                 m5=None,
-                 m9=None,
-                 m13=None,
-                 m2=None,
-                 m6=None,
-                 m10=None,
-                 m14=None,
-                 m3=None,
-                 m7=None,
-                 m11=None,
-                 m15=None):
-        # type: (float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float) -> None
-        '''Initializes this Matrix struct'''
-        super(Matrix, self).__init__(
-            m0 or 0.0,
-            m4 or 0.0,
-            m8 or 0.0,
-            m12 or 0.0,
-            m1 or 0.0,
-            m5 or 0.0,
-            m9 or 0.0,
-            m13 or 0.0,
-            m2 or 0.0,
-            m6 or 0.0,
-            m10 or 0.0,
-            m14 or 0.0,
-            m3 or 0.0,
-            m7 or 0.0,
-            m11 or 0.0,
-            m15 or 0.0
-        )
-
-
-    @property
-    def byref(self):
-        '''Gets a reference to this Matrix instance'''
-        return byref(self)
-
-
-    def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
-
-    def __repr__(self):
-        return self.__str__()
-
-    def determinant(self):
-        # type: (Matrix) -> float
-        """Compute matrix determinant"""
-        result = _MatrixDeterminant(self)
-        return result
-
-    def trace(self):
-        # type: (Matrix) -> float
-        """Get the trace of the matrix (sum of the values along the diagonal)"""
-        result = _MatrixTrace(self)
-        return result
-
-    def transpose(self):
-        # type: (Matrix) -> Matrix
-        """Get the trace of the matrix (sum of the values along the diagonal)"""
-        result = _MatrixTranspose(self)
-        return result
-
-    def invert(self):
-        # type: (Matrix) -> Matrix
-        """Invert provided matrix"""
-        result = _MatrixInvert(self)
-        return result
-
-
-# Pointer type to Matrixs
-MatrixPtr = POINTER(Matrix)
-
+# rlapi::raylib
+# ------------------------------------------------------------------------------
 
 class ConfigFlags(IntEnum):
     """System/Window config flags"""
@@ -5147,12 +2246,14 @@ class ConfigFlags(IntEnum):
     FLAG_WINDOW_MOUSE_PASSTHROUGH = 16384
     """Set to support mouse passthrough, only supported when FLAG_WINDOW_UNDECORATED"""
 
+    FLAG_BORDERLESS_WINDOWED_MODE = 32768
+    """Set to run program in borderless windowed mode"""
+
     FLAG_MSAA_4X_HINT = 32
     """Set to try enabling MSAA 4X"""
 
     FLAG_INTERLACED_HINT = 65536
     """Set to try enabling interlaced video format (for V3D)"""
-
 
 
 FLAG_VSYNC_HINT = ConfigFlags.FLAG_VSYNC_HINT
@@ -5168,6 +2269,7 @@ FLAG_WINDOW_ALWAYS_RUN = ConfigFlags.FLAG_WINDOW_ALWAYS_RUN
 FLAG_WINDOW_TRANSPARENT = ConfigFlags.FLAG_WINDOW_TRANSPARENT
 FLAG_WINDOW_HIGHDPI = ConfigFlags.FLAG_WINDOW_HIGHDPI
 FLAG_WINDOW_MOUSE_PASSTHROUGH = ConfigFlags.FLAG_WINDOW_MOUSE_PASSTHROUGH
+FLAG_BORDERLESS_WINDOWED_MODE = ConfigFlags.FLAG_BORDERLESS_WINDOWED_MODE
 FLAG_MSAA_4X_HINT = ConfigFlags.FLAG_MSAA_4X_HINT
 FLAG_INTERLACED_HINT = ConfigFlags.FLAG_INTERLACED_HINT
 
@@ -5198,7 +2300,6 @@ class TraceLogLevel(IntEnum):
 
     LOG_NONE = 7
     """Disable logging"""
-
 
 
 LOG_ALL = TraceLogLevel.LOG_ALL
@@ -5545,7 +2646,6 @@ class KeyboardKey(IntEnum):
     """Key: Android volume down button"""
 
 
-
 KEY_NULL = KeyboardKey.KEY_NULL
 KEY_APOSTROPHE = KeyboardKey.KEY_APOSTROPHE
 KEY_COMMA = KeyboardKey.KEY_COMMA
@@ -5677,11 +2777,10 @@ class MouseButton(IntEnum):
     """Mouse button extra (advanced mouse device)"""
 
     MOUSE_BUTTON_FORWARD = 5
-    """Mouse button fordward (advanced mouse device)"""
+    """Mouse button forward (advanced mouse device)"""
 
     MOUSE_BUTTON_BACK = 6
     """Mouse button back (advanced mouse device)"""
-
 
 
 MOUSE_BUTTON_LEFT = MouseButton.MOUSE_BUTTON_LEFT
@@ -5724,11 +2823,10 @@ class MouseCursor(IntEnum):
     """The top-right to bottom-left diagonal resize/move arrow shape"""
 
     MOUSE_CURSOR_RESIZE_ALL = 9
-    """The omni-directional resize/move cursor shape"""
+    """The omnidirectional resize/move cursor shape"""
 
     MOUSE_CURSOR_NOT_ALLOWED = 10
     """The operation-not-allowed shape"""
-
 
 
 MOUSE_CURSOR_DEFAULT = MouseCursor.MOUSE_CURSOR_DEFAULT
@@ -5802,7 +2900,6 @@ class GamepadButton(IntEnum):
     """Gamepad joystick pressed button right"""
 
 
-
 GAMEPAD_BUTTON_UNKNOWN = GamepadButton.GAMEPAD_BUTTON_UNKNOWN
 GAMEPAD_BUTTON_LEFT_FACE_UP = GamepadButton.GAMEPAD_BUTTON_LEFT_FACE_UP
 GAMEPAD_BUTTON_LEFT_FACE_RIGHT = GamepadButton.GAMEPAD_BUTTON_LEFT_FACE_RIGHT
@@ -5843,7 +2940,6 @@ class GamepadAxis(IntEnum):
 
     GAMEPAD_AXIS_RIGHT_TRIGGER = 5
     """Gamepad back trigger right, pressure level: [1..-1]"""
-
 
 
 GAMEPAD_AXIS_LEFT_X = GamepadAxis.GAMEPAD_AXIS_LEFT_X
@@ -5889,7 +2985,6 @@ class MaterialMapIndex(IntEnum):
 
     MATERIAL_MAP_BRDF = 10
     """Brdf material"""
-
 
 
 MATERIAL_MAP_ALBEDO = MaterialMapIndex.MATERIAL_MAP_ALBEDO
@@ -5987,7 +3082,6 @@ class ShaderLocationIndex(IntEnum):
     """Shader location: sampler2d texture: brdf"""
 
 
-
 SHADER_LOC_VERTEX_POSITION = ShaderLocationIndex.SHADER_LOC_VERTEX_POSITION
 SHADER_LOC_VERTEX_TEXCOORD01 = ShaderLocationIndex.SHADER_LOC_VERTEX_TEXCOORD01
 SHADER_LOC_VERTEX_TEXCOORD02 = ShaderLocationIndex.SHADER_LOC_VERTEX_TEXCOORD02
@@ -6047,7 +3141,6 @@ class ShaderUniformDataType(IntEnum):
     """Shader uniform type: sampler2d"""
 
 
-
 SHADER_UNIFORM_FLOAT = ShaderUniformDataType.SHADER_UNIFORM_FLOAT
 SHADER_UNIFORM_VEC2 = ShaderUniformDataType.SHADER_UNIFORM_VEC2
 SHADER_UNIFORM_VEC3 = ShaderUniformDataType.SHADER_UNIFORM_VEC3
@@ -6073,7 +3166,6 @@ class ShaderAttributeDataType(IntEnum):
 
     SHADER_ATTRIB_VEC4 = 3
     """Shader attribute type: vec4 (4 float)"""
-
 
 
 SHADER_ATTRIB_FLOAT = ShaderAttributeDataType.SHADER_ATTRIB_FLOAT
@@ -6115,39 +3207,47 @@ class PixelFormat(IntEnum):
     PIXELFORMAT_UNCOMPRESSED_R32G32B32A32 = 10
     """32*4 bpp (4 channels - float)"""
 
-    PIXELFORMAT_COMPRESSED_DXT1_RGB = 11
+    PIXELFORMAT_UNCOMPRESSED_R16 = 11
+    """16 bpp (1 channel - half float)"""
+
+    PIXELFORMAT_UNCOMPRESSED_R16G16B16 = 12
+    """16*3 bpp (3 channels - half float)"""
+
+    PIXELFORMAT_UNCOMPRESSED_R16G16B16A16 = 13
+    """16*4 bpp (4 channels - half float)"""
+
+    PIXELFORMAT_COMPRESSED_DXT1_RGB = 14
     """4 bpp (no alpha)"""
 
-    PIXELFORMAT_COMPRESSED_DXT1_RGBA = 12
+    PIXELFORMAT_COMPRESSED_DXT1_RGBA = 15
     """4 bpp (1 bit alpha)"""
 
-    PIXELFORMAT_COMPRESSED_DXT3_RGBA = 13
+    PIXELFORMAT_COMPRESSED_DXT3_RGBA = 16
     """8 bpp"""
 
-    PIXELFORMAT_COMPRESSED_DXT5_RGBA = 14
+    PIXELFORMAT_COMPRESSED_DXT5_RGBA = 17
     """8 bpp"""
 
-    PIXELFORMAT_COMPRESSED_ETC1_RGB = 15
+    PIXELFORMAT_COMPRESSED_ETC1_RGB = 18
     """4 bpp"""
 
-    PIXELFORMAT_COMPRESSED_ETC2_RGB = 16
+    PIXELFORMAT_COMPRESSED_ETC2_RGB = 19
     """4 bpp"""
 
-    PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA = 17
+    PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA = 20
     """8 bpp"""
 
-    PIXELFORMAT_COMPRESSED_PVRT_RGB = 18
+    PIXELFORMAT_COMPRESSED_PVRT_RGB = 21
     """4 bpp"""
 
-    PIXELFORMAT_COMPRESSED_PVRT_RGBA = 19
+    PIXELFORMAT_COMPRESSED_PVRT_RGBA = 22
     """4 bpp"""
 
-    PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA = 20
+    PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA = 23
     """8 bpp"""
 
-    PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA = 21
+    PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA = 24
     """2 bpp"""
-
 
 
 PIXELFORMAT_UNCOMPRESSED_GRAYSCALE = PixelFormat.PIXELFORMAT_UNCOMPRESSED_GRAYSCALE
@@ -6160,6 +3260,9 @@ PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 = PixelFormat.PIXELFORMAT_UNCOMPRESSED_R8G8B8A
 PIXELFORMAT_UNCOMPRESSED_R32 = PixelFormat.PIXELFORMAT_UNCOMPRESSED_R32
 PIXELFORMAT_UNCOMPRESSED_R32G32B32 = PixelFormat.PIXELFORMAT_UNCOMPRESSED_R32G32B32
 PIXELFORMAT_UNCOMPRESSED_R32G32B32A32 = PixelFormat.PIXELFORMAT_UNCOMPRESSED_R32G32B32A32
+PIXELFORMAT_UNCOMPRESSED_R16 = PixelFormat.PIXELFORMAT_UNCOMPRESSED_R16
+PIXELFORMAT_UNCOMPRESSED_R16G16B16 = PixelFormat.PIXELFORMAT_UNCOMPRESSED_R16G16B16
+PIXELFORMAT_UNCOMPRESSED_R16G16B16A16 = PixelFormat.PIXELFORMAT_UNCOMPRESSED_R16G16B16A16
 PIXELFORMAT_COMPRESSED_DXT1_RGB = PixelFormat.PIXELFORMAT_COMPRESSED_DXT1_RGB
 PIXELFORMAT_COMPRESSED_DXT1_RGBA = PixelFormat.PIXELFORMAT_COMPRESSED_DXT1_RGBA
 PIXELFORMAT_COMPRESSED_DXT3_RGBA = PixelFormat.PIXELFORMAT_COMPRESSED_DXT3_RGBA
@@ -6195,7 +3298,6 @@ class TextureFilter(IntEnum):
     """Anisotropic filtering 16x"""
 
 
-
 TEXTURE_FILTER_POINT = TextureFilter.TEXTURE_FILTER_POINT
 TEXTURE_FILTER_BILINEAR = TextureFilter.TEXTURE_FILTER_BILINEAR
 TEXTURE_FILTER_TRILINEAR = TextureFilter.TEXTURE_FILTER_TRILINEAR
@@ -6220,7 +3322,6 @@ class TextureWrap(IntEnum):
     """Mirrors and clamps to border the texture in tiled mode"""
 
 
-
 TEXTURE_WRAP_REPEAT = TextureWrap.TEXTURE_WRAP_REPEAT
 TEXTURE_WRAP_CLAMP = TextureWrap.TEXTURE_WRAP_CLAMP
 TEXTURE_WRAP_MIRROR_REPEAT = TextureWrap.TEXTURE_WRAP_MIRROR_REPEAT
@@ -6237,7 +3338,7 @@ class CubemapLayout(IntEnum):
     """Layout is defined by a vertical line with faces"""
 
     CUBEMAP_LAYOUT_LINE_HORIZONTAL = 2
-    """Layout is defined by an horizontal line with faces"""
+    """Layout is defined by a horizontal line with faces"""
 
     CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR = 3
     """Layout is defined by a 3x4 cross with cubemap faces"""
@@ -6246,8 +3347,7 @@ class CubemapLayout(IntEnum):
     """Layout is defined by a 4x3 cross with cubemap faces"""
 
     CUBEMAP_LAYOUT_PANORAMA = 5
-    """Layout is defined by a panorama image (equirectangular map)"""
-
+    """Layout is defined by a panorama image (equirrectangular map)"""
 
 
 CUBEMAP_LAYOUT_AUTO_DETECT = CubemapLayout.CUBEMAP_LAYOUT_AUTO_DETECT
@@ -6269,7 +3369,6 @@ class FontType(IntEnum):
 
     FONT_SDF = 2
     """SDF font generation, requires external shader"""
-
 
 
 FONT_DEFAULT = FontType.FONT_DEFAULT
@@ -6299,8 +3398,10 @@ class BlendMode(IntEnum):
     """Blend premultiplied textures considering alpha"""
 
     BLEND_CUSTOM = 6
-    """Blend textures using custom src/dst factors (use rlSetBlendMode())"""
+    """Blend textures using custom src/dst factors (use rlSetBlendFactors())"""
 
+    BLEND_CUSTOM_SEPARATE = 7
+    """Blend textures using custom rgb/alpha separate src/dst factors (use rlSetBlendFactorsSeparate())"""
 
 
 BLEND_ALPHA = BlendMode.BLEND_ALPHA
@@ -6310,6 +3411,7 @@ BLEND_ADD_COLORS = BlendMode.BLEND_ADD_COLORS
 BLEND_SUBTRACT_COLORS = BlendMode.BLEND_SUBTRACT_COLORS
 BLEND_ALPHA_PREMULTIPLY = BlendMode.BLEND_ALPHA_PREMULTIPLY
 BLEND_CUSTOM = BlendMode.BLEND_CUSTOM
+BLEND_CUSTOM_SEPARATE = BlendMode.BLEND_CUSTOM_SEPARATE
 
 
 class Gesture(IntEnum):
@@ -6349,7 +3451,6 @@ class Gesture(IntEnum):
     """Pinch out gesture"""
 
 
-
 GESTURE_NONE = Gesture.GESTURE_NONE
 GESTURE_TAP = Gesture.GESTURE_TAP
 GESTURE_DOUBLETAP = Gesture.GESTURE_DOUBLETAP
@@ -6382,7 +3483,6 @@ class CameraMode(IntEnum):
     """Third person camera"""
 
 
-
 CAMERA_CUSTOM = CameraMode.CAMERA_CUSTOM
 CAMERA_FREE = CameraMode.CAMERA_FREE
 CAMERA_ORBITAL = CameraMode.CAMERA_ORBITAL
@@ -6398,7 +3498,6 @@ class CameraProjection(IntEnum):
 
     CAMERA_ORTHOGRAPHIC = 1
     """Orthographic projection"""
-
 
 
 CAMERA_PERSPECTIVE = CameraProjection.CAMERA_PERSPECTIVE
@@ -6418,123 +3517,42 @@ class NPatchLayout(IntEnum):
     """Npatch layout: 3x1 tiles"""
 
 
-
 NPATCH_NINE_PATCH = NPatchLayout.NPATCH_NINE_PATCH
 NPATCH_THREE_PATCH_VERTICAL = NPatchLayout.NPATCH_THREE_PATCH_VERTICAL
 NPATCH_THREE_PATCH_HORIZONTAL = NPatchLayout.NPATCH_THREE_PATCH_HORIZONTAL
 
 
+# rlapi::rlgl
+# ------------------------------------------------------------------------------
+
 class rlGlVersion(IntEnum):
-    """"""
+    """OpenGL version"""
 
-    OPENGL_11 = 1
-    """"""
+    RL_OPENGL_11 = 1
+    """OpenGL 1.1"""
 
-    OPENGL_21 = 2
-    """"""
+    RL_OPENGL_21 = 2
+    """OpenGL 2.1 (GLSL 120)"""
 
-    OPENGL_33 = 3
-    """"""
+    RL_OPENGL_33 = 3
+    """OpenGL 3.3 (GLSL 330)"""
 
-    OPENGL_43 = 4
-    """"""
+    RL_OPENGL_43 = 4
+    """OpenGL 4.3 (using GLSL 330)"""
 
-    OPENGL_ES_20 = 5
-    """"""
+    RL_OPENGL_ES_20 = 5
+    """OpenGL ES 2.0 (GLSL 100)"""
 
-
-
-OPENGL_11 = rlGlVersion.OPENGL_11
-OPENGL_21 = rlGlVersion.OPENGL_21
-OPENGL_33 = rlGlVersion.OPENGL_33
-OPENGL_43 = rlGlVersion.OPENGL_43
-OPENGL_ES_20 = rlGlVersion.OPENGL_ES_20
+    RL_OPENGL_ES_30 = 6
+    """OpenGL ES 3.0 (GLSL 300 es)"""
 
 
-class rlFramebufferAttachType(IntEnum):
-    """"""
-
-    RL_ATTACHMENT_COLOR_CHANNEL0 = 0
-    """"""
-
-    RL_ATTACHMENT_COLOR_CHANNEL1 = 1
-    """"""
-
-    RL_ATTACHMENT_COLOR_CHANNEL2 = 2
-    """"""
-
-    RL_ATTACHMENT_COLOR_CHANNEL3 = 3
-    """"""
-
-    RL_ATTACHMENT_COLOR_CHANNEL4 = 4
-    """"""
-
-    RL_ATTACHMENT_COLOR_CHANNEL5 = 5
-    """"""
-
-    RL_ATTACHMENT_COLOR_CHANNEL6 = 6
-    """"""
-
-    RL_ATTACHMENT_COLOR_CHANNEL7 = 7
-    """"""
-
-    RL_ATTACHMENT_DEPTH = 100
-    """"""
-
-    RL_ATTACHMENT_STENCIL = 200
-    """"""
-
-
-
-RL_ATTACHMENT_COLOR_CHANNEL0 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL0
-RL_ATTACHMENT_COLOR_CHANNEL1 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL1
-RL_ATTACHMENT_COLOR_CHANNEL2 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL2
-RL_ATTACHMENT_COLOR_CHANNEL3 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL3
-RL_ATTACHMENT_COLOR_CHANNEL4 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL4
-RL_ATTACHMENT_COLOR_CHANNEL5 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL5
-RL_ATTACHMENT_COLOR_CHANNEL6 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL6
-RL_ATTACHMENT_COLOR_CHANNEL7 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL7
-RL_ATTACHMENT_DEPTH = rlFramebufferAttachType.RL_ATTACHMENT_DEPTH
-RL_ATTACHMENT_STENCIL = rlFramebufferAttachType.RL_ATTACHMENT_STENCIL
-
-
-class rlFramebufferAttachTextureType(IntEnum):
-    """"""
-
-    RL_ATTACHMENT_CUBEMAP_POSITIVE_X = 0
-    """"""
-
-    RL_ATTACHMENT_CUBEMAP_NEGATIVE_X = 1
-    """"""
-
-    RL_ATTACHMENT_CUBEMAP_POSITIVE_Y = 2
-    """"""
-
-    RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y = 3
-    """"""
-
-    RL_ATTACHMENT_CUBEMAP_POSITIVE_Z = 4
-    """"""
-
-    RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z = 5
-    """"""
-
-    RL_ATTACHMENT_TEXTURE2D = 100
-    """"""
-
-    RL_ATTACHMENT_RENDERBUFFER = 200
-    """"""
-
-
-
-RL_ATTACHMENT_CUBEMAP_POSITIVE_X = rlFramebufferAttachTextureType.RL_ATTACHMENT_CUBEMAP_POSITIVE_X
-RL_ATTACHMENT_CUBEMAP_NEGATIVE_X = rlFramebufferAttachTextureType.RL_ATTACHMENT_CUBEMAP_NEGATIVE_X
-RL_ATTACHMENT_CUBEMAP_POSITIVE_Y = rlFramebufferAttachTextureType.RL_ATTACHMENT_CUBEMAP_POSITIVE_Y
-RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y = rlFramebufferAttachTextureType.RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y
-RL_ATTACHMENT_CUBEMAP_POSITIVE_Z = rlFramebufferAttachTextureType.RL_ATTACHMENT_CUBEMAP_POSITIVE_Z
-RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z = rlFramebufferAttachTextureType.RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z
-RL_ATTACHMENT_TEXTURE2D = rlFramebufferAttachTextureType.RL_ATTACHMENT_TEXTURE2D
-RL_ATTACHMENT_RENDERBUFFER = rlFramebufferAttachTextureType.RL_ATTACHMENT_RENDERBUFFER
+RL_OPENGL_11 = rlGlVersion.RL_OPENGL_11
+RL_OPENGL_21 = rlGlVersion.RL_OPENGL_21
+RL_OPENGL_33 = rlGlVersion.RL_OPENGL_33
+RL_OPENGL_43 = rlGlVersion.RL_OPENGL_43
+RL_OPENGL_ES_20 = rlGlVersion.RL_OPENGL_ES_20
+RL_OPENGL_ES_30 = rlGlVersion.RL_OPENGL_ES_30
 
 
 class rlTraceLogLevel(IntEnum):
@@ -6565,7 +3583,6 @@ class rlTraceLogLevel(IntEnum):
     """Disable logging"""
 
 
-
 RL_LOG_ALL = rlTraceLogLevel.RL_LOG_ALL
 RL_LOG_TRACE = rlTraceLogLevel.RL_LOG_TRACE
 RL_LOG_DEBUG = rlTraceLogLevel.RL_LOG_DEBUG
@@ -6577,7 +3594,7 @@ RL_LOG_NONE = rlTraceLogLevel.RL_LOG_NONE
 
 
 class rlPixelFormat(IntEnum):
-    """Texture formats (support depends on OpenGL version)"""
+    """Texture pixel formats"""
 
     RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE = 1
     """8 bit per pixel (no alpha)"""
@@ -6609,39 +3626,47 @@ class rlPixelFormat(IntEnum):
     RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32 = 10
     """32*4 bpp (4 channels - float)"""
 
-    RL_PIXELFORMAT_COMPRESSED_DXT1_RGB = 11
+    RL_PIXELFORMAT_UNCOMPRESSED_R16 = 11
+    """16 bpp (1 channel - half float)"""
+
+    RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16 = 12
+    """16*3 bpp (3 channels - half float)"""
+
+    RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16 = 13
+    """16*4 bpp (4 channels - half float)"""
+
+    RL_PIXELFORMAT_COMPRESSED_DXT1_RGB = 14
     """4 bpp (no alpha)"""
 
-    RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA = 12
+    RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA = 15
     """4 bpp (1 bit alpha)"""
 
-    RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA = 13
+    RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA = 16
     """8 bpp"""
 
-    RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA = 14
+    RL_PIXELFORMAT_COMPRESSED_DXT5_RGBA = 17
     """8 bpp"""
 
-    RL_PIXELFORMAT_COMPRESSED_ETC1_RGB = 15
+    RL_PIXELFORMAT_COMPRESSED_ETC1_RGB = 18
     """4 bpp"""
 
-    RL_PIXELFORMAT_COMPRESSED_ETC2_RGB = 16
+    RL_PIXELFORMAT_COMPRESSED_ETC2_RGB = 19
     """4 bpp"""
 
-    RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA = 17
+    RL_PIXELFORMAT_COMPRESSED_ETC2_EAC_RGBA = 20
     """8 bpp"""
 
-    RL_PIXELFORMAT_COMPRESSED_PVRT_RGB = 18
+    RL_PIXELFORMAT_COMPRESSED_PVRT_RGB = 21
     """4 bpp"""
 
-    RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA = 19
+    RL_PIXELFORMAT_COMPRESSED_PVRT_RGBA = 22
     """4 bpp"""
 
-    RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA = 20
+    RL_PIXELFORMAT_COMPRESSED_ASTC_4x4_RGBA = 23
     """8 bpp"""
 
-    RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA = 21
+    RL_PIXELFORMAT_COMPRESSED_ASTC_8x8_RGBA = 24
     """2 bpp"""
-
 
 
 RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE = rlPixelFormat.RL_PIXELFORMAT_UNCOMPRESSED_GRAYSCALE
@@ -6654,6 +3679,9 @@ RL_PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 = rlPixelFormat.RL_PIXELFORMAT_UNCOMPRESSED
 RL_PIXELFORMAT_UNCOMPRESSED_R32 = rlPixelFormat.RL_PIXELFORMAT_UNCOMPRESSED_R32
 RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32 = rlPixelFormat.RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32
 RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32 = rlPixelFormat.RL_PIXELFORMAT_UNCOMPRESSED_R32G32B32A32
+RL_PIXELFORMAT_UNCOMPRESSED_R16 = rlPixelFormat.RL_PIXELFORMAT_UNCOMPRESSED_R16
+RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16 = rlPixelFormat.RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16
+RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16 = rlPixelFormat.RL_PIXELFORMAT_UNCOMPRESSED_R16G16B16A16
 RL_PIXELFORMAT_COMPRESSED_DXT1_RGB = rlPixelFormat.RL_PIXELFORMAT_COMPRESSED_DXT1_RGB
 RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA = rlPixelFormat.RL_PIXELFORMAT_COMPRESSED_DXT1_RGBA
 RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA = rlPixelFormat.RL_PIXELFORMAT_COMPRESSED_DXT3_RGBA
@@ -6689,7 +3717,6 @@ class rlTextureFilter(IntEnum):
     """Anisotropic filtering 16x"""
 
 
-
 RL_TEXTURE_FILTER_POINT = rlTextureFilter.RL_TEXTURE_FILTER_POINT
 RL_TEXTURE_FILTER_BILINEAR = rlTextureFilter.RL_TEXTURE_FILTER_BILINEAR
 RL_TEXTURE_FILTER_TRILINEAR = rlTextureFilter.RL_TEXTURE_FILTER_TRILINEAR
@@ -6722,6 +3749,8 @@ class rlBlendMode(IntEnum):
     RL_BLEND_CUSTOM = 6
     """Blend textures using custom src/dst factors (use rlSetBlendFactors())"""
 
+    RL_BLEND_CUSTOM_SEPARATE = 7
+    """Blend textures using custom src/dst factors (use rlSetBlendFactorsSeparate())"""
 
 
 RL_BLEND_ALPHA = rlBlendMode.RL_BLEND_ALPHA
@@ -6731,6 +3760,7 @@ RL_BLEND_ADD_COLORS = rlBlendMode.RL_BLEND_ADD_COLORS
 RL_BLEND_SUBTRACT_COLORS = rlBlendMode.RL_BLEND_SUBTRACT_COLORS
 RL_BLEND_ALPHA_PREMULTIPLY = rlBlendMode.RL_BLEND_ALPHA_PREMULTIPLY
 RL_BLEND_CUSTOM = rlBlendMode.RL_BLEND_CUSTOM
+RL_BLEND_CUSTOM_SEPARATE = rlBlendMode.RL_BLEND_CUSTOM_SEPARATE
 
 
 class rlShaderLocationIndex(IntEnum):
@@ -6815,7 +3845,6 @@ class rlShaderLocationIndex(IntEnum):
     """Shader location: sampler2d texture: brdf"""
 
 
-
 RL_SHADER_LOC_VERTEX_POSITION = rlShaderLocationIndex.RL_SHADER_LOC_VERTEX_POSITION
 RL_SHADER_LOC_VERTEX_TEXCOORD01 = rlShaderLocationIndex.RL_SHADER_LOC_VERTEX_TEXCOORD01
 RL_SHADER_LOC_VERTEX_TEXCOORD02 = rlShaderLocationIndex.RL_SHADER_LOC_VERTEX_TEXCOORD02
@@ -6875,7 +3904,6 @@ class rlShaderUniformDataType(IntEnum):
     """Shader uniform type: sampler2d"""
 
 
-
 RL_SHADER_UNIFORM_FLOAT = rlShaderUniformDataType.RL_SHADER_UNIFORM_FLOAT
 RL_SHADER_UNIFORM_VEC2 = rlShaderUniformDataType.RL_SHADER_UNIFORM_VEC2
 RL_SHADER_UNIFORM_VEC3 = rlShaderUniformDataType.RL_SHADER_UNIFORM_VEC3
@@ -6903,946 +3931,4859 @@ class rlShaderAttributeDataType(IntEnum):
     """Shader attribute type: vec4 (4 float)"""
 
 
-
 RL_SHADER_ATTRIB_FLOAT = rlShaderAttributeDataType.RL_SHADER_ATTRIB_FLOAT
 RL_SHADER_ATTRIB_VEC2 = rlShaderAttributeDataType.RL_SHADER_ATTRIB_VEC2
 RL_SHADER_ATTRIB_VEC3 = rlShaderAttributeDataType.RL_SHADER_ATTRIB_VEC3
 RL_SHADER_ATTRIB_VEC4 = rlShaderAttributeDataType.RL_SHADER_ATTRIB_VEC4
 
 
+class rlFramebufferAttachType(IntEnum):
+    """Framebuffer attachment type"""
 
-RAYLIB_VERSION = '4.2'
+    RL_ATTACHMENT_COLOR_CHANNEL0 = 0
+    """Framebuffer attachment type: color 0"""
+
+    RL_ATTACHMENT_COLOR_CHANNEL1 = 1
+    """Framebuffer attachment type: color 1"""
+
+    RL_ATTACHMENT_COLOR_CHANNEL2 = 2
+    """Framebuffer attachment type: color 2"""
+
+    RL_ATTACHMENT_COLOR_CHANNEL3 = 3
+    """Framebuffer attachment type: color 3"""
+
+    RL_ATTACHMENT_COLOR_CHANNEL4 = 4
+    """Framebuffer attachment type: color 4"""
+
+    RL_ATTACHMENT_COLOR_CHANNEL5 = 5
+    """Framebuffer attachment type: color 5"""
+
+    RL_ATTACHMENT_COLOR_CHANNEL6 = 6
+    """Framebuffer attachment type: color 6"""
+
+    RL_ATTACHMENT_COLOR_CHANNEL7 = 7
+    """Framebuffer attachment type: color 7"""
+
+    RL_ATTACHMENT_DEPTH = 100
+    """Framebuffer attachment type: depth"""
+
+    RL_ATTACHMENT_STENCIL = 200
+    """Framebuffer attachment type: stencil"""
+
+
+RL_ATTACHMENT_COLOR_CHANNEL0 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL0
+RL_ATTACHMENT_COLOR_CHANNEL1 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL1
+RL_ATTACHMENT_COLOR_CHANNEL2 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL2
+RL_ATTACHMENT_COLOR_CHANNEL3 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL3
+RL_ATTACHMENT_COLOR_CHANNEL4 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL4
+RL_ATTACHMENT_COLOR_CHANNEL5 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL5
+RL_ATTACHMENT_COLOR_CHANNEL6 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL6
+RL_ATTACHMENT_COLOR_CHANNEL7 = rlFramebufferAttachType.RL_ATTACHMENT_COLOR_CHANNEL7
+RL_ATTACHMENT_DEPTH = rlFramebufferAttachType.RL_ATTACHMENT_DEPTH
+RL_ATTACHMENT_STENCIL = rlFramebufferAttachType.RL_ATTACHMENT_STENCIL
+
+
+class rlFramebufferAttachTextureType(IntEnum):
+    """Framebuffer texture attachment type"""
+
+    RL_ATTACHMENT_CUBEMAP_POSITIVE_X = 0
+    """Framebuffer texture attachment type: cubemap, +X side"""
+
+    RL_ATTACHMENT_CUBEMAP_NEGATIVE_X = 1
+    """Framebuffer texture attachment type: cubemap, -X side"""
+
+    RL_ATTACHMENT_CUBEMAP_POSITIVE_Y = 2
+    """Framebuffer texture attachment type: cubemap, +Y side"""
+
+    RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y = 3
+    """Framebuffer texture attachment type: cubemap, -Y side"""
+
+    RL_ATTACHMENT_CUBEMAP_POSITIVE_Z = 4
+    """Framebuffer texture attachment type: cubemap, +Z side"""
+
+    RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z = 5
+    """Framebuffer texture attachment type: cubemap, -Z side"""
+
+    RL_ATTACHMENT_TEXTURE2D = 100
+    """Framebuffer texture attachment type: texture2d"""
+
+    RL_ATTACHMENT_RENDERBUFFER = 200
+    """Framebuffer texture attachment type: renderbuffer"""
+
+
+RL_ATTACHMENT_CUBEMAP_POSITIVE_X = rlFramebufferAttachTextureType.RL_ATTACHMENT_CUBEMAP_POSITIVE_X
+RL_ATTACHMENT_CUBEMAP_NEGATIVE_X = rlFramebufferAttachTextureType.RL_ATTACHMENT_CUBEMAP_NEGATIVE_X
+RL_ATTACHMENT_CUBEMAP_POSITIVE_Y = rlFramebufferAttachTextureType.RL_ATTACHMENT_CUBEMAP_POSITIVE_Y
+RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y = rlFramebufferAttachTextureType.RL_ATTACHMENT_CUBEMAP_NEGATIVE_Y
+RL_ATTACHMENT_CUBEMAP_POSITIVE_Z = rlFramebufferAttachTextureType.RL_ATTACHMENT_CUBEMAP_POSITIVE_Z
+RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z = rlFramebufferAttachTextureType.RL_ATTACHMENT_CUBEMAP_NEGATIVE_Z
+RL_ATTACHMENT_TEXTURE2D = rlFramebufferAttachTextureType.RL_ATTACHMENT_TEXTURE2D
+RL_ATTACHMENT_RENDERBUFFER = rlFramebufferAttachTextureType.RL_ATTACHMENT_RENDERBUFFER
+
+
+class rlCullMode(IntEnum):
+    """Face culling mode"""
+
+    RL_CULL_FACE_FRONT = 0
+
+    RL_CULL_FACE_BACK = 1
+
+
+RL_CULL_FACE_FRONT = rlCullMode.RL_CULL_FACE_FRONT
+RL_CULL_FACE_BACK = rlCullMode.RL_CULL_FACE_BACK
+
+# endregion (enumerations)
+
+# region STRUCTURES
+
+# rlapi::raylib
+# ------------------------------------------------------------------------------
+
+class Vector2(Structure):
+    """Vector2, 2 components"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Vector2 elements"""
+        return (Vector2 * len(sequence))(*sequence)
+
+    @classmethod
+    def one(cls):
+        # type: (Vector2) -> Vector2
+        return _Vector2One()
+
+    def __init__(self, x=None, y=None):
+        # type: (Vector2, float, float) -> None
+        """Initializes this Vector2"""
+        super(Vector2, self).__init__(
+            x or 0.0,
+            y or 0.0
+        )
+
+    def __str__(self):
+        return "({}, {})".format(self.x, self.y)
+
+    def __repr__(self):
+        return "Vector2{}".format(self.__str__())
+
+    def __eq__(self, other):
+        return _Vector2Equals(self, other)
+    
+    def __ne__(self, other):
+        return not _Vector2Equals(self, other)
+    
+    def __pos__(self):
+        return Vector2(+self.x, +self.y)
+    
+    def __neg__(self):
+        return Vector2(-self.x, -self.y)
+    
+    def __abs__(self):
+        return Vector2(abs(self.x), abs(self.y))
+    
+    def __add__(self, other):
+        if isinstance(other, (int, float)):
+            return _Vector2AddValue(self, float(other))
+        return _Vector2Add(self, Vector2(other[0], other[1]))
+    
+    def __radd__(self, other):
+        if isinstance(other, (int, float)):
+            return _Vector2AddValue(self, float(other))
+        return _Vector2Add(self, Vector2(other[0], other[1]))
+    
+    def __iadd__(self, other):
+        if isinstance(other, (int, float)):
+            self.xy = _Vector2AddValue(self, float(other))
+        else:
+            self.xy = _Vector2Add(self, Vector2(other[0], other[1]))
+        return self
+    
+    def __sub__(self, other):
+        if isinstance(other, (int, float)):
+            return _Vector2SubtractValue(self, float(other))
+        return _Vector2Subtract(self, Vector2(other[0], other[1]))
+    
+    def __rsub__(self, other):
+        if isinstance(other, (int, float)):
+            return Vector2(other - self.x, other - self.y)
+        return _Vector2Subtract(Vector2(other[0], other[1]), self)
+    
+    def __isub__(self, other):
+        if isinstance(other, (int, float)):
+            self.xy = _Vector2SubtractValue(self, float(other))
+        else:
+            self.xy = _Vector2Subtract(self, Vector2(other[0], other[1]))
+        return self
+    
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            return _Vector2Scale(self, float(other))
+        elif isinstance(other, Matrix):
+            return _Vector2Transform(self, other)
+        return _Vector2Multiply(self, Vector2(other[0], other[1]))
+    
+    def __rmul__(self, other):
+        if isinstance(other, (int, float)):
+            return _Vector2Scale(self, float(other))
+        return _Vector2Multiply(self, Vector2(other[0], other[1]))
+    
+    def __imul__(self, other):
+        if isinstance(other, (int, float)):
+            self.xy = _Vector2Scale(self, float(other))
+        elif isinstance(other, Matrix):
+            self.xy = _Vector2Transform(self, other)
+        else:
+            self.xy = _Vector2Multiply(self, Vector2(other[0], other[1]))
+        return self
+    
+    def __truediv__(self, other):
+        if isinstance(other, (int, float)):
+            return _Vector2Divide(self, Vector2(other, other))
+        return _Vector2Divide(self, Vector2(other[0], other[1]))
+    
+    def __rtruediv__(self, other):
+        if isinstance(other, (int, float)):
+            return Vector2(other / self.x, other / self.y)
+        return _Vector2Divide(Vector2(other[0], other[1]), self)
+    
+    def __itruediv__(self, other):
+        if isinstance(other, (int, float)):
+            self.xy = _Vector2Divide(self, Vector2(other, other))
+        else:
+            self.xy = _Vector2Divide(self, Vector2(other[0], other[1]))
+        return self
+
+    def __len__(self):
+        return 2
+    
+    def __getitem__(self, key):
+        return (self.x, self.y).__getitem__(key)
+    
+    def __getattr__(self, attr):
+        m = RE_VEC2_GET_SWZL.fullmatch(attr)
+        if not m:
+            raise AttributeError("Vector2 object does not have attribute '{}'.".format(attr))
+        cls = {1: float, 2: Vector2, 3: Vector3, 4: Vector4}.get(len(attr))
+        v = self.todict()
+        return cls(*(v[ch] for ch in attr))
+    
+    def __setattr__(self, attr, value):
+        m = RE_VEC2_SET_SWZL.fullmatch(attr)
+        if not m:
+            raise AttributeError("Vector2 object does not have attribute '{}'.".format(attr))
+        if len(attr) == 1:
+            super(Vector2, self).__setattr__(attr, float(value))
+        else:
+            for i, ch in enumerate(attr):
+                super(Vector2, self).__setattr__(ch, float(value[i]))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Vector2"""
+        return byref(self)
+
+    @property
+    def length(self):
+        return _Vector2Length(self)
+
+    @property
+    def length_sqr(self):
+        return _Vector2LengthSqr(self)
+
+    def dot_product(self, v2):
+        # type: (Vector2, Vector2) -> float
+        return _Vector2DotProduct(self, v2)
+
+    def distance(self, v2):
+        # type: (Vector2, Vector2) -> float
+        return _Vector2Distance(self, v2)
+
+    def distance_sqr(self, v2):
+        # type: (Vector2, Vector2) -> float
+        return _Vector2DistanceSqr(self, v2)
+
+    def angle(self, v2):
+        # type: (Vector2, Vector2) -> float
+        return _Vector2Angle(self, v2)
+
+    def normalize(self):
+        # type: (Vector2) -> Vector2
+        self.xy = _Vector2Normalize(self)
+        return self
+
+    def transform(self, mat):
+        # type: (Vector2, Matrix) -> Vector2
+        self.xy = _Vector2Transform(self, mat)
+        return self
+
+    def lerp(self, v2, amount):
+        # type: (Vector2, Vector2, float) -> Vector2
+        self.xy = _Vector2Lerp(self, v2, _float(amount))
+        return self
+
+    def reflect(self, normal):
+        # type: (Vector2, Vector2) -> Vector2
+        self.xy = _Vector2Reflect(self, normal)
+        return self
+
+    def rotate(self, angle):
+        # type: (Vector2, float) -> Vector2
+        self.xy = _Vector2Rotate(self, _float(angle))
+        return self
+
+    def move_towards(self, target, max_distance):
+        # type: (Vector2, Vector2, float) -> Vector2
+        self.xy = _Vector2MoveTowards(self, target, _float(max_distance))
+        return self
+
+    def clamp(self, min_, max_):
+        # type: (Vector2, Vector2, Vector2) -> Vector2
+        self.xy = _Vector2Clamp(self, min_, max_)
+        return self
+
+    def clamp_value(self, min_, max_):
+        # type: (Vector2, float, float) -> Vector2
+        self.xy = _Vector2ClampValue(self, _float(min_), _float(max_))
+        return self
+
+    def todict(self):
+        '''Returns a dict mapping this Vector2's components'''
+        return {'x': self.x, 'y': self.y}
+    
+    def fromdict(self, d):
+        '''Apply the mapping `d` to this Vector2's components'''
+        self.x = float(d.get('x', self.x))
+        self.y = float(d.get('y', self.y))
+
+# Pointer types for Vector2
+Vector2Ptr = POINTER(Vector2)
+
+
+class Vector3(Structure):
+    """Vector3, 3 components"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Vector3 elements"""
+        return (Vector3 * len(sequence))(*sequence)
+
+    @classmethod
+    def one(cls):
+        # type: (Vector3) -> Vector3
+        return _Vector3One()
+
+    def __init__(self, x=None, y=None, z=None):
+        # type: (Vector3, float, float, float) -> None
+        """Initializes this Vector3"""
+        super(Vector3, self).__init__(
+            x or 0.0,
+            y or 0.0,
+            z or 0.0
+        )
+
+    def __str__(self):
+        return "({}, {}, {})".format(self.x, self.y, self.z)
+
+    def __repr__(self):
+        return "Vector3{}".format(self.__str__())
+
+    def __eq__(self, other):
+        return _Vector3Equals(self, other)
+    
+    def __ne__(self, other):
+        return not _Vector3Equals(self, other)
+    
+    def __pos__(self):
+        return Vector3(+self.x, +self.y, +self.z)
+    
+    def __neg__(self):
+        return Vector3(-self.x, -self.y, -self.z)
+    
+    def __abs__(self):
+        return Vector3(abs(self.x), abs(self.y), abs(self.z))
+    
+    def __add__(self, other):
+        if isinstance(other, (int, float)):
+            return _Vector3AddValue(self, float(other))
+        return _Vector3Add(self, Vector3(other[0], other[1], other[2]))
+    
+    def __radd__(self, other):
+        if isinstance(other, (int, float)):
+            return _Vector3AddValue(self, float(other))
+        return _Vector3Add(self, Vector3(other[0], other[1], other[2]))
+    
+    def __iadd__(self, other):
+        if isinstance(other, (int, float)):
+            self.xy = _Vector3AddValue(self, float(other))
+        else:
+            self.xy = _Vector3Add(self, Vector3(other[0], other[1], other[2]))
+        return self
+    
+    def __sub__(self, other):
+        if isinstance(other, (int, float)):
+            return _Vector3SubtractValue(self, float(other))
+        return _Vector3Subtract(self, Vector3(other[0], other[1], other[2]))
+    
+    def __rsub__(self, other):
+        if isinstance(other, (int, float)):
+            return Vector3(other - self.x, other - self.y, other - self.z)
+        return _Vector3Subtract(Vector3(other[0], other[1], other[2]), self)
+    
+    def __isub__(self, other):
+        if isinstance(other, (int, float)):
+            self.xy = _Vector3SubtractValue(self, float(other))
+        else:
+            self.xy = _Vector3Subtract(self, Vector3(other[0], other[1], other[2]))
+        return self
+    
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            return _Vector3Scale(self, float(other))
+        elif isinstance(other, Matrix):
+            return _Vector3Transform(self, other)
+        return _Vector3Multiply(self, Vector3(other[0], other[1], other[2]))
+    
+    def __rmul__(self, other):
+        if isinstance(other, (int, float)):
+            return _Vector3Scale(self, float(other))
+        return _Vector3Multiply(self, Vector3(other[0], other[1], other[2]))
+    
+    def __imul__(self, other):
+        if isinstance(other, (int, float)):
+            self.xy = _Vector3Scale(self, float(other))
+        elif isinstance(other, Matrix):
+            self.xy = _Vector3Transform(self, other)
+        else:
+            self.xy = _Vector3Multiply(self, Vector3(other[0], other[1], other[2]))
+        return self
+    
+    def __truediv__(self, other):
+        if isinstance(other, (int, float)):
+            return _Vector3Divide(self, Vector3(other, other))
+        return _Vector3Divide(self, Vector3(other[0], other[1]))
+    
+    def __rtruediv__(self, other):
+        if isinstance(other, (int, float)):
+            return Vector3(other / self.x, other / self.y, other / self.z)
+        return _Vector3Divide(Vector3(other[0], other[1], other[2]), self)
+    
+    def __itruediv__(self, other):
+        if isinstance(other, (int, float)):
+            self.xy = _Vector3Divide(self, Vector3(other, other))
+        else:
+            self.xy = _Vector3Divide(self, Vector3(other[0], other[1], other[2]))
+        return self
+
+    def __len__(self):
+        return 3
+    
+    def __getitem__(self, key):
+        return (self.x, self.y, self.z).__getitem__(key)
+    
+    def __getattr__(self, attr):
+        m = RE_VEC3_GET_SWZL.fullmatch(attr)
+        if not m:
+            raise AttributeError("Vector3 object does not have attribute '{}'.".format(attr))
+        cls = {1: float, 2: Vector2, 3: Vector3, 4: Vector4}.get(len(attr))
+        v = self.todict()
+        return cls(*(v[ch] for ch in attr))
+    
+    def __setattr__(self, attr, value):
+        m = RE_VEC3_SET_SWZL.fullmatch(attr)
+        if not m:
+            raise AttributeError("Vector3 object does not have attribute '{}'.".format(attr))
+        if len(attr) == 1:
+            super(Vector3, self).__setattr__(attr, float(value))
+        else:
+            for i, ch in enumerate(attr):
+                super(Vector3, self).__setattr__(ch, float(value[i]))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Vector3"""
+        return byref(self)
+
+    @property
+    def length(self):
+        return _Vector3Length(self)
+
+    @property
+    def length_sqr(self):
+        return _Vector3LengthSqr(self)
+
+    def cross_product(self, v2):
+        # type: (Vector3, Vector3) -> Vector3
+        return _Vector3CrossProduct(self, v2)
+
+    def perpendicular(self):
+        # type: (Vector3) -> Vector3
+        self.xyz = _Vector3Perpendicular(self)
+        return self
+
+    def dot_product(self, v2):
+        # type: (Vector3, Vector3) -> float
+        return _Vector3DotProduct(self, v2)
+
+    def distance(self, v2):
+        # type: (Vector3, Vector3) -> float
+        return _Vector3Distance(self, v2)
+
+    def distance_sqr(self, v2):
+        # type: (Vector3, Vector3) -> float
+        return _Vector3DistanceSqr(self, v2)
+
+    def angle(self, v2):
+        # type: (Vector3, Vector3) -> float
+        return _Vector3Angle(self, v2)
+
+    def normalize(self):
+        # type: (Vector3) -> Vector3
+        self.xyz = _Vector3Normalize(self)
+        return self
+
+    def ortho_normalize(self, v2):
+        # type: (Vector3Ptr, Vector3Ptr) -> None
+        _Vector3OrthoNormalize(self, v2)
+
+    def transform(self, mat):
+        # type: (Vector3, Matrix) -> Vector3
+        self.xyz = _Vector3Transform(self, mat)
+        return self
+
+    def rotate_by_quaternion(self, q):
+        # type: (Vector3, Quaternion) -> Vector3
+        self.xyz = _Vector3RotateByQuaternion(self, q)
+        return self
+
+    def rotate_by_axis_angle(self, axis, angle):
+        # type: (Vector3, Vector3, float) -> Vector3
+        self.xyz = _Vector3RotateByAxisAngle(self, axis, _float(angle))
+        return self
+
+    def lerp(self, v2, amount):
+        # type: (Vector3, Vector3, float) -> Vector3
+        self.xyz = _Vector3Lerp(self, v2, _float(amount))
+        return self
+
+    def reflect(self, normal):
+        # type: (Vector3, Vector3) -> Vector3
+        self.xyz = _Vector3Reflect(self, normal)
+        return self
+
+    def min(self, v2):
+        # type: (Vector3, Vector3) -> Vector3
+        self.xyz = _Vector3Min(self, v2)
+        return self
+
+    def max(self, v2):
+        # type: (Vector3, Vector3) -> Vector3
+        self.xyz = _Vector3Max(self, v2)
+        return self
+
+    def barycenter(self, a, b, c):
+        # type: (Vector3, Vector3, Vector3, Vector3) -> Vector3
+        self.xyz = _Vector3Barycenter(self, a, b, c)
+        return self
+
+    def unproject(self, projection, view):
+        # type: (Vector3, Matrix, Matrix) -> Vector3
+        self.xyz = _Vector3Unproject(self, projection, view)
+        return self
+
+    def to_float_v(self):
+        # type: (Vector3) -> float3
+        return _Vector3ToFloatV(self)
+
+    def clamp(self, min_, max_):
+        # type: (Vector3, Vector3, Vector3) -> Vector3
+        self.xyz = _Vector3Clamp(self, min_, max_)
+        return self
+
+    def clamp_value(self, min_, max_):
+        # type: (Vector3, float, float) -> Vector3
+        self.xyz = _Vector3ClampValue(self, _float(min_), _float(max_))
+        return self
+
+    def refract(self, n, r):
+        # type: (Vector3, Vector3, float) -> Vector3
+        return _Vector3Refract(self, n, _float(r))
+
+    def todict(self):
+        '''Returns a dict mapping this Vector3's components'''
+        return {'x': self.x, 'y': self.y, 'z': self.z}
+    
+    def fromdict(self, d):
+        '''Apply the mapping `d` to this Vector3's components'''
+        self.x = float(d.get('x', self.x))
+        self.y = float(d.get('y', self.y))
+        self.z = float(d.get('z', self.z))
+
+# Pointer types for Vector3
+Vector3Ptr = POINTER(Vector3)
+
+
+class Vector4(Structure):
+    """Vector4, 4 components"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Vector4 elements"""
+        return (Vector4 * len(sequence))(*sequence)
+
+    def __init__(self, x=None, y=None, z=None, w=None):
+        # type: (Vector4, float, float, float, float) -> None
+        """Initializes this Vector4"""
+        super(Vector4, self).__init__(
+            x or 0.0,
+            y or 0.0,
+            z or 0.0,
+            w or 0.0
+        )
+
+    def __str__(self):
+        return "({}, {}, {}, {})".format(self.x, self.y, self.z, self.w)
+
+    def __repr__(self):
+        return "Vector4{}".format(self.__str__())
+
+    def __eq__(self, other):
+        return _Vector3Equals(self.xyz, other[:3])
+    
+    def __ne__(self, other):
+        return not _Vector3Equals(self.xyz, other[:3])
+    
+    def __pos__(self):
+        return Vector4(+self.x, +self.y, +self.z, +self.w)
+    
+    def __neg__(self):
+        return Vector4(-self.x, -self.y, -self.z, -self.w)
+    
+    def __abs__(self):
+        return Vector4(abs(self.x), abs(self.y), abs(self.z), abs(self.w))
+
+    def __len__(self):
+        return 4
+    
+    def __getitem__(self, key):
+        return (self.x, self.y, self.z, self.w).__getitem__(key)
+    
+    def __getattr__(self, attr):
+        m = RE_VEC4_GET_SWZL.fullmatch(attr)
+        if not m:
+            raise AttributeError("Vector4 object does not have attribute '{}'.".format(attr))
+        cls = {1: float, 2: Vector2, 3: Vector3, 4: Vector4}.get(len(attr))
+        v = self.todict()
+        return cls(*(v[ch] for ch in attr))
+    
+    def __setattr__(self, attr, value):
+        m = RE_VEC4_SET_SWZL.fullmatch(attr)
+        if not m:
+            raise AttributeError("Vector4 object does not have attribute '{}'.".format(attr))
+        if len(attr) == 1:
+            super(Vector4, self).__setattr__(attr, float(value))
+        else:
+            for i, ch in enumerate(attr):
+                super(Vector4, self).__setattr__(ch, float(value[i]))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Vector4"""
+        return byref(self)
+
+    def todict(self):
+        '''Returns a dict mapping this Vector4's components'''
+        return {'x': self.x, 'y': self.y, 'z': self.z, 'w': self.w}
+    
+    def fromdict(self, d):
+        '''Apply the mapping `d` to this Vector4's components'''
+        self.x = float(d.get('x', self.x))
+        self.y = float(d.get('y', self.y))
+        self.z = float(d.get('z', self.z))
+        self.w = float(d.get('w', self.w))
+
+
+# Quaternion, 4 components (Vector4 alias)
+Quaternion = Vector4
+QuaternionPtr = POINTER(Vector4)
+
+
+class Matrix(Structure):
+    """Matrix, 4x4 components, column major, OpenGL style, right-handed"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Matrix elements"""
+        return (Matrix * len(sequence))(*sequence)
+
+    @classmethod
+    def identity(cls):
+        # type: (Matrix) -> Matrix
+        return _MatrixIdentity()
+
+    @classmethod
+    def translate(cls, x, y, z):
+        # type: (Matrix, float, float, float) -> Matrix
+        return _MatrixTranslate(_float(x), _float(y), _float(z))
+
+    @classmethod
+    def rotate(cls, axis, angle):
+        # type: (Matrix, Vector3, float) -> Matrix
+        return _MatrixRotate(axis, _float(angle))
+
+    @classmethod
+    def rotate_x(cls, angle):
+        # type: (Matrix, float) -> Matrix
+        return _MatrixRotateX(_float(angle))
+
+    @classmethod
+    def rotate_y(cls, angle):
+        # type: (Matrix, float) -> Matrix
+        return _MatrixRotateY(_float(angle))
+
+    @classmethod
+    def rotate_z(cls, angle):
+        # type: (Matrix, float) -> Matrix
+        return _MatrixRotateZ(_float(angle))
+
+    @classmethod
+    def rotate_xyz(cls, angle):
+        # type: (Matrix, Vector3) -> Matrix
+        return _MatrixRotateXYZ(angle)
+
+    @classmethod
+    def rotate_zyx(cls, angle):
+        # type: (Matrix, Vector3) -> Matrix
+        return _MatrixRotateZYX(angle)
+
+    @classmethod
+    def scale(cls, x, y, z):
+        # type: (Matrix, float, float, float) -> Matrix
+        return _MatrixScale(_float(x), _float(y), _float(z))
+
+    @classmethod
+    def frustum(cls, left, right, bottom, top, near, far):
+        # type: (Matrix, float, float, float, float, float, float) -> Matrix
+        return _MatrixFrustum(_float(left), _float(right), _float(bottom), _float(top), _float(near), _float(far))
+
+    @classmethod
+    def perspective(cls, fov_y, aspect, near_plane, far_plane):
+        # type: (Matrix, float, float, float, float) -> Matrix
+        return _MatrixPerspective(_float(fov_y), _float(aspect), _float(near_plane), _float(far_plane))
+
+    @classmethod
+    def ortho(cls, left, right, bottom, top, near_plane, far_plane):
+        # type: (Matrix, float, float, float, float, float, float) -> Matrix
+        return _MatrixOrtho(_float(left), _float(right), _float(bottom), _float(top), _float(near_plane), _float(far_plane))
+
+    @classmethod
+    def look_at(cls, eye, target, up):
+        # type: (Matrix, Vector3, Vector3, Vector3) -> Matrix
+        return _MatrixLookAt(eye, target, up)
+
+    def __init__(self, m0=None, m4=None, m8=None, m12=None, m1=None, m5=None, m9=None, m13=None, m2=None, m6=None, m10=None, m14=None, m3=None, m7=None, m11=None, m15=None):
+        # type: (Matrix, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float) -> None
+        """Initializes this Matrix"""
+        super(Matrix, self).__init__(
+            m0 or 0.0,
+            m4 or 0.0,
+            m8 or 0.0,
+            m12 or 0.0,
+            m1 or 0.0,
+            m5 or 0.0,
+            m9 or 0.0,
+            m13 or 0.0,
+            m2 or 0.0,
+            m6 or 0.0,
+            m10 or 0.0,
+            m14 or 0.0,
+            m3 or 0.0,
+            m7 or 0.0,
+            m11 or 0.0,
+            m15 or 0.0
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(self.__class__.__name__, id(self))
+
+    def __repr__(self):
+        return self.__str__()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Matrix"""
+        return byref(self)
+
+    def determinant(self):
+        # type: (Matrix) -> float
+        return _MatrixDeterminant(self)
+
+    def trace(self):
+        # type: (Matrix) -> float
+        return _MatrixTrace(self)
+
+    def transpose(self):
+        # type: (Matrix) -> Matrix
+        return _MatrixTranspose(self)
+
+    def invert(self):
+        # type: (Matrix) -> Matrix
+        return _MatrixInvert(self)
+
+# Pointer types for Matrix
+MatrixPtr = POINTER(Matrix)
+
+
+class Color(Structure):
+    """Color, 4 components, R8G8B8A8 (32bit)"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Color elements"""
+        return (Color * len(sequence))(*sequence)
+
+    @classmethod
+    def from_normalized(cls, normalized):
+        # type: (Color, Vector4) -> Color
+        """Get Color from normalized values [0..1]"""
+        return _ColorFromNormalized(_vec4(normalized))
+
+    @classmethod
+    def from_hsv(cls, hue, saturation, value):
+        # type: (Color, float, float, float) -> Color
+        """Get a Color from HSV values, hue [0..360], saturation/value [0..1]"""
+        return _ColorFromHSV(_float(hue), _float(saturation), _float(value))
+
+    @classmethod
+    def get(cls, hex_value):
+        # type: (Color, int) -> Color
+        """Get Color structure from hexadecimal value"""
+        return _GetColor(_int(hex_value))
+
+    def __init__(self, r=None, g=None, b=None, a=None):
+        # type: (Color, int, int, int, int) -> None
+        """Initializes this Color"""
+        super(Color, self).__init__(
+            r or 0,
+            g or 0,
+            b or 0,
+            a or 0
+        )
+
+    def __str__(self):
+        return "({: 3}, {: 3}, {: 3}, {: 3})".format(self.r, self.g, self.b, self.a)
+
+    def __repr__(self):
+        return "Color{}".format(self.__str__())
+
+    def __len__(self):
+        return 4
+    
+    def __getitem__(self, key):
+        return (self.r, self.g, self.b, self.a).__getitem__(key)
+    
+    def __getattr__(self, attr):
+        m = RE_RGBA_GET_SWZL.fullmatch(attr)
+        if not m:
+            raise AttributeError("Color object does not have attribute '{}'.".format(attr))
+        cls = {1: int, 4: Color}.get(len(attr))
+        v = self.todict()
+        return cls(*(v[ch] for ch in attr))
+    
+    def __setattr__(self, attr, value):
+        m = RE_RGBA_SET_SWZL.fullmatch(attr)
+        if not m:
+            raise AttributeError("Color object does not have attribute '{}'.".format(attr))
+        if len(attr) == 1:
+            super(Color, self).__setattr__(attr, int(value))
+        else:
+            for i, ch in enumerate(attr):
+                super(Color, self).__setattr__(ch, int(value[i]))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Color"""
+        return byref(self)
+
+    def fade(self, alpha):
+        # type: (Color, float) -> Color
+        """Get color with alpha applied, alpha goes from 0.0f to 1.0f"""
+        return _Fade(_color(self), _float(alpha))
+
+    def normalize(self):
+        # type: (Color) -> Vector4
+        """Get Color normalized as float [0..1]"""
+        return _ColorNormalize(_color(self))
+
+    def to_int(self):
+        # type: (Color) -> int
+        """Get hexadecimal value for a Color"""
+        return _ColorToInt(_color(self))
+
+    def to_hsv(self):
+        # type: (Color) -> Vector3
+        """Get HSV values for a Color, hue [0..360], saturation/value [0..1]"""
+        return _ColorToHSV(_color(self))
+
+    def tint(self, tint):
+        # type: (Color, Color) -> Color
+        """Get color multiplied with another color"""
+        return _ColorTint(_color(self), _color(tint))
+
+    def brightness(self, factor):
+        # type: (Color, float) -> Color
+        """Get color with brightness correction, brightness factor goes from -1.0f to 1.0f"""
+        return _ColorBrightness(_color(self), _float(factor))
+
+    def contrast(self, contrast):
+        # type: (Color, float) -> Color
+        """Get color with contrast correction, contrast values between -1.0f and 1.0f"""
+        return _ColorContrast(_color(self), _float(contrast))
+
+    def alpha(self, alpha):
+        # type: (Color, float) -> Color
+        """Get color with alpha applied, alpha goes from 0.0f to 1.0f"""
+        return _ColorAlpha(_color(self), _float(alpha))
+
+    def alpha_blend(self, src, tint):
+        # type: (Color, Color, Color) -> Color
+        """Get src alpha-blended into dst color with tint"""
+        return _ColorAlphaBlend(_color(self), _color(src), _color(tint))
+
+    def todict(self):
+        '''Returns a dict mapping this Color's components'''
+        return {'r': self.r, 'g': self.g, 'b': self.b, 'a': self.a}
+    
+    def fromdict(self, d):
+        '''Apply the mapping `d` to this Color's components'''
+        self.r = int(d.get('r', self.r))
+        self.g = int(d.get('g', self.g))
+        self.b = int(d.get('b', self.b))
+        self.a = int(d.get('a', self.a))
+
+# Pointer types for Color
+ColorPtr = POINTER(Color)
+
+
+class Rectangle(Structure):
+    """Rectangle, 4 components"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Rectangle elements"""
+        return (Rectangle * len(sequence))(*sequence)
+
+    def __init__(self, x=None, y=None, width=None, height=None):
+        # type: (Rectangle, float, float, float, float) -> None
+        """Initializes this Rectangle"""
+        super(Rectangle, self).__init__(
+            x or 0.0,
+            y or 0.0,
+            width or 0.0,
+            height or 0.0
+        )
+
+    def __str__(self):
+        return "({}, {}, {}, {})".format(self.x, self.y, self.width, self.height)
+
+    def __repr__(self):
+        return "Rectangle{}".format(self.__str__())
+
+    def __len__(self):
+        return 4
+    
+    def __getitem__(self, key):
+        return (self.x, self.y, self.width, self.height).__getitem__(key)
+    
+    def __getattr__(self, attr):
+        m = RE_RECT_GET_SWZL.fullmatch(attr)
+        if not m:
+            raise AttributeError("Rectangle object does not have attribute '{}'.".format(attr))
+        cls = {1: float, 2: Vector2, 3: Vector3, 4: Rectangle}.get(len(attr))
+        v = self.todict()
+        return cls(*(v[ch] for ch in attr))
+    
+    def __setattr__(self, attr, value):
+        m = RE_RECT_SET_SWZL.fullmatch(attr)
+        if not m:
+            raise AttributeError("Rectangle object does not have attribute '{}'.".format(attr))
+        w = self.width
+        h = self.height
+        if attr in ('width', 'height') or len(attr) == 1:
+            if attr == 'c':
+                super(Rectangle, self).__setattr__('x', float(value - w * 0.5))
+            elif attr == 'r':
+                super(Rectangle, self).__setattr__('x', float(value - w))
+            elif attr == 'm':
+                super(Rectangle, self).__setattr__('y', float(value - h * 0.5))
+            elif attr == 'b':
+                super(Rectangle, self).__setattr__('y', float(value - h))
+            elif attr == 'w':
+                super(Rectangle, self).__setattr__('width', value)
+            elif attr == 'h':
+                super(Rectangle, self).__setattr__('height', value)
+            else:
+                super(Rectangle, self).__setattr__(attr, float(value))
+        else:
+            for i, ch in enumerate(attr):
+                if ch in ('x', 'y'):
+                    super(Rectangle, self).__setattr__(ch, float(value[i]))
+                elif ch == 'c':
+                    super(Rectangle, self).__setattr__('x', float(value[i] - w * 0.5))
+                elif ch == 'r':
+                    super(Rectangle, self).__setattr__('x', float(value[i] - w))
+                elif ch == 'm':
+                    super(Rectangle, self).__setattr__('y', float(value[i] - h * 0.5))
+                elif ch == 'b':
+                    super(Rectangle, self).__setattr__('y', float(value[i] - h))
+                elif ch == 'w':
+                    super(Rectangle, self).__setattr__('width', value[i])
+                elif ch == 'h':
+                    super(Rectangle, self).__setattr__('height', value[i])
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Rectangle"""
+        return byref(self)
+
+    def todict(self):
+        '''Returns a dict mapping this Rectangle's components'''
+        return {'x': self.x, 'y': self.y, 'w': self.width, 'h': self.height,
+                'c': self.x + self.width * 0.5, 'm': self.y + self.height * 0.5,
+                'r': self.x + self.width, 'b': self.y + self.height}
+    
+    def fromdict(self, d):
+        '''Apply the mapping `d` to this Rectangle's components'''
+        self.x = float(d.get('x', self.x))
+        self.y = float(d.get('y', self.y))
+        self.width = float(d.get('w', self.width))
+        self.height = float(d.get('h', self.height))
+
+# Pointer types for Rectangle
+RectanglePtr = POINTER(Rectangle)
+
+# Pointer types for Rectangle
+RectanglePtrPtr = POINTER(RectanglePtr)
+
+
+class Image(Structure):
+    """Image, pixel data stored in CPU memory (RAM)"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Image elements"""
+        return (Image * len(sequence))(*sequence)
+
+    @classmethod
+    def load(cls, file_name):
+        # type: (Image, bytes | str | None) -> Image
+        """Load image from file into CPU memory (RAM)"""
+        return _LoadImage(_str_in(file_name))
+
+    @classmethod
+    def load_raw(cls, file_name, width, height, format_, header_size):
+        # type: (Image, bytes | str | None, int, int, int, int) -> Image
+        """Load image from RAW file data"""
+        return _LoadImageRaw(_str_in(file_name), _int(width), _int(height), _int(format_), _int(header_size))
+
+    @classmethod
+    def load_svg(cls, file_name_or_string, width, height):
+        # type: (Image, bytes | str | None, int, int) -> Image
+        """Load image from SVG file data or string with specified size"""
+        return _LoadImageSvg(_str_in(file_name_or_string), _int(width), _int(height))
+
+    @classmethod
+    def load_anim(cls, file_name, frames):
+        # type: (Image, bytes | str | None, IntPtr) -> Image
+        """Load image sequence from file (frames appended to image.data)"""
+        return _LoadImageAnim(_str_in(file_name), frames)
+
+    @classmethod
+    def load_from_memory(cls, file_type, file_data, data_size):
+        # type: (Image, bytes | str | None, int, int) -> Image
+        """Load image from memory buffer, fileType refers to extension: i.e. '.png'"""
+        return _LoadImageFromMemory(_str_in(file_type), _int(file_data, (0, 255)), _int(data_size))
+
+    @classmethod
+    def load_from_texture(cls, texture):
+        # type: (Image, Texture2D) -> Image
+        """Load image from GPU texture data"""
+        return _LoadImageFromTexture(texture)
+
+    @classmethod
+    def load_from_screen(cls):
+        # type: (Image) -> Image
+        """Load image from screen buffer and (screenshot)"""
+        return _LoadImageFromScreen()
+
+    @classmethod
+    def gen_color(cls, width, height, color):
+        # type: (Image, int, int, Color) -> Image
+        """Generate image: plain color"""
+        return _GenImageColor(_int(width), _int(height), _color(color))
+
+    @classmethod
+    def gen_gradient_linear(cls, width, height, direction, start, end):
+        # type: (Image, int, int, int, Color, Color) -> Image
+        """Generate image: linear gradient, direction in degrees [0..360], 0=Vertical gradient"""
+        return _GenImageGradientLinear(_int(width), _int(height), _int(direction), _color(start), _color(end))
+
+    @classmethod
+    def gen_gradient_radial(cls, width, height, density, inner, outer):
+        # type: (Image, int, int, float, Color, Color) -> Image
+        """Generate image: radial gradient"""
+        return _GenImageGradientRadial(_int(width), _int(height), _float(density), _color(inner), _color(outer))
+
+    @classmethod
+    def gen_gradient_square(cls, width, height, density, inner, outer):
+        # type: (Image, int, int, float, Color, Color) -> Image
+        """Generate image: square gradient"""
+        return _GenImageGradientSquare(_int(width), _int(height), _float(density), _color(inner), _color(outer))
+
+    @classmethod
+    def gen_checked(cls, width, height, checks_x, checks_y, col1, col2):
+        # type: (Image, int, int, int, int, Color, Color) -> Image
+        """Generate image: checked"""
+        return _GenImageChecked(_int(width), _int(height), _int(checks_x), _int(checks_y), _color(col1), _color(col2))
+
+    @classmethod
+    def gen_white_noise(cls, width, height, factor):
+        # type: (Image, int, int, float) -> Image
+        """Generate image: white noise"""
+        return _GenImageWhiteNoise(_int(width), _int(height), _float(factor))
+
+    @classmethod
+    def gen_perlin_noise(cls, width, height, offset_x, offset_y, scale):
+        # type: (Image, int, int, int, int, float) -> Image
+        """Generate image: perlin noise"""
+        return _GenImagePerlinNoise(_int(width), _int(height), _int(offset_x), _int(offset_y), _float(scale))
+
+    @classmethod
+    def gen_cellular(cls, width, height, tile_size):
+        # type: (Image, int, int, int) -> Image
+        """Generate image: cellular algorithm, bigger tileSize means bigger cells"""
+        return _GenImageCellular(_int(width), _int(height), _int(tile_size))
+
+    @classmethod
+    def gen_text(cls, width, height, text):
+        # type: (Image, int, int, bytes | str | None) -> Image
+        """Generate image: grayscale image from text data"""
+        return _GenImageText(_int(width), _int(height), _str_in(text))
+
+    @classmethod
+    def from_image(cls, image, rec):
+        # type: (Image, Image, Rectangle) -> Image
+        """Create an image from another image piece"""
+        return _ImageFromImage(image, _rect(rec))
+
+    @classmethod
+    def text(cls, text, font_size, color):
+        # type: (Image, bytes | str | None, int, Color) -> Image
+        """Create an image from text (default font)"""
+        return _ImageText(_str_in(text), _int(font_size), _color(color))
+
+    @classmethod
+    def text_ex(cls, font, text, font_size, spacing, tint):
+        # type: (Image, Font, bytes | str | None, float, float, Color) -> Image
+        """Create an image from text (custom sprite font)"""
+        return _ImageTextEx(font, _str_in(text), _float(font_size), _float(spacing), _color(tint))
+
+    def __init__(self, data=None, width=None, height=None, mipmaps=None, format_=None):
+        # type: (Image, bytes | str | None, int, int, int, int) -> None
+        """Initializes this Image"""
+        super(Image, self).__init__(
+            data,
+            width or 0,
+            height or 0,
+            mipmaps or 1,
+            format_ or PIXELFORMAT_UNCOMPRESSED_GRAYSCALE
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Image"""
+        return byref(self)
+
+    @property
+    def is_ready(self):
+        """Check if an image is ready"""
+        return _IsImageReady(self)
+
+    def unload(self):
+        # type: (Image) -> None
+        """Unload image from CPU memory (RAM)"""
+        _UnloadImage(self)
+
+    def export(self, file_name):
+        # type: (Image, bytes | str | None) -> bool
+        """Export image data to file, returns true on success"""
+        return _ExportImage(self, _str_in(file_name))
+
+    def export_as_code(self, file_name):
+        # type: (Image, bytes | str | None) -> bool
+        """Export image as code file defining an array of bytes, returns true on success"""
+        return _ExportImageAsCode(self, _str_in(file_name))
+
+    def copy(self):
+        # type: (Image) -> Image
+        """Create an image duplicate (useful for transformations)"""
+        return _ImageCopy(self)
+
+    def format(self, new_format):
+        # type: (ImagePtr, int) -> None
+        """Convert image data to desired format"""
+        _ImageFormat(self, _int(new_format))
+
+    def to_pot(self, fill):
+        # type: (ImagePtr, Color) -> None
+        """Convert image to POT (power-of-two)"""
+        _ImageToPOT(self, _color(fill))
+
+    def crop(self, crop):
+        # type: (ImagePtr, Rectangle) -> None
+        """Crop an image to a defined rectangle"""
+        _ImageCrop(self, _rect(crop))
+
+    def alpha_crop(self, threshold):
+        # type: (ImagePtr, float) -> None
+        """Crop image depending on alpha value"""
+        _ImageAlphaCrop(self, _float(threshold))
+
+    def alpha_clear(self, color, threshold):
+        # type: (ImagePtr, Color, float) -> None
+        """Clear alpha channel to desired color"""
+        _ImageAlphaClear(self, _color(color), _float(threshold))
+
+    def alpha_mask(self, alpha_mask):
+        # type: (ImagePtr, Image) -> None
+        """Apply alpha mask to image"""
+        _ImageAlphaMask(self, alpha_mask)
+
+    def alpha_premultiply(self):
+        # type: (ImagePtr) -> None
+        """Premultiply alpha channel"""
+        _ImageAlphaPremultiply(self)
+
+    def blur_gaussian(self, blur_size):
+        # type: (ImagePtr, int) -> None
+        """Apply Gaussian blur using a box blur approximation"""
+        _ImageBlurGaussian(self, _int(blur_size))
+
+    def resize(self, new_width, new_height):
+        # type: (ImagePtr, int, int) -> None
+        """Resize image (Bicubic scaling algorithm)"""
+        _ImageResize(self, _int(new_width), _int(new_height))
+
+    def resize_nn(self, new_width, new_height):
+        # type: (ImagePtr, int, int) -> None
+        """Resize image (Nearest-Neighbor scaling algorithm)"""
+        _ImageResizeNN(self, _int(new_width), _int(new_height))
+
+    def resize_canvas(self, new_width, new_height, offset_x, offset_y, fill):
+        # type: (ImagePtr, int, int, int, int, Color) -> None
+        """Resize canvas and fill with color"""
+        _ImageResizeCanvas(self, _int(new_width), _int(new_height), _int(offset_x), _int(offset_y), _color(fill))
+
+    def mipmaps(self):
+        # type: (ImagePtr) -> None
+        """Compute all mipmap levels for a provided image"""
+        _ImageMipmaps(self)
+
+    def dither(self, r_bpp, g_bpp, b_bpp, a_bpp):
+        # type: (ImagePtr, int, int, int, int) -> None
+        """Dither image data to 16bpp or lower (Floyd-Steinberg dithering)"""
+        _ImageDither(self, _int(r_bpp), _int(g_bpp), _int(b_bpp), _int(a_bpp))
+
+    def flip_vertical(self):
+        # type: (ImagePtr) -> None
+        """Flip image vertically"""
+        _ImageFlipVertical(self)
+
+    def flip_horizontal(self):
+        # type: (ImagePtr) -> None
+        """Flip image horizontally"""
+        _ImageFlipHorizontal(self)
+
+    def rotate(self, degrees):
+        # type: (ImagePtr, int) -> None
+        """Rotate image by input angle in degrees (-359 to 359)"""
+        _ImageRotate(self, _int(degrees))
+
+    def rotate_cw(self):
+        # type: (ImagePtr) -> None
+        """Rotate image clockwise 90deg"""
+        _ImageRotateCW(self)
+
+    def rotate_ccw(self):
+        # type: (ImagePtr) -> None
+        """Rotate image counter-clockwise 90deg"""
+        _ImageRotateCCW(self)
+
+    def color_tint(self, color):
+        # type: (ImagePtr, Color) -> None
+        """Modify image color: tint"""
+        _ImageColorTint(self, _color(color))
+
+    def color_invert(self):
+        # type: (ImagePtr) -> None
+        """Modify image color: invert"""
+        _ImageColorInvert(self)
+
+    def color_grayscale(self):
+        # type: (ImagePtr) -> None
+        """Modify image color: grayscale"""
+        _ImageColorGrayscale(self)
+
+    def color_contrast(self, contrast):
+        # type: (ImagePtr, float) -> None
+        """Modify image color: contrast (-100 to 100)"""
+        _ImageColorContrast(self, _float(contrast))
+
+    def color_brightness(self, brightness):
+        # type: (ImagePtr, int) -> None
+        """Modify image color: brightness (-255 to 255)"""
+        _ImageColorBrightness(self, _int(brightness))
+
+    def color_replace(self, color, replace):
+        # type: (ImagePtr, Color, Color) -> None
+        """Modify image color: replace color"""
+        _ImageColorReplace(self, _color(color), _color(replace))
+
+    def clear_background(self, color):
+        # type: (ImagePtr, Color) -> None
+        """Clear image background with given color"""
+        _ImageClearBackground(self, _color(color))
+
+    def draw_pixel(self, pos_x, pos_y, color):
+        # type: (ImagePtr, int, int, Color) -> None
+        """Draw pixel within an image"""
+        _ImageDrawPixel(self, _int(pos_x), _int(pos_y), _color(color))
+
+    def draw_pixel_v(self, position, color):
+        # type: (ImagePtr, Vector2, Color) -> None
+        """Draw pixel within an image (Vector version)"""
+        _ImageDrawPixelV(self, _vec2(position), _color(color))
+
+    def draw_line(self, start_pos_x, start_pos_y, end_pos_x, end_pos_y, color):
+        # type: (ImagePtr, int, int, int, int, Color) -> None
+        """Draw line within an image"""
+        _ImageDrawLine(self, _int(start_pos_x), _int(start_pos_y), _int(end_pos_x), _int(end_pos_y), _color(color))
+
+    def draw_line_v(self, start, end, color):
+        # type: (ImagePtr, Vector2, Vector2, Color) -> None
+        """Draw line within an image (Vector version)"""
+        _ImageDrawLineV(self, _vec2(start), _vec2(end), _color(color))
+
+    def draw_circle(self, center_x, center_y, radius, color):
+        # type: (ImagePtr, int, int, int, Color) -> None
+        """Draw a filled circle within an image"""
+        _ImageDrawCircle(self, _int(center_x), _int(center_y), _int(radius), _color(color))
+
+    def draw_circle_v(self, center, radius, color):
+        # type: (ImagePtr, Vector2, int, Color) -> None
+        """Draw a filled circle within an image (Vector version)"""
+        _ImageDrawCircleV(self, _vec2(center), _int(radius), _color(color))
+
+    def draw_circle_lines(self, center_x, center_y, radius, color):
+        # type: (ImagePtr, int, int, int, Color) -> None
+        """Draw circle outline within an image"""
+        _ImageDrawCircleLines(self, _int(center_x), _int(center_y), _int(radius), _color(color))
+
+    def draw_circle_lines_v(self, center, radius, color):
+        # type: (ImagePtr, Vector2, int, Color) -> None
+        """Draw circle outline within an image (Vector version)"""
+        _ImageDrawCircleLinesV(self, _vec2(center), _int(radius), _color(color))
+
+    def draw_rectangle(self, pos_x, pos_y, width, height, color):
+        # type: (ImagePtr, int, int, int, int, Color) -> None
+        """Draw rectangle within an image"""
+        _ImageDrawRectangle(self, _int(pos_x), _int(pos_y), _int(width), _int(height), _color(color))
+
+    def draw_rectangle_v(self, position, size, color):
+        # type: (ImagePtr, Vector2, Vector2, Color) -> None
+        """Draw rectangle within an image (Vector version)"""
+        _ImageDrawRectangleV(self, _vec2(position), _vec2(size), _color(color))
+
+    def draw_rectangle_rec(self, rec, color):
+        # type: (ImagePtr, Rectangle, Color) -> None
+        """Draw rectangle within an image"""
+        _ImageDrawRectangleRec(self, _rect(rec), _color(color))
+
+    def draw_rectangle_lines(self, rec, thick, color):
+        # type: (ImagePtr, Rectangle, int, Color) -> None
+        """Draw rectangle lines within an image"""
+        _ImageDrawRectangleLines(self, _rect(rec), _int(thick), _color(color))
+
+    def draw(self, src, src_rec, dst_rec, tint):
+        # type: (ImagePtr, Image, Rectangle, Rectangle, Color) -> None
+        """Draw a source image within a destination image (tint applied to source)"""
+        _ImageDraw(self, src, _rect(src_rec), _rect(dst_rec), _color(tint))
+
+    def draw_text(self, text, pos_x, pos_y, font_size, color):
+        # type: (ImagePtr, bytes | str | None, int, int, int, Color) -> None
+        """Draw text (using default font) within an image (destination)"""
+        _ImageDrawText(self, _str_in(text), _int(pos_x), _int(pos_y), _int(font_size), _color(color))
+
+    def draw_text_ex(self, font, text, position, font_size, spacing, tint):
+        # type: (ImagePtr, Font, bytes | str | None, Vector2, float, float, Color) -> None
+        """Draw text (custom sprite font) within an image (destination)"""
+        _ImageDrawTextEx(self, font, _str_in(text), _vec2(position), _float(font_size), _float(spacing), _color(tint))
+
+    def load_colors(self):
+        # type: (Image) -> ColorPtr
+        """Load color data from image as a Color array (RGBA - 32bit)"""
+        return _LoadImageColors(self)
+
+    def load_palette(self, max_palette_size, color_count):
+        # type: (Image, int, int) -> Array[Color]
+        """Load colors palette from image as a Color array (RGBA - 32bit)"""
+        color_count = Int(color_count)
+        result = _LoadImagePalette(self, _int(max_palette_size), byref(color_count))
+        result = cast(result, POINTER(Color * color_count.value))[0]
+        _clear_in_out()
+        _push_in_out(color_count.value)
+        return result
+
+    def get_alpha_border(self, threshold):
+        # type: (Image, float) -> Rectangle
+        """Get image alpha border rectangle"""
+        return _GetImageAlphaBorder(self, _float(threshold))
+
+    def get_color(self, x, y):
+        # type: (Image, int, int) -> Color
+        """Get image pixel color at (x, y) position"""
+        return _GetImageColor(self, _int(x), _int(y))
+
+    @staticmethod
+    def unload_colors(colors):
+        # type: (ColorPtr) -> None
+        """Unload color data loaded with LoadImageColors()"""
+        _UnloadImageColors(colors)
+
+    @staticmethod
+    def unload_palette(colors):
+        # type: (ColorPtr) -> None
+        """Unload colors palette loaded with LoadImagePalette()"""
+        _UnloadImagePalette(colors)
+
+# Pointer types for Image
+ImagePtr = POINTER(Image)
+
+
+class Texture(Structure):
+    """Texture, tex data stored in GPU memory (VRAM)"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Texture elements"""
+        return (Texture * len(sequence))(*sequence)
+
+    @classmethod
+    def load(cls, file_name):
+        # type: (Texture, bytes | str | None) -> Texture2D
+        """Load texture from file into GPU memory (VRAM)"""
+        return _LoadTexture(_str_in(file_name))
+
+    @classmethod
+    def load_from_image(cls, image):
+        # type: (Texture, Image) -> Texture2D
+        """Load texture from image data"""
+        return _LoadTextureFromImage(image)
+
+    @classmethod
+    def load_cubemap(cls, image, layout):
+        # type: (Texture, Image, int) -> TextureCubemap
+        """Load cubemap from image, multiple image cubemap layouts supported"""
+        return _LoadTextureCubemap(image, _int(layout))
+
+    def __init__(self, id_=None, width=None, height=None, mipmaps=None, format_=None):
+        # type: (Texture, int, int, int, int, int) -> None
+        """Initializes this Texture"""
+        super(Texture, self).__init__(
+            id_ or 0,
+            width or 0,
+            height or 0,
+            mipmaps or 0,
+            format_ or PIXELFORMAT_UNCOMPRESSED_GRAYSCALE
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(self.__class__.__name__, id(self))
+
+    def __repr__(self):
+        return self.__str__()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Texture"""
+        return byref(self)
+
+    @property
+    def is_ready(self):
+        """Check if a texture is ready"""
+        return _IsTextureReady(self)
+
+    def unload(self):
+        # type: (Texture2D) -> None
+        """Unload texture from GPU memory (VRAM)"""
+        _UnloadTexture(self)
+
+    def gen_mip_maps(self):
+        # type: (Texture2DPtr) -> None
+        """Generate GPU mipmaps for a texture"""
+        _GenTextureMipmaps(self)
+
+    def set_filter(self, filter_):
+        # type: (Texture2D, int) -> None
+        """Set texture scaling filter mode"""
+        _SetTextureFilter(self, _int(filter_))
+
+    def set_wrap(self, wrap):
+        # type: (Texture2D, int) -> None
+        """Set texture wrapping mode"""
+        _SetTextureWrap(self, _int(wrap))
+
+    def draw(self, pos_x, pos_y, tint):
+        # type: (Texture2D, int, int, Color) -> None
+        """Draw a Texture2D"""
+        _DrawTexture(self, _int(pos_x), _int(pos_y), _color(tint))
+
+    def draw_v(self, position, tint):
+        # type: (Texture2D, Vector2, Color) -> None
+        """Draw a Texture2D with position defined as Vector2"""
+        _DrawTextureV(self, _vec2(position), _color(tint))
+
+    def draw_ex(self, position, rotation, scale, tint):
+        # type: (Texture2D, Vector2, float, float, Color) -> None
+        """Draw a Texture2D with extended parameters"""
+        _DrawTextureEx(self, _vec2(position), _float(rotation), _float(scale), _color(tint))
+
+    def draw_rec(self, source, position, tint):
+        # type: (Texture2D, Rectangle, Vector2, Color) -> None
+        """Draw a part of a texture defined by a rectangle"""
+        _DrawTextureRec(self, _rect(source), _vec2(position), _color(tint))
+
+    def draw_pro(self, source, dest, origin, rotation, tint):
+        # type: (Texture2D, Rectangle, Rectangle, Vector2, float, Color) -> None
+        """Draw a part of a texture defined by a rectangle with 'pro' parameters"""
+        _DrawTexturePro(self, _rect(source), _rect(dest), _vec2(origin), _float(rotation), _color(tint))
+
+    def draw_npatch(self, n_patch_info, dest, origin, rotation, tint):
+        # type: (Texture2D, NPatchInfo, Rectangle, Vector2, float, Color) -> None
+        """Draws a texture (or part of it) that stretches or shrinks nicely"""
+        _DrawTextureNPatch(self, n_patch_info, _rect(dest), _vec2(origin), _float(rotation), _color(tint))
+
+    def update(self, pixels):
+        # type: (Texture2D, bytes | str | None) -> None
+        """Update GPU texture with new data"""
+        _UpdateTexture(self, pixels)
+
+    def update_rec(self, rec, pixels):
+        # type: (Texture2D, Rectangle, bytes | str | None) -> None
+        """Update GPU texture rectangle with new data"""
+        _UpdateTextureRec(self, _rect(rec), pixels)
+
+
+# Texture2D, same as Texture
+Texture2D = Texture
+Texture2DPtr = POINTER(Texture)
+
+# TextureCubemap, same as Texture
+TextureCubemap = Texture
+TextureCubemapPtr = POINTER(Texture)
+
+
+class RenderTexture(Structure):
+    """RenderTexture, fbo for texture rendering"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of RenderTexture elements"""
+        return (RenderTexture * len(sequence))(*sequence)
+
+    def __init__(self, id_=None, texture=None, depth=None):
+        # type: (RenderTexture, int, Texture, Texture) -> None
+        """Initializes this RenderTexture"""
+        super(RenderTexture, self).__init__(
+            id_,
+            texture,
+            depth
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this RenderTexture"""
+        return byref(self)
+
+
+# RenderTexture2D, same as RenderTexture
+RenderTexture2D = RenderTexture
+RenderTexture2DPtr = POINTER(RenderTexture)
+
+
+class NPatchInfo(Structure):
+    """NPatchInfo, n-patch layout info"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of NPatchInfo elements"""
+        return (NPatchInfo * len(sequence))(*sequence)
+
+    def __init__(self, source=None, left=None, top=None, right=None, bottom=None, layout=None):
+        # type: (NPatchInfo, Rectangle, int, int, int, int, int) -> None
+        """Initializes this NPatchInfo"""
+        super(NPatchInfo, self).__init__(
+            source or Rectangle(),
+            left or 1,
+            top or 1,
+            right or 1,
+            bottom or 1,
+            layout or NPATCH_NINE_PATCH
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this NPatchInfo"""
+        return byref(self)
+
+
+class GlyphInfo(Structure):
+    """GlyphInfo, font characters glyphs info"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of GlyphInfo elements"""
+        return (GlyphInfo * len(sequence))(*sequence)
+
+    def __init__(self, value=None, offset_x=None, offset_y=None, advance_x=None, image=None):
+        # type: (GlyphInfo, int, int, int, int, Image) -> None
+        """Initializes this GlyphInfo"""
+        super(GlyphInfo, self).__init__(
+            value or 0,
+            offset_x or 0,
+            offset_y or 0,
+            advance_x or 0,
+            image or Image()
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this GlyphInfo"""
+        return byref(self)
+
+# Pointer types for GlyphInfo
+GlyphInfoPtr = POINTER(GlyphInfo)
+
+
+class Font(Structure):
+    """Font, font texture and GlyphInfo array data"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Font elements"""
+        return (Font * len(sequence))(*sequence)
+
+    @classmethod
+    def load(cls, file_name):
+        # type: (Font, bytes | str | None) -> Font
+        """Load font from file into GPU memory (VRAM)"""
+        return _LoadFont(_str_in(file_name))
+
+    @classmethod
+    def load_ex(cls, file_name, font_size, codepoints, codepoint_count):
+        # type: (Font, bytes | str | None, int, list[int] | str, int) -> Font
+        """Load font from file with extended parameters, use NULL for codepoints and 0 for codepointCount to load the default character setFont"""
+        codepoints = int_array(codepoints)
+        result = _LoadFontEx(_str_in(file_name), _int(font_size), byref(codepoints), _int(codepoint_count))
+        result = result.contents[:codepoints]
+        return result
+
+    @classmethod
+    def load_from_image(cls, image, key, first_char):
+        # type: (Font, Image, Color, int) -> Font
+        """Load font from Image (XNA style)"""
+        return _LoadFontFromImage(image, _color(key), _int(first_char))
+
+    @classmethod
+    def load_from_memory(cls, file_type, file_data, data_size, font_size, codepoints, codepoint_count):
+        # type: (Font, bytes | str | None, int, int, int, list[int] | str, int) -> Font
+        """Load font from memory buffer, fileType refers to extension: i.e. '.ttf'"""
+        codepoints = int_array(codepoints)
+        return _LoadFontFromMemory(_str_in(file_type), _int(file_data, (0, 255)), _int(data_size), _int(font_size), codepoints, _int(codepoint_count))
+
+    @classmethod
+    def get_default(cls):
+        # type: (Font) -> Font
+        """Get the default Font"""
+        return _GetFontDefault()
+
+    def __init__(self, base_size=None, glyph_count=None, glyph_padding=None, texture=None, recs=None, glyphs=None):
+        # type: (Font, int, int, int, Texture2D, RectanglePtr, GlyphInfoPtr) -> None
+        """Initializes this Font"""
+        super(Font, self).__init__(
+            base_size or 1,
+            glyph_count or 0,
+            glyph_padding or 1,
+            texture or Texture2D(),
+            recs,
+            glyphs
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(self.__class__.__name__, id(self))
+
+    def __repr__(self):
+        return self.__str__()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Font"""
+        return byref(self)
+
+    @property
+    def is_ready(self):
+        """Check if a font is ready"""
+        return _IsFontReady(self)
+
+    def unload(self):
+        # type: (Font) -> None
+        """Unload font from GPU memory (VRAM)"""
+        _UnloadFont(self)
+
+    def draw_text_ex(self, text, position, font_size, spacing, tint):
+        # type: (Font, bytes | str | None, Vector2, float, float, Color) -> None
+        """Draw text using font and additional parameters"""
+        _DrawTextEx(self, _str_in(text), _vec2(position), _float(font_size), _float(spacing), _color(tint))
+
+    def draw_text_pro(self, text, position, origin, rotation, font_size, spacing, tint):
+        # type: (Font, bytes | str | None, Vector2, Vector2, float, float, float, Color) -> None
+        """Draw text using Font and pro parameters (rotation)"""
+        _DrawTextPro(self, _str_in(text), _vec2(position), _vec2(origin), _float(rotation), _float(font_size), _float(spacing), _color(tint))
+
+    def draw_text_codepoint(self, codepoint, position, font_size, tint):
+        # type: (Font, int, Vector2, float, Color) -> None
+        """Draw one character (codepoint)"""
+        _DrawTextCodepoint(self, _int(codepoint), _vec2(position), _float(font_size), _color(tint))
+
+    def draw_text_codepoints(self, codepoints, codepoint_count, position, font_size, spacing, tint):
+        # type: (Font, IntPtr, int, Vector2, float, float, Color) -> None
+        """Draw multiple character (codepoint)"""
+        _DrawTextCodepoints(self, codepoints, _int(codepoint_count), _vec2(position), _float(font_size), _float(spacing), _color(tint))
+
+    def measure_text_ex(self, text, font_size, spacing):
+        # type: (Font, bytes | str | None, float, float) -> Vector2
+        """Measure string size for Font"""
+        return _MeasureTextEx(self, _str_in(text), _float(font_size), _float(spacing))
+
+    def get_glyph_index(self, codepoint):
+        # type: (Font, int) -> int
+        """Get glyph index position in font for a codepoint (unicode character), fallback to '?' if not found"""
+        return _GetGlyphIndex(self, _int(codepoint))
+
+    def get_glyph_info(self, codepoint):
+        # type: (Font, int) -> GlyphInfo
+        """Get glyph font info data for a codepoint (unicode character), fallback to '?' if not found"""
+        return _GetGlyphInfo(self, _int(codepoint))
+
+    def get_glyph_atlas_rec(self, codepoint):
+        # type: (Font, int) -> Rectangle
+        """Get glyph rectangle in font atlas for a codepoint (unicode character), fallback to '?' if not found"""
+        return _GetGlyphAtlasRec(self, _int(codepoint))
+
+    @staticmethod
+    def load_data(file_data, data_size, font_size, codepoints, codepoint_count, type_):
+        # type: (int, int, int, list[int] | str, int, int) -> Array[GlyphInfo]
+        """Load font data for further use"""
+        codepoints = int_array(codepoints)
+        result = _LoadFontData(_int(file_data, (0, 255)), _int(data_size), _int(font_size), byref(codepoints), _int(codepoint_count), _int(type_))
+        result = cast(result, POINTER(GlyphInfo * codepoints.value))[0]
+        _clear_in_out()
+        _push_in_out(codepoints.value)
+        return result
+
+    @staticmethod
+    def unload_data(glyphs, glyph_count):
+        # type: (GlyphInfoPtr, int) -> None
+        """Unload font chars info data (RAM)"""
+        _UnloadFontData(glyphs, _int(glyph_count))
+
+
+class Camera3D(Structure):
+    """Camera, defines position/orientation in 3d space"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Camera3D elements"""
+        return (Camera3D * len(sequence))(*sequence)
+
+    def __init__(self, position=None, target=None, up=None, fovy=None, projection=None):
+        # type: (Camera3D, Vector3, Vector3, Vector3, float, int) -> None
+        """Initializes this Camera3D"""
+        super(Camera3D, self).__init__(
+            position or Vector3(),
+            target or Vector3(),
+            up or Vector3(0.0, 1.0, 0.0),
+            fovy or 45.0,
+            projection or CAMERA_PERSPECTIVE
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    def __enter__(self):
+        # type: (Camera3D) -> None
+        """Begin 3D mode with custom camera (3D)"""
+        _BeginMode3D(self)
+
+    def __exit__():
+        # type: () -> None
+        """Ends 3D mode and returns to default 2D orthographic mode"""
+        _EndMode3D()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Camera3D"""
+        return byref(self)
+
+    def get_matrix(self):
+        # type: (Camera) -> Matrix
+        """Get camera transform matrix (view matrix)"""
+        return _GetCameraMatrix(self)
+
+
+# Camera type fallback, defaults to Camera3D
+Camera = Camera3D
+CameraPtr = POINTER(Camera3D)
+
+
+class Camera2D(Structure):
+    """Camera2D, defines position/orientation in 2d space"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Camera2D elements"""
+        return (Camera2D * len(sequence))(*sequence)
+
+    def __init__(self, offset=None, target=None, rotation=None, zoom=None):
+        # type: (Camera2D, Vector2, Vector2, float, float) -> None
+        """Initializes this Camera2D"""
+        super(Camera2D, self).__init__(
+            offset or Vector2(),
+            target or Vector2(),
+            rotation or 0.0,
+            zoom or 1.0
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    def __enter__(self):
+        # type: (Camera2D) -> None
+        """Begin 2D mode with custom camera (2D)"""
+        _BeginMode2D(self)
+
+    def __exit__():
+        # type: () -> None
+        """Ends 2D mode with custom camera"""
+        _EndMode2D()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Camera2D"""
+        return byref(self)
+
+    def get_matrix2d(self):
+        # type: (Camera2D) -> Matrix
+        """Get camera 2d transform matrix"""
+        return _GetCameraMatrix2D(self)
+
+
+class Mesh(Structure):
+    """Mesh, vertex data and vao/vbo"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Mesh elements"""
+        return (Mesh * len(sequence))(*sequence)
+
+    @classmethod
+    def gen_poly(cls, sides, radius):
+        # type: (Mesh, int, float) -> Mesh
+        """Generate polygonal mesh"""
+        return _GenMeshPoly(_int(sides), _float(radius))
+
+    @classmethod
+    def gen_plane(cls, width, length, res_x, res_z):
+        # type: (Mesh, float, float, int, int) -> Mesh
+        """Generate plane mesh (with subdivisions)"""
+        return _GenMeshPlane(_float(width), _float(length), _int(res_x), _int(res_z))
+
+    @classmethod
+    def gen_cube(cls, width, height, length):
+        # type: (Mesh, float, float, float) -> Mesh
+        """Generate cuboid mesh"""
+        return _GenMeshCube(_float(width), _float(height), _float(length))
+
+    @classmethod
+    def gen_sphere(cls, radius, rings, slices):
+        # type: (Mesh, float, int, int) -> Mesh
+        """Generate sphere mesh (standard sphere)"""
+        return _GenMeshSphere(_float(radius), _int(rings), _int(slices))
+
+    @classmethod
+    def gen_hemi_sphere(cls, radius, rings, slices):
+        # type: (Mesh, float, int, int) -> Mesh
+        """Generate half-sphere mesh (no bottom cap)"""
+        return _GenMeshHemiSphere(_float(radius), _int(rings), _int(slices))
+
+    @classmethod
+    def gen_cylinder(cls, radius, height, slices):
+        # type: (Mesh, float, float, int) -> Mesh
+        """Generate cylinder mesh"""
+        return _GenMeshCylinder(_float(radius), _float(height), _int(slices))
+
+    @classmethod
+    def gen_cone(cls, radius, height, slices):
+        # type: (Mesh, float, float, int) -> Mesh
+        """Generate cone/pyramid mesh"""
+        return _GenMeshCone(_float(radius), _float(height), _int(slices))
+
+    @classmethod
+    def gen_torus(cls, radius, size, rad_seg, sides):
+        # type: (Mesh, float, float, int, int) -> Mesh
+        """Generate torus mesh"""
+        return _GenMeshTorus(_float(radius), _float(size), _int(rad_seg), _int(sides))
+
+    @classmethod
+    def gen_knot(cls, radius, size, rad_seg, sides):
+        # type: (Mesh, float, float, int, int) -> Mesh
+        """Generate trefoil knot mesh"""
+        return _GenMeshKnot(_float(radius), _float(size), _int(rad_seg), _int(sides))
+
+    @classmethod
+    def gen_heightmap(cls, heightmap, size):
+        # type: (Mesh, Image, Vector3) -> Mesh
+        """Generate heightmap mesh from image data"""
+        return _GenMeshHeightmap(heightmap, _vec3(size))
+
+    @classmethod
+    def gen_cubicmap(cls, cubicmap, cube_size):
+        # type: (Mesh, Image, Vector3) -> Mesh
+        """Generate cubes-based map mesh from image data"""
+        return _GenMeshCubicmap(cubicmap, _vec3(cube_size))
+
+    def __init__(self, vertex_count=None, triangle_count=None, vertices=None, texcoords=None, texcoords2=None, normals=None, tangents=None, colors=None, indices=None, anim_vertices=None, anim_normals=None, bone_ids=None, bone_weights=None, vao_id=None, vbo_id=None):
+        # type: (Mesh, int, int, FloatPtr, FloatPtr, FloatPtr, FloatPtr, FloatPtr, int, UShortPtr, FloatPtr, FloatPtr, int, FloatPtr, int, UIntPtr) -> None
+        """Initializes this Mesh"""
+        super(Mesh, self).__init__(
+            vertex_count or 0,
+            triangle_count or 0,
+            vertices,
+            texcoords,
+            texcoords2,
+            normals,
+            tangents,
+            colors,
+            indices,
+            anim_vertices,
+            anim_normals,
+            bone_ids,
+            bone_weights,
+            vao_id or 0,
+            vbo_id
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(self.__class__.__name__, id(self))
+
+    def __repr__(self):
+        return self.__str__()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Mesh"""
+        return byref(self)
+
+    def upload(self, dynamic):
+        # type: (MeshPtr, bool) -> None
+        """Upload mesh vertex data in GPU and provide VAO/VBO ids"""
+        _UploadMesh(self, _bool(dynamic))
+
+    def update_buffer(self, index, data, data_size, offset):
+        # type: (Mesh, int, bytes | str | None, int, int) -> None
+        """Update mesh vertex data in GPU for a specific buffer index"""
+        _UpdateMeshBuffer(self, _int(index), data, _int(data_size), _int(offset))
+
+    def unload(self):
+        # type: (Mesh) -> None
+        """Unload mesh data from CPU and GPU"""
+        _UnloadMesh(self)
+
+    def draw(self, material, transform):
+        # type: (Mesh, Material, Matrix) -> None
+        """Draw a 3d mesh with material and transform"""
+        _DrawMesh(self, material, transform)
+
+    def draw_instanced(self, material, transforms, instances):
+        # type: (Mesh, Material, MatrixPtr, int) -> None
+        """Draw multiple mesh instances with material and different transforms"""
+        _DrawMeshInstanced(self, material, transforms, _int(instances))
+
+    def export(self, file_name):
+        # type: (Mesh, bytes | str | None) -> bool
+        """Export mesh data to file, returns true on success"""
+        return _ExportMesh(self, _str_in(file_name))
+
+    def get_bounding_box(self):
+        # type: (Mesh) -> BoundingBox
+        """Compute mesh bounding box limits"""
+        return _GetMeshBoundingBox(self)
+
+    def gen_tangents(self):
+        # type: (MeshPtr) -> None
+        """Compute mesh tangents"""
+        _GenMeshTangents(self)
+
+# Pointer types for Mesh
+MeshPtr = POINTER(Mesh)
+
+
+class Shader(Structure):
+    """Shader"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Shader elements"""
+        return (Shader * len(sequence))(*sequence)
+
+    @classmethod
+    def load(cls, vs_file_name, fs_file_name):
+        # type: (Shader, bytes | str | None, bytes | str | None) -> Shader
+        """Load shader from files and bind default locations"""
+        return _LoadShader(_str_in(vs_file_name), _str_in(fs_file_name))
+
+    @classmethod
+    def load_from_memory(cls, vs_code, fs_code):
+        # type: (Shader, bytes | str | None, bytes | str | None) -> Shader
+        """Load shader from code strings and bind default locations"""
+        return _LoadShaderFromMemory(_str_in(vs_code), _str_in(fs_code))
+
+    def __init__(self, id_=None, locs=None):
+        # type: (Shader, int, IntPtr) -> None
+        """Initializes this Shader"""
+        super(Shader, self).__init__(
+            id_ or 0,
+            locs
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(self.__class__.__name__, id(self))
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __enter__(self):
+        # type: (Shader) -> None
+        """Begin custom shader drawing"""
+        _BeginShaderMode(self)
+
+    def __exit__():
+        # type: () -> None
+        """End custom shader drawing (use default shader)"""
+        _EndShaderMode()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Shader"""
+        return byref(self)
+
+    @property
+    def is_ready(self):
+        """Check if a shader is ready"""
+        return _IsShaderReady(self)
+
+    def get_location(self, uniform_name):
+        # type: (Shader, bytes | str | None) -> int
+        """Get shader uniform location"""
+        return _GetShaderLocation(self, _str_in(uniform_name))
+
+    def get_location_attrib(self, attrib_name):
+        # type: (Shader, bytes | str | None) -> int
+        """Get shader attribute location"""
+        return _GetShaderLocationAttrib(self, _str_in(attrib_name))
+
+    def set_value(self, loc_index, value, uniform_type):
+        # type: (Shader, int, bytes | str | None, int) -> None
+        """Set shader uniform value"""
+        _SetShaderValue(self, _int(loc_index), value, _int(uniform_type))
+
+    def set_value_v(self, loc_index, value, uniform_type, count):
+        # type: (Shader, int, bytes | str | None, int, int) -> None
+        """Set shader uniform value vector"""
+        _SetShaderValueV(self, _int(loc_index), value, _int(uniform_type), _int(count))
+
+    def set_value_matrix(self, loc_index, mat):
+        # type: (Shader, int, Matrix) -> None
+        """Set shader uniform value (matrix 4x4)"""
+        _SetShaderValueMatrix(self, _int(loc_index), mat)
+
+    def set_value_texture(self, loc_index, texture):
+        # type: (Shader, int, Texture2D) -> None
+        """Set shader uniform value for texture (sampler2d)"""
+        _SetShaderValueTexture(self, _int(loc_index), texture)
+
+    def unload(self):
+        # type: (Shader) -> None
+        """Unload shader from GPU memory (VRAM)"""
+        _UnloadShader(self)
+
+
+class MaterialMap(Structure):
+    """MaterialMap"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of MaterialMap elements"""
+        return (MaterialMap * len(sequence))(*sequence)
+
+    def __init__(self, texture=None, color=None, value=None):
+        # type: (MaterialMap, Texture2D, Color, float) -> None
+        """Initializes this MaterialMap"""
+        super(MaterialMap, self).__init__(
+            texture or Texture2D(),
+            color or Color(),
+            value or 0.0
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this MaterialMap"""
+        return byref(self)
+
+# Pointer types for MaterialMap
+MaterialMapPtr = POINTER(MaterialMap)
+
+
+class Material(Structure):
+    """Material, includes shader and maps"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Material elements"""
+        return (Material * len(sequence))(*sequence)
+
+    @classmethod
+    def load_materials(cls, file_name, material_count):
+        # type: (Material, bytes | str | None, int) -> Array[Material]
+        """Load materials from model file"""
+        material_count = Int(material_count)
+        result = _LoadMaterials(_str_in(file_name), byref(material_count))
+        result = cast(result, POINTER(Material * material_count.value))[0]
+        _clear_in_out()
+        _push_in_out(material_count.value)
+        return result
+
+    @classmethod
+    def load_default(cls):
+        # type: (Material) -> Material
+        """Load default material (Supports: DIFFUSE, SPECULAR, NORMAL maps)"""
+        return _LoadMaterialDefault()
+
+    def __init__(self, shader=None, maps=None, params=None):
+        # type: (Material, Shader, MaterialMapPtr, Float4 | list[float]) -> None
+        """Initializes this Material"""
+        super(Material, self).__init__(
+            shader or Shader(),
+            maps,
+            params
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(self.__class__.__name__, id(self))
+
+    def __repr__(self):
+        return self.__str__()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Material"""
+        return byref(self)
+
+    @property
+    def is_ready(self):
+        """Check if a material is ready"""
+        return _IsMaterialReady(self)
+
+    def unload(self):
+        # type: (Material) -> None
+        """Unload material from GPU memory (VRAM)"""
+        _UnloadMaterial(self)
+
+    def set_texture(self, map_type, texture):
+        # type: (MaterialPtr, int, Texture2D) -> None
+        """Set texture for a material map type (MATERIAL_MAP_DIFFUSE, MATERIAL_MAP_SPECULAR...)"""
+        _SetMaterialTexture(self, _int(map_type), texture)
+
+# Pointer types for Material
+MaterialPtr = POINTER(Material)
+
+
+class Transform(Structure):
+    """Transform, vertex transformation data"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Transform elements"""
+        return (Transform * len(sequence))(*sequence)
+
+    def __init__(self, translation=None, rotation=None, scale=None):
+        # type: (Transform, Vector3, Quaternion, Vector3) -> None
+        """Initializes this Transform"""
+        super(Transform, self).__init__(
+            translation or Vector3(),
+            rotation or Quaternion(),
+            scale or Vector3(1.0, 1.0, 1.0)
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Transform"""
+        return byref(self)
+
+# Pointer types for Transform
+TransformPtr = POINTER(Transform)
+
+# Pointer types for Transform
+TransformPtrPtr = POINTER(TransformPtr)
+
+
+class BoneInfo(Structure):
+    """Bone, skeletal animation bone"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of BoneInfo elements"""
+        return (BoneInfo * len(sequence))(*sequence)
+
+    def __init__(self, name=None, parent=None):
+        # type: (BoneInfo, Char32 | list[int | str] | str, int) -> None
+        """Initializes this BoneInfo"""
+        super(BoneInfo, self).__init__(
+            name,
+            parent or 0
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this BoneInfo"""
+        return byref(self)
+
+# Pointer types for BoneInfo
+BoneInfoPtr = POINTER(BoneInfo)
+
+
+class Model(Structure):
+    """Model, meshes, materials and animation data"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Model elements"""
+        return (Model * len(sequence))(*sequence)
+
+    @classmethod
+    def load(cls, file_name):
+        # type: (Model, bytes | str | None) -> Model
+        """Load model from files (meshes and materials)"""
+        return _LoadModel(_str_in(file_name))
+
+    @classmethod
+    def load_from_mesh(cls, mesh):
+        # type: (Model, Mesh) -> Model
+        """Load model from generated mesh (default material)"""
+        return _LoadModelFromMesh(mesh)
+
+    def __init__(self, transform=None, mesh_count=None, material_count=None, meshes=None, materials=None, mesh_material=None, bone_count=None, bones=None, bind_pose=None):
+        # type: (Model, Matrix, int, int, MeshPtr, MaterialPtr, IntPtr, int, BoneInfoPtr, TransformPtr) -> None
+        """Initializes this Model"""
+        super(Model, self).__init__(
+            transform,
+            mesh_count or 0,
+            material_count or 0,
+            meshes,
+            materials,
+            mesh_material,
+            bone_count or 0,
+            bones,
+            bind_pose
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(self.__class__.__name__, id(self))
+
+    def __repr__(self):
+        return self.__str__()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Model"""
+        return byref(self)
+
+    def is_animation_valid(self, anim):
+        # type: (Model, ModelAnimation) -> bool
+        """Check model animation skeleton match"""
+        return _IsModelAnimationValid(self, anim)
+
+    def update_animation(self, anim, frame):
+        # type: (Model, ModelAnimation, int) -> None
+        """Update model animation pose"""
+        _UpdateModelAnimation(self, anim, _int(frame))
+
+    def set_mesh_material(self, mesh_id, material_id):
+        # type: (ModelPtr, int, int) -> None
+        """Set material for a mesh"""
+        _SetModelMeshMaterial(self, _int(mesh_id), _int(material_id))
+
+    def unload(self):
+        # type: (Model) -> None
+        """Unload model (including meshes) from memory (RAM and/or VRAM)"""
+        _UnloadModel(self)
+
+    def get_bounding_box(self):
+        # type: (Model) -> BoundingBox
+        """Compute model bounding box limits (considers all meshes)"""
+        return _GetModelBoundingBox(self)
+
+    def draw(self, position, scale, tint):
+        # type: (Model, Vector3, float, Color) -> None
+        """Draw a model (with texture if set)"""
+        _DrawModel(self, _vec3(position), _float(scale), _color(tint))
+
+    def draw_ex(self, position, rotation_axis, rotation_angle, scale, tint):
+        # type: (Model, Vector3, Vector3, float, Vector3, Color) -> None
+        """Draw a model with extended parameters"""
+        _DrawModelEx(self, _vec3(position), _vec3(rotation_axis), _float(rotation_angle), _vec3(scale), _color(tint))
+
+    def draw_wires(self, position, scale, tint):
+        # type: (Model, Vector3, float, Color) -> None
+        """Draw a model wires (with texture if set)"""
+        _DrawModelWires(self, _vec3(position), _float(scale), _color(tint))
+
+    def draw_wires_ex(self, position, rotation_axis, rotation_angle, scale, tint):
+        # type: (Model, Vector3, Vector3, float, Vector3, Color) -> None
+        """Draw a model wires (with texture if set) with extended parameters"""
+        _DrawModelWiresEx(self, _vec3(position), _vec3(rotation_axis), _float(rotation_angle), _vec3(scale), _color(tint))
+
+# Pointer types for Model
+ModelPtr = POINTER(Model)
+
+
+class ModelAnimation(Structure):
+    """ModelAnimation"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of ModelAnimation elements"""
+        return (ModelAnimation * len(sequence))(*sequence)
+
+    def __init__(self, bone_count=None, frame_count=None, bones=None, frame_poses=None, name=None):
+        # type: (ModelAnimation, int, int, BoneInfoPtr, TransformPtrPtr, Char32 | list[int | str] | str) -> None
+        """Initializes this ModelAnimation"""
+        super(ModelAnimation, self).__init__(
+            bone_count or 0,
+            frame_count or 0,
+            bones,
+            frame_poses,
+            name
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this ModelAnimation"""
+        return byref(self)
+
+# Pointer types for ModelAnimation
+ModelAnimationPtr = POINTER(ModelAnimation)
+
+
+class Ray(Structure):
+    """Ray, ray for raycasting"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Ray elements"""
+        return (Ray * len(sequence))(*sequence)
+
+    def __init__(self, position=None, direction=None):
+        # type: (Ray, Vector3, Vector3) -> None
+        """Initializes this Ray"""
+        super(Ray, self).__init__(
+            position or Vector3(),
+            direction or Vector3()
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Ray"""
+        return byref(self)
+
+
+class RayCollision(Structure):
+    """RayCollision, ray hit information"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of RayCollision elements"""
+        return (RayCollision * len(sequence))(*sequence)
+
+    def __init__(self, hit=None, distance=None, point=None, normal=None):
+        # type: (RayCollision, bool, float, Vector3, Vector3) -> None
+        """Initializes this RayCollision"""
+        super(RayCollision, self).__init__(
+            hit or False,
+            distance or 0.0,
+            point or Vector3(),
+            normal or Vector3()
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this RayCollision"""
+        return byref(self)
+
+
+class BoundingBox(Structure):
+    """BoundingBox"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of BoundingBox elements"""
+        return (BoundingBox * len(sequence))(*sequence)
+
+    def __init__(self, min_=None, max_=None):
+        # type: (BoundingBox, Vector3, Vector3) -> None
+        """Initializes this BoundingBox"""
+        super(BoundingBox, self).__init__(
+            min_ or Vector3(),
+            max_ or Vector3()
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this BoundingBox"""
+        return byref(self)
+
+
+class Wave(Structure):
+    """Wave, audio wave data"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Wave elements"""
+        return (Wave * len(sequence))(*sequence)
+
+    @classmethod
+    def load(cls, file_name):
+        # type: (Wave, bytes | str | None) -> Wave
+        """Load wave data from file"""
+        return _LoadWave(_str_in(file_name))
+
+    @classmethod
+    def load_from_memory(cls, file_type, file_data, data_size):
+        # type: (Wave, bytes | str | None, int, int) -> Wave
+        """Load wave from memory buffer, fileType refers to extension: i.e. '.wav'"""
+        return _LoadWaveFromMemory(_str_in(file_type), _int(file_data, (0, 255)), _int(data_size))
+
+    def __init__(self, frame_count=None, sample_rate=None, sample_size=None, channels=None, data=None):
+        # type: (Wave, int, int, int, int, bytes | str | None) -> None
+        """Initializes this Wave"""
+        super(Wave, self).__init__(
+            frame_count or 0,
+            sample_rate or 0,
+            sample_size or 0,
+            channels or 0,
+            data
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(self.__class__.__name__, id(self))
+
+    def __repr__(self):
+        return self.__str__()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Wave"""
+        return byref(self)
+
+    @property
+    def is_ready(self):
+        """Checks if wave data is ready"""
+        return _IsWaveReady(self)
+
+    def copy(self):
+        # type: (Wave) -> Wave
+        """Copy a wave to a new wave"""
+        return _WaveCopy(self)
+
+    def crop(self, init_sample, final_sample):
+        # type: (WavePtr, int, int) -> None
+        """Crop a wave to defined samples range"""
+        _WaveCrop(self, _int(init_sample), _int(final_sample))
+
+    def format(self, sample_rate, sample_size, channels):
+        # type: (WavePtr, int, int, int) -> None
+        """Convert wave data to desired format"""
+        _WaveFormat(self, _int(sample_rate), _int(sample_size), _int(channels))
+
+    def format(self):
+        # type: (Wave) -> FloatPtr
+        """Load samples data from wave as a 32bit float data array"""
+        return _LoadWaveSamples(self)
+
+    def export(self, file_name):
+        # type: (Wave, bytes | str | None) -> bool
+        """Export wave data to file, returns true on success"""
+        return _ExportWave(self, _str_in(file_name))
+
+    def export_as_code(self, file_name):
+        # type: (Wave, bytes | str | None) -> bool
+        """Export wave sample data to code (.h), returns true on success"""
+        return _ExportWaveAsCode(self, _str_in(file_name))
+
+    def unload(self):
+        # type: (Wave) -> None
+        """Unload wave data"""
+        _UnloadWave(self)
+
+    def unload_samples(self):
+        # type: (FloatPtr) -> None
+        """Unload samples data loaded with LoadWaveSamples()"""
+        _UnloadWaveSamples(self)
+
+# Pointer types for Wave
+WavePtr = POINTER(Wave)
+
+
+class AudioStream(Structure):
+    """AudioStream, custom audio stream"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of AudioStream elements"""
+        return (AudioStream * len(sequence))(*sequence)
+
+    @classmethod
+    def load(cls, sample_rate, sample_size, channels):
+        # type: (AudioStream, int, int, int) -> AudioStream
+        """Load audio stream (to stream raw audio pcm data)"""
+        return _LoadAudioStream(_int(sample_rate), _int(sample_size), _int(channels))
+
+    def __init__(self, buffer=None, processor=None, sample_rate=None, sample_size=None, channels=None):
+        # type: (AudioStream, rAudioBufferPtr, rAudioProcessorPtr, int, int, int) -> None
+        """Initializes this AudioStream"""
+        super(AudioStream, self).__init__(
+            buffer,
+            processor,
+            sample_rate or 0,
+            sample_size or 0,
+            channels or 0
+        )
+
+    def __str__(self):
+        return "[{} Playing: {}]".format(self.__class__.__name__, _IsAudioStreamPlaying(self))
+
+    def __repr__(self):
+        return self.__str__()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this AudioStream"""
+        return byref(self)
+
+    @property
+    def is_ready(self):
+        """Checks if an audio stream is ready"""
+        return _IsAudioStreamReady(self)
+
+    def unload(self):
+        # type: (AudioStream) -> None
+        """Unload audio stream and free memory"""
+        _UnloadAudioStream(self)
+
+    def update(self, data, frame_count):
+        # type: (AudioStream, bytes | str | None, int) -> None
+        """Update audio stream buffers with data"""
+        _UpdateAudioStream(self, data, _int(frame_count))
+
+    def is_processed(self):
+        # type: (AudioStream) -> bool
+        """Check if any audio stream buffers requires refill"""
+        return _IsAudioStreamProcessed(self)
+
+    def play(self):
+        # type: (AudioStream) -> None
+        """Play audio stream"""
+        _PlayAudioStream(self)
+
+    def pause(self):
+        # type: (AudioStream) -> None
+        """Pause audio stream"""
+        _PauseAudioStream(self)
+
+    def resume(self):
+        # type: (AudioStream) -> None
+        """Resume audio stream"""
+        _ResumeAudioStream(self)
+
+    def is_playing(self):
+        # type: (AudioStream) -> bool
+        """Check if audio stream is playing"""
+        return _IsAudioStreamPlaying(self)
+
+    def stop(self):
+        # type: (AudioStream) -> None
+        """Stop audio stream"""
+        _StopAudioStream(self)
+
+    def set_volume(self, volume):
+        # type: (AudioStream, float) -> None
+        """Set volume for audio stream (1.0 is max level)"""
+        _SetAudioStreamVolume(self, _float(volume))
+
+    def set_pitch(self, pitch):
+        # type: (AudioStream, float) -> None
+        """Set pitch for audio stream (1.0 is base level)"""
+        _SetAudioStreamPitch(self, _float(pitch))
+
+    def set_pan(self, pan):
+        # type: (AudioStream, float) -> None
+        """Set pan for audio stream (0.5 is centered)"""
+        _SetAudioStreamPan(self, _float(pan))
+
+    def set_buffer_size_default(self):
+        # type: (int) -> None
+        """Default size for new audio streams"""
+        _SetAudioStreamBufferSizeDefault(_int(self))
+
+    def set_callback(self, callback):
+        # type: (AudioStream, AudioCallback) -> None
+        """Audio thread callback to request new data"""
+        _SetAudioStreamCallback(self, callback)
+
+    def attach_processor(self, processor):
+        # type: (AudioStream, AudioCallback) -> None
+        """Attach audio stream processor to stream, receives the samples as <float>s"""
+        _AttachAudioStreamProcessor(self, processor)
+
+    def detach_processor(self, processor):
+        # type: (AudioStream, AudioCallback) -> None
+        """Detach audio stream processor from stream"""
+        _DetachAudioStreamProcessor(self, processor)
+
+
+class Sound(Structure):
+    """Sound"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Sound elements"""
+        return (Sound * len(sequence))(*sequence)
+
+    @classmethod
+    def load(cls, file_name):
+        # type: (Sound, bytes | str | None) -> Sound
+        """Load sound from file"""
+        return _LoadSound(_str_in(file_name))
+
+    @classmethod
+    def load_from_wave(cls, wave):
+        # type: (Sound, Wave) -> Sound
+        """Load sound from wave data"""
+        return _LoadSoundFromWave(wave)
+
+    @classmethod
+    def load_alias(cls, source):
+        # type: (Sound, Sound) -> Sound
+        """Create a new sound that shares the same sample data as the source sound, does not own the sound data"""
+        return _LoadSoundAlias(source)
+
+    def __init__(self, stream=None, frame_count=None):
+        # type: (Sound, AudioStream, int) -> None
+        """Initializes this Sound"""
+        super(Sound, self).__init__(
+            stream or AudioStream(),
+            frame_count or 0
+        )
+
+    def __str__(self):
+        return "[{} Playing: {}]".format(self.__class__.__name__, _IsSoundPlaying(self))
+
+    def __repr__(self):
+        return self.__str__()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Sound"""
+        return byref(self)
+
+    @property
+    def is_ready(self):
+        """Checks if a sound is ready"""
+        return _IsSoundReady(self)
+
+    def play(self):
+        # type: (Sound) -> None
+        """Play a sound"""
+        _PlaySound(self)
+
+    def stop(self):
+        # type: (Sound) -> None
+        """Stop playing a sound"""
+        _StopSound(self)
+
+    def pause(self):
+        # type: (Sound) -> None
+        """Pause a sound"""
+        _PauseSound(self)
+
+    def resume(self):
+        # type: (Sound) -> None
+        """Resume a paused sound"""
+        _ResumeSound(self)
+
+    def is_playing(self):
+        # type: (Sound) -> bool
+        """Check if a sound is currently playing"""
+        return _IsSoundPlaying(self)
+
+    def set_volume(self, volume):
+        # type: (Sound, float) -> None
+        """Set volume for a sound (1.0 is max level)"""
+        _SetSoundVolume(self, _float(volume))
+
+    def set_pitch(self, pitch):
+        # type: (Sound, float) -> None
+        """Set pitch for a sound (1.0 is base level)"""
+        _SetSoundPitch(self, _float(pitch))
+
+    def set_pan(self, pan):
+        # type: (Sound, float) -> None
+        """Set pan for a sound (0.5 is center)"""
+        _SetSoundPan(self, _float(pan))
+
+    def unload(self):
+        # type: (Sound) -> None
+        """Unload sound"""
+        _UnloadSound(self)
+
+    def unload_alias(self):
+        # type: (Sound) -> None
+        """Unload a sound alias (does not deallocate sample data)"""
+        _UnloadSoundAlias(self)
+
+    def update(self, data, sample_count):
+        # type: (Sound, bytes | str | None, int) -> None
+        """Update sound buffer with new data"""
+        _UpdateSound(self, data, _int(sample_count))
+
+
+class Music(Structure):
+    """Music, audio stream, anything longer than ~10 seconds should be streamed"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of Music elements"""
+        return (Music * len(sequence))(*sequence)
+
+    @classmethod
+    def load(cls, file_name):
+        # type: (Music, bytes | str | None) -> Music
+        """Load music stream from file"""
+        return _LoadMusicStream(_str_in(file_name))
+
+    @classmethod
+    def load_from_memory(cls, file_type, data, data_size):
+        # type: (Music, bytes | str | None, int, int) -> Music
+        """Load music stream from data"""
+        return _LoadMusicStreamFromMemory(_str_in(file_type), _int(data, (0, 255)), _int(data_size))
+
+    def __init__(self, stream=None, frame_count=None, looping=None, ctx_type=None, ctx_data=None):
+        # type: (Music, AudioStream, int, bool, int, bytes | str | None) -> None
+        """Initializes this Music"""
+        super(Music, self).__init__(
+            stream or AudioStream(),
+            frame_count or 0,
+            looping or False,
+            ctx_type or 0,
+            ctx_data
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(self.__class__.__name__, id(self))
+
+    def __repr__(self):
+        return self.__str__()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this Music"""
+        return byref(self)
+
+    @property
+    def is_ready(self):
+        """Checks if a music stream is ready"""
+        return _IsMusicReady(self)
+
+    @property
+    def time_length(self):
+        """Get music time length (in seconds)"""
+        return _GetMusicTimeLength(self)
+
+    @property
+    def time_played(self):
+        """Get current music time played (in seconds)"""
+        return _GetMusicTimePlayed(self)
+
+    def play(self):
+        # type: (Music) -> None
+        """Start music playing"""
+        _PlayMusicStream(self)
+
+    def is_playing(self):
+        # type: (Music) -> bool
+        """Check if music is playing"""
+        return _IsMusicStreamPlaying(self)
+
+    def update(self):
+        # type: (Music) -> None
+        """Updates buffers for music streaming"""
+        _UpdateMusicStream(self)
+
+    def stop(self):
+        # type: (Music) -> None
+        """Stop music playing"""
+        _StopMusicStream(self)
+
+    def pause(self):
+        # type: (Music) -> None
+        """Pause music playing"""
+        _PauseMusicStream(self)
+
+    def resume(self):
+        # type: (Music) -> None
+        """Resume playing paused music"""
+        _ResumeMusicStream(self)
+
+    def seek(self, position):
+        # type: (Music, float) -> None
+        """Seek music to a position (in seconds)"""
+        _SeekMusicStream(self, _float(position))
+
+    def set_volume(self, volume):
+        # type: (Music, float) -> None
+        """Set volume for music (1.0 is max level)"""
+        _SetMusicVolume(self, _float(volume))
+
+    def set_pitch(self, pitch):
+        # type: (Music, float) -> None
+        """Set pitch for a music (1.0 is base level)"""
+        _SetMusicPitch(self, _float(pitch))
+
+    def set_pan(self, pan):
+        # type: (Music, float) -> None
+        """Set pan for a music (0.5 is center)"""
+        _SetMusicPan(self, _float(pan))
+
+    def unload(self):
+        # type: (Music) -> None
+        """Unload music stream"""
+        _UnloadMusicStream(self)
+
+
+class VrDeviceInfo(Structure):
+    """VrDeviceInfo, Head-Mounted-Display device parameters"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of VrDeviceInfo elements"""
+        return (VrDeviceInfo * len(sequence))(*sequence)
+
+    def __init__(self, h_resolution=None, v_resolution=None, h_screen_size=None, v_screen_size=None, v_screen_center=None, eye_to_screen_distance=None, lens_separation_distance=None, interpupillary_distance=None, lens_distortion_values=None, chroma_ab_correction=None):
+        # type: (VrDeviceInfo, int, int, float, float, float, float, float, float, Float4 | list[float], Float4 | list[float]) -> None
+        """Initializes this VrDeviceInfo"""
+        super(VrDeviceInfo, self).__init__(
+            h_resolution or 0,
+            v_resolution or 0,
+            h_screen_size or 0.0,
+            v_screen_size or 0.0,
+            v_screen_center or 0.0,
+            eye_to_screen_distance or 0.0,
+            lens_separation_distance or 0.0,
+            interpupillary_distance or 0.0,
+            lens_distortion_values,
+            chroma_ab_correction
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this VrDeviceInfo"""
+        return byref(self)
+
+
+class VrStereoConfig(Structure):
+    """VrStereoConfig, VR stereo rendering configuration for simulator"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of VrStereoConfig elements"""
+        return (VrStereoConfig * len(sequence))(*sequence)
+
+    @classmethod
+    def load(cls, device):
+        # type: (VrStereoConfig, VrDeviceInfo) -> VrStereoConfig
+        """Load VR stereo config for VR simulator device parameters"""
+        return _LoadVrStereoConfig(device)
+
+    def __init__(self, projection=None, view_offset=None, left_lens_center=None, right_lens_center=None, left_screen_center=None, right_screen_center=None, scale=None, scale_in=None):
+        # type: (VrStereoConfig, Matrix2 | list[Matrix], Matrix2 | list[Matrix], Float2 | list[float], Float2 | list[float], Float2 | list[float], Float2 | list[float], Float2 | list[float], Float2 | list[float]) -> None
+        """Initializes this VrStereoConfig"""
+        super(VrStereoConfig, self).__init__(
+            projection,
+            view_offset,
+            left_lens_center,
+            right_lens_center,
+            left_screen_center,
+            right_screen_center,
+            scale,
+            scale_in
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    def __enter__(self):
+        # type: (VrStereoConfig) -> None
+        """Begin stereo rendering (requires VR simulator)"""
+        _BeginVrStereoMode(self)
+
+    def __exit__():
+        # type: () -> None
+        """End stereo rendering (requires VR simulator)"""
+        _EndVrStereoMode()
+
+    @property
+    def byref(self):
+        """Gets a pointer to this VrStereoConfig"""
+        return byref(self)
+
+    def unload(self):
+        # type: (VrStereoConfig) -> None
+        """Unload VR stereo config"""
+        _UnloadVrStereoConfig(self)
+
+
+class FilePathList(Structure):
+    """File path list"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of FilePathList elements"""
+        return (FilePathList * len(sequence))(*sequence)
+
+    def __init__(self, capacity=None, count=None, paths=None):
+        # type: (FilePathList, int, int, CharPtrPtr | list[CharPtr | str] | None) -> None
+        """Initializes this FilePathList"""
+        super(FilePathList, self).__init__(
+            capacity or 0,
+            count or 0,
+            paths
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this FilePathList"""
+        return byref(self)
+
+
+class AutomationEvent(Structure):
+    """Automation event"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of AutomationEvent elements"""
+        return (AutomationEvent * len(sequence))(*sequence)
+
+    def __init__(self, frame=None, type_=None, params=None):
+        # type: (AutomationEvent, int, int, Int4 | list[int]) -> None
+        """Initializes this AutomationEvent"""
+        super(AutomationEvent, self).__init__(
+            frame or 0,
+            type_ or 0,
+            params
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this AutomationEvent"""
+        return byref(self)
+
+# Pointer types for AutomationEvent
+AutomationEventPtr = POINTER(AutomationEvent)
+
+
+class AutomationEventList(Structure):
+    """Automation event list"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of AutomationEventList elements"""
+        return (AutomationEventList * len(sequence))(*sequence)
+
+    def __init__(self, capacity=None, count=None, events=None):
+        # type: (AutomationEventList, int, int, AutomationEventPtr) -> None
+        """Initializes this AutomationEventList"""
+        super(AutomationEventList, self).__init__(
+            capacity or 0,
+            count or 0,
+            events
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this AutomationEventList"""
+        return byref(self)
+
+# Pointer types for AutomationEventList
+AutomationEventListPtr = POINTER(AutomationEventList)
+
+class rAudioBuffer(Structure):
+    """Opaque structure type"""
+
+    pass
+
+rAudioBufferPtr = POINTER(rAudioBuffer)
+class rAudioProcessor(Structure):
+    """Opaque structure type"""
+
+    pass
+
+rAudioProcessorPtr = POINTER(rAudioProcessor)
+
+# rlapi::raymath
+# ------------------------------------------------------------------------------
+
+class float3(Structure):
+    """NOTE: Helper types to be used instead of array return types for *ToFloat functions"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of float3 elements"""
+        return (float3 * len(sequence))(*sequence)
+
+    def __init__(self, v=None):
+        # type: (float3, Float3 | list[float]) -> None
+        """Initializes this float3"""
+        super(float3, self).__init__(
+            v
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this float3"""
+        return byref(self)
+
+
+class float16(Structure):
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of float16 elements"""
+        return (float16 * len(sequence))(*sequence)
+
+    def __init__(self, v=None):
+        # type: (float16, Float16 | list[float]) -> None
+        """Initializes this float16"""
+        super(float16, self).__init__(
+            v
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this float16"""
+        return byref(self)
+
+
+# rlapi::rlgl
+# ------------------------------------------------------------------------------
+
+class rlVertexBuffer(Structure):
+    """Dynamic vertex buffers (position + texcoords + colors + indices arrays)"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of rlVertexBuffer elements"""
+        return (rlVertexBuffer * len(sequence))(*sequence)
+
+    def __init__(self, element_count=None, vertices=None, texcoords=None, colors=None, indices=None, vao_id=None, vbo_id=None):
+        # type: (rlVertexBuffer, int, FloatPtr, FloatPtr, int, UShortPtr, int, UInt4 | list[int]) -> None
+        """Initializes this rlVertexBuffer"""
+        super(rlVertexBuffer, self).__init__(
+            element_count,
+            vertices,
+            texcoords,
+            colors,
+            indices,
+            vao_id,
+            vbo_id
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this rlVertexBuffer"""
+        return byref(self)
+
+# Pointer types for rlVertexBuffer
+rlVertexBufferPtr = POINTER(rlVertexBuffer)
+
+
+class rlDrawCall(Structure):
+    """of those state-change happens (this is done in core module)"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of rlDrawCall elements"""
+        return (rlDrawCall * len(sequence))(*sequence)
+
+    def __init__(self, mode=None, vertex_count=None, vertex_alignment=None, texture_id=None):
+        # type: (rlDrawCall, int, int, int, int) -> None
+        """Initializes this rlDrawCall"""
+        super(rlDrawCall, self).__init__(
+            mode,
+            vertex_count,
+            vertex_alignment,
+            texture_id
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this rlDrawCall"""
+        return byref(self)
+
+# Pointer types for rlDrawCall
+rlDrawCallPtr = POINTER(rlDrawCall)
+
+
+class rlRenderBatch(Structure):
+    """rlRenderBatch type"""
+
+    @classmethod
+    def array_of(cls, sequence):
+        """Creates and returns an array of rlRenderBatch elements"""
+        return (rlRenderBatch * len(sequence))(*sequence)
+
+    def __init__(self, buffer_count=None, current_buffer=None, vertex_buffer=None, draws=None, draw_counter=None, current_depth=None):
+        # type: (rlRenderBatch, int, int, rlVertexBufferPtr, rlDrawCallPtr, int, float) -> None
+        """Initializes this rlRenderBatch"""
+        super(rlRenderBatch, self).__init__(
+            buffer_count,
+            current_buffer,
+            vertex_buffer,
+            draws,
+            draw_counter,
+            current_depth
+        )
+
+    def __str__(self):
+        return "[{} at {}]".format(_clsname(self), id(self))
+
+    def __repr__(self):
+        return "{}()".format(_clsname(self))
+
+    @property
+    def byref(self):
+        """Gets a pointer to this rlRenderBatch"""
+        return byref(self)
+
+# Pointer types for rlRenderBatch
+rlRenderBatchPtr = POINTER(rlRenderBatch)
+
+
+# endregion (structures)
+
+# region CALLBACKS
+
+# rlapi::raylib
+# ------------------------------------------------------------------------------
+
+
+# Logging: Redirect trace log messages
+TraceLogCallback = CFUNCTYPE(Int, CharPtr)
+
+
+# FileIO: Load binary data
+LoadFileDataCallback = CFUNCTYPE(CharPtr, IntPtr)
+
+
+# FileIO: Save binary data
+SaveFileDataCallback = CFUNCTYPE(CharPtr, VoidPtr, Int)
+
+
+# FileIO: Load text data
+LoadFileTextCallback = CFUNCTYPE(CharPtr)
+
+
+# FileIO: Save text data
+SaveFileTextCallback = CFUNCTYPE(CharPtr, CharPtr)
+
+
+AudioCallback = CFUNCTYPE(VoidPtr, UInt)
+
+# endregion (callbacks)
+
+# region INTERNALS
+
+# rlapi::raylib
+# ------------------------------------------------------------------------------
+
+Vector2._fields_ = [
+    ('x', c_float),
+    ('y', c_float),
+]
+
+
+Vector3._fields_ = [
+    ('x', c_float),
+    ('y', c_float),
+    ('z', c_float),
+]
+
+
+Vector4._fields_ = [
+    ('x', c_float),
+    ('y', c_float),
+    ('z', c_float),
+    ('w', c_float),
+]
+
+
+Matrix._fields_ = [
+    ('m0', c_float),
+    ('m4', c_float),
+    ('m8', c_float),
+    ('m12', c_float),
+    ('m1', c_float),
+    ('m5', c_float),
+    ('m9', c_float),
+    ('m13', c_float),
+    ('m2', c_float),
+    ('m6', c_float),
+    ('m10', c_float),
+    ('m14', c_float),
+    ('m3', c_float),
+    ('m7', c_float),
+    ('m11', c_float),
+    ('m15', c_float),
+]
+
+
+Color._fields_ = [
+    ('r', c_ubyte),
+    ('g', c_ubyte),
+    ('b', c_ubyte),
+    ('a', c_ubyte),
+]
+
+
+Rectangle._fields_ = [
+    ('x', c_float),
+    ('y', c_float),
+    ('width', c_float),
+    ('height', c_float),
+]
+
+
+Image._fields_ = [
+    ('data', c_void_p),
+    ('width', c_int),
+    ('height', c_int),
+    ('mipmaps', c_int),
+    ('format', c_int),
+]
+
+
+Texture._fields_ = [
+    ('id', c_uint),
+    ('width', c_int),
+    ('height', c_int),
+    ('mipmaps', c_int),
+    ('format', c_int),
+]
+
+
+RenderTexture._fields_ = [
+    ('id', c_uint),
+    ('texture', Texture),
+    ('depth', Texture),
+]
+
+
+NPatchInfo._fields_ = [
+    ('source', Rectangle),
+    ('left', c_int),
+    ('top', c_int),
+    ('right', c_int),
+    ('bottom', c_int),
+    ('layout', c_int),
+]
+
+
+GlyphInfo._fields_ = [
+    ('value', c_int),
+    ('offset_x', c_int),
+    ('offset_y', c_int),
+    ('advance_x', c_int),
+    ('image', Image),
+]
+
+
+Font._fields_ = [
+    ('base_size', c_int),
+    ('glyph_count', c_int),
+    ('glyph_padding', c_int),
+    ('texture', Texture2D),
+    ('recs', RectanglePtr),
+    ('glyphs', GlyphInfoPtr),
+]
+
+
+Camera3D._fields_ = [
+    ('position', Vector3),
+    ('target', Vector3),
+    ('up', Vector3),
+    ('fovy', c_float),
+    ('projection', c_int),
+]
+
+
+Camera2D._fields_ = [
+    ('offset', Vector2),
+    ('target', Vector2),
+    ('rotation', c_float),
+    ('zoom', c_float),
+]
+
+
+Mesh._fields_ = [
+    ('vertex_count', c_int),
+    ('triangle_count', c_int),
+    ('vertices', POINTER(c_float)),
+    ('texcoords', POINTER(c_float)),
+    ('texcoords2', POINTER(c_float)),
+    ('normals', POINTER(c_float)),
+    ('tangents', POINTER(c_float)),
+    ('colors', c_ubyte),
+    ('indices', POINTER(c_ushort)),
+    ('anim_vertices', POINTER(c_float)),
+    ('anim_normals', POINTER(c_float)),
+    ('bone_ids', c_ubyte),
+    ('bone_weights', POINTER(c_float)),
+    ('vao_id', c_uint),
+    ('vbo_id', POINTER(c_uint)),
+]
+
+
+Shader._fields_ = [
+    ('id', c_uint),
+    ('locs', POINTER(c_int)),
+]
+
+
+MaterialMap._fields_ = [
+    ('texture', Texture2D),
+    ('color', Color),
+    ('value', c_float),
+]
+
+
+Material._fields_ = [
+    ('shader', Shader),
+    ('maps', MaterialMapPtr),
+    ('params', c_float * 4),
+]
+
+
+Transform._fields_ = [
+    ('translation', Vector3),
+    ('rotation', Quaternion),
+    ('scale', Vector3),
+]
+
+
+BoneInfo._fields_ = [
+    ('name', c_char * 32),
+    ('parent', c_int),
+]
+
+
+Model._fields_ = [
+    ('transform', Matrix),
+    ('mesh_count', c_int),
+    ('material_count', c_int),
+    ('meshes', MeshPtr),
+    ('materials', MaterialPtr),
+    ('mesh_material', POINTER(c_int)),
+    ('bone_count', c_int),
+    ('bones', BoneInfoPtr),
+    ('bind_pose', TransformPtr),
+]
+
+
+ModelAnimation._fields_ = [
+    ('bone_count', c_int),
+    ('frame_count', c_int),
+    ('bones', BoneInfoPtr),
+    ('frame_poses', TransformPtrPtr),
+    ('name', c_char * 32),
+]
+
+
+Ray._fields_ = [
+    ('position', Vector3),
+    ('direction', Vector3),
+]
+
+
+RayCollision._fields_ = [
+    ('hit', c_bool),
+    ('distance', c_float),
+    ('point', Vector3),
+    ('normal', Vector3),
+]
+
+
+BoundingBox._fields_ = [
+    ('min', Vector3),
+    ('max', Vector3),
+]
+
+
+Wave._fields_ = [
+    ('frame_count', c_uint),
+    ('sample_rate', c_uint),
+    ('sample_size', c_uint),
+    ('channels', c_uint),
+    ('data', c_void_p),
+]
+
+
+AudioStream._fields_ = [
+    ('buffer', rAudioBufferPtr),
+    ('processor', rAudioProcessorPtr),
+    ('sample_rate', c_uint),
+    ('sample_size', c_uint),
+    ('channels', c_uint),
+]
+
+
+Sound._fields_ = [
+    ('stream', AudioStream),
+    ('frame_count', c_uint),
+]
+
+
+Music._fields_ = [
+    ('stream', AudioStream),
+    ('frame_count', c_uint),
+    ('looping', c_bool),
+    ('ctx_type', c_int),
+    ('ctx_data', c_void_p),
+]
+
+
+VrDeviceInfo._fields_ = [
+    ('h_resolution', c_int),
+    ('v_resolution', c_int),
+    ('h_screen_size', c_float),
+    ('v_screen_size', c_float),
+    ('v_screen_center', c_float),
+    ('eye_to_screen_distance', c_float),
+    ('lens_separation_distance', c_float),
+    ('interpupillary_distance', c_float),
+    ('lens_distortion_values', c_float * 4),
+    ('chroma_ab_correction', c_float * 4),
+]
+
+
+VrStereoConfig._fields_ = [
+    ('projection', Matrix * 2),
+    ('view_offset', Matrix * 2),
+    ('left_lens_center', c_float * 2),
+    ('right_lens_center', c_float * 2),
+    ('left_screen_center', c_float * 2),
+    ('right_screen_center', c_float * 2),
+    ('scale', c_float * 2),
+    ('scale_in', c_float * 2),
+]
+
+
+FilePathList._fields_ = [
+    ('capacity', c_uint),
+    ('count', c_uint),
+    ('paths', POINTER(c_char_p)),
+]
+
+
+AutomationEvent._fields_ = [
+    ('frame', c_uint),
+    ('type', c_uint),
+    ('params', c_int * 4),
+]
+
+
+AutomationEventList._fields_ = [
+    ('capacity', c_uint),
+    ('count', c_uint),
+    ('events', AutomationEventPtr),
+]
+
+
+_InitWindow = _wrap(rlapi.InitWindow, None, Int, Int, CharPtr)
+_CloseWindow = _wrap(rlapi.CloseWindow, None)
+_WindowShouldClose = _wrap(rlapi.WindowShouldClose, Bool)
+_IsWindowReady = _wrap(rlapi.IsWindowReady, Bool)
+_IsWindowFullscreen = _wrap(rlapi.IsWindowFullscreen, Bool)
+_IsWindowHidden = _wrap(rlapi.IsWindowHidden, Bool)
+_IsWindowMinimized = _wrap(rlapi.IsWindowMinimized, Bool)
+_IsWindowMaximized = _wrap(rlapi.IsWindowMaximized, Bool)
+_IsWindowFocused = _wrap(rlapi.IsWindowFocused, Bool)
+_IsWindowResized = _wrap(rlapi.IsWindowResized, Bool)
+_IsWindowState = _wrap(rlapi.IsWindowState, Bool, UInt)
+_SetWindowState = _wrap(rlapi.SetWindowState, None, UInt)
+_ClearWindowState = _wrap(rlapi.ClearWindowState, None, UInt)
+_ToggleFullscreen = _wrap(rlapi.ToggleFullscreen, None)
+_ToggleBorderlessWindowed = _wrap(rlapi.ToggleBorderlessWindowed, None)
+_MaximizeWindow = _wrap(rlapi.MaximizeWindow, None)
+_MinimizeWindow = _wrap(rlapi.MinimizeWindow, None)
+_RestoreWindow = _wrap(rlapi.RestoreWindow, None)
+_SetWindowIcon = _wrap(rlapi.SetWindowIcon, None, Image)
+_SetWindowIcons = _wrap(rlapi.SetWindowIcons, None, ImagePtr, Int)
+_SetWindowTitle = _wrap(rlapi.SetWindowTitle, None, CharPtr)
+_SetWindowPosition = _wrap(rlapi.SetWindowPosition, None, Int, Int)
+_SetWindowMonitor = _wrap(rlapi.SetWindowMonitor, None, Int)
+_SetWindowMinSize = _wrap(rlapi.SetWindowMinSize, None, Int, Int)
+_SetWindowMaxSize = _wrap(rlapi.SetWindowMaxSize, None, Int, Int)
+_SetWindowSize = _wrap(rlapi.SetWindowSize, None, Int, Int)
+_SetWindowOpacity = _wrap(rlapi.SetWindowOpacity, None, Float)
+_SetWindowFocused = _wrap(rlapi.SetWindowFocused, None)
+_GetWindowHandle = _wrap(rlapi.GetWindowHandle, VoidPtr)
+_GetScreenWidth = _wrap(rlapi.GetScreenWidth, Int)
+_GetScreenHeight = _wrap(rlapi.GetScreenHeight, Int)
+_GetRenderWidth = _wrap(rlapi.GetRenderWidth, Int)
+_GetRenderHeight = _wrap(rlapi.GetRenderHeight, Int)
+_GetMonitorCount = _wrap(rlapi.GetMonitorCount, Int)
+_GetCurrentMonitor = _wrap(rlapi.GetCurrentMonitor, Int)
+_GetMonitorPosition = _wrap(rlapi.GetMonitorPosition, Vector2, Int)
+_GetMonitorWidth = _wrap(rlapi.GetMonitorWidth, Int, Int)
+_GetMonitorHeight = _wrap(rlapi.GetMonitorHeight, Int, Int)
+_GetMonitorPhysicalWidth = _wrap(rlapi.GetMonitorPhysicalWidth, Int, Int)
+_GetMonitorPhysicalHeight = _wrap(rlapi.GetMonitorPhysicalHeight, Int, Int)
+_GetMonitorRefreshRate = _wrap(rlapi.GetMonitorRefreshRate, Int, Int)
+_GetWindowPosition = _wrap(rlapi.GetWindowPosition, Vector2)
+_GetWindowScaleDPI = _wrap(rlapi.GetWindowScaleDPI, Vector2)
+_GetMonitorName = _wrap(rlapi.GetMonitorName, CharPtr, Int)
+_SetClipboardText = _wrap(rlapi.SetClipboardText, None, CharPtr)
+_GetClipboardText = _wrap(rlapi.GetClipboardText, CharPtr)
+_EnableEventWaiting = _wrap(rlapi.EnableEventWaiting, None)
+_DisableEventWaiting = _wrap(rlapi.DisableEventWaiting, None)
+_ShowCursor = _wrap(rlapi.ShowCursor, None)
+_HideCursor = _wrap(rlapi.HideCursor, None)
+_IsCursorHidden = _wrap(rlapi.IsCursorHidden, Bool)
+_EnableCursor = _wrap(rlapi.EnableCursor, None)
+_DisableCursor = _wrap(rlapi.DisableCursor, None)
+_IsCursorOnScreen = _wrap(rlapi.IsCursorOnScreen, Bool)
+_ClearBackground = _wrap(rlapi.ClearBackground, None, Color)
+_BeginDrawing = _wrap(rlapi.BeginDrawing, None)
+_EndDrawing = _wrap(rlapi.EndDrawing, None)
+_BeginMode2D = _wrap(rlapi.BeginMode2D, None, Camera2D)
+_EndMode2D = _wrap(rlapi.EndMode2D, None)
+_BeginMode3D = _wrap(rlapi.BeginMode3D, None, Camera3D)
+_EndMode3D = _wrap(rlapi.EndMode3D, None)
+_BeginTextureMode = _wrap(rlapi.BeginTextureMode, None, RenderTexture2D)
+_EndTextureMode = _wrap(rlapi.EndTextureMode, None)
+_BeginShaderMode = _wrap(rlapi.BeginShaderMode, None, Shader)
+_EndShaderMode = _wrap(rlapi.EndShaderMode, None)
+_BeginBlendMode = _wrap(rlapi.BeginBlendMode, None, Int)
+_EndBlendMode = _wrap(rlapi.EndBlendMode, None)
+_BeginScissorMode = _wrap(rlapi.BeginScissorMode, None, Int, Int, Int, Int)
+_EndScissorMode = _wrap(rlapi.EndScissorMode, None)
+_BeginVrStereoMode = _wrap(rlapi.BeginVrStereoMode, None, VrStereoConfig)
+_EndVrStereoMode = _wrap(rlapi.EndVrStereoMode, None)
+_LoadVrStereoConfig = _wrap(rlapi.LoadVrStereoConfig, VrStereoConfig, VrDeviceInfo)
+_UnloadVrStereoConfig = _wrap(rlapi.UnloadVrStereoConfig, None, VrStereoConfig)
+_LoadShader = _wrap(rlapi.LoadShader, Shader, CharPtr, CharPtr)
+_LoadShaderFromMemory = _wrap(rlapi.LoadShaderFromMemory, Shader, CharPtr, CharPtr)
+_IsShaderReady = _wrap(rlapi.IsShaderReady, Bool, Shader)
+_GetShaderLocation = _wrap(rlapi.GetShaderLocation, Int, Shader, CharPtr)
+_GetShaderLocationAttrib = _wrap(rlapi.GetShaderLocationAttrib, Int, Shader, CharPtr)
+_SetShaderValue = _wrap(rlapi.SetShaderValue, None, Shader, Int, VoidPtr, Int)
+_SetShaderValueV = _wrap(rlapi.SetShaderValueV, None, Shader, Int, VoidPtr, Int, Int)
+_SetShaderValueMatrix = _wrap(rlapi.SetShaderValueMatrix, None, Shader, Int, Matrix)
+_SetShaderValueTexture = _wrap(rlapi.SetShaderValueTexture, None, Shader, Int, Texture2D)
+_UnloadShader = _wrap(rlapi.UnloadShader, None, Shader)
+_GetMouseRay = _wrap(rlapi.GetMouseRay, Ray, Vector2, Camera)
+_GetCameraMatrix = _wrap(rlapi.GetCameraMatrix, Matrix, Camera)
+_GetCameraMatrix2D = _wrap(rlapi.GetCameraMatrix2D, Matrix, Camera2D)
+_GetWorldToScreen = _wrap(rlapi.GetWorldToScreen, Vector2, Vector3, Camera)
+_GetScreenToWorld2D = _wrap(rlapi.GetScreenToWorld2D, Vector2, Vector2, Camera2D)
+_GetWorldToScreenEx = _wrap(rlapi.GetWorldToScreenEx, Vector2, Vector3, Camera, Int, Int)
+_GetWorldToScreen2D = _wrap(rlapi.GetWorldToScreen2D, Vector2, Vector2, Camera2D)
+_SetTargetFPS = _wrap(rlapi.SetTargetFPS, None, Int)
+_GetFrameTime = _wrap(rlapi.GetFrameTime, Float)
+_GetTime = _wrap(rlapi.GetTime, Double)
+_GetFPS = _wrap(rlapi.GetFPS, Int)
+_SwapScreenBuffer = _wrap(rlapi.SwapScreenBuffer, None)
+_PollInputEvents = _wrap(rlapi.PollInputEvents, None)
+_WaitTime = _wrap(rlapi.WaitTime, None, Double)
+_SetRandomSeed = _wrap(rlapi.SetRandomSeed, None, UInt)
+_GetRandomValue = _wrap(rlapi.GetRandomValue, Int, Int, Int)
+_LoadRandomSequence = _wrap(rlapi.LoadRandomSequence, IntPtr, UInt, Int, Int)
+_UnloadRandomSequence = _wrap(rlapi.UnloadRandomSequence, None, IntPtr)
+_TakeScreenshot = _wrap(rlapi.TakeScreenshot, None, CharPtr)
+_SetConfigFlags = _wrap(rlapi.SetConfigFlags, None, UInt)
+_OpenURL = _wrap(rlapi.OpenURL, None, CharPtr)
+_TraceLog = _wrap(rlapi.TraceLog, None, Int, CharPtr)
+_SetTraceLogLevel = _wrap(rlapi.SetTraceLogLevel, None, Int)
+_MemAlloc = _wrap(rlapi.MemAlloc, VoidPtr, UInt)
+_MemRealloc = _wrap(rlapi.MemRealloc, VoidPtr, VoidPtr, UInt)
+_MemFree = _wrap(rlapi.MemFree, None, VoidPtr)
+_SetTraceLogCallback = _wrap(rlapi.SetTraceLogCallback, None, TraceLogCallback)
+_SetLoadFileDataCallback = _wrap(rlapi.SetLoadFileDataCallback, None, LoadFileDataCallback)
+_SetSaveFileDataCallback = _wrap(rlapi.SetSaveFileDataCallback, None, SaveFileDataCallback)
+_SetLoadFileTextCallback = _wrap(rlapi.SetLoadFileTextCallback, None, LoadFileTextCallback)
+_SetSaveFileTextCallback = _wrap(rlapi.SetSaveFileTextCallback, None, SaveFileTextCallback)
+_LoadFileData = _wrap(rlapi.LoadFileData, UCharPtr, CharPtr, IntPtr)
+_UnloadFileData = _wrap(rlapi.UnloadFileData, None, UCharPtr)
+_SaveFileData = _wrap(rlapi.SaveFileData, Bool, CharPtr, VoidPtr, Int)
+_ExportDataAsCode = _wrap(rlapi.ExportDataAsCode, Bool, UCharPtr, Int, CharPtr)
+_LoadFileText = _wrap(rlapi.LoadFileText, CharPtr, CharPtr)
+_UnloadFileText = _wrap(rlapi.UnloadFileText, None, CharPtr)
+_SaveFileText = _wrap(rlapi.SaveFileText, Bool, CharPtr, CharPtr)
+_FileExists = _wrap(rlapi.FileExists, Bool, CharPtr)
+_DirectoryExists = _wrap(rlapi.DirectoryExists, Bool, CharPtr)
+_IsFileExtension = _wrap(rlapi.IsFileExtension, Bool, CharPtr, CharPtr)
+_GetFileLength = _wrap(rlapi.GetFileLength, Int, CharPtr)
+_GetFileExtension = _wrap(rlapi.GetFileExtension, CharPtr, CharPtr)
+_GetFileName = _wrap(rlapi.GetFileName, CharPtr, CharPtr)
+_GetFileNameWithoutExt = _wrap(rlapi.GetFileNameWithoutExt, CharPtr, CharPtr)
+_GetDirectoryPath = _wrap(rlapi.GetDirectoryPath, CharPtr, CharPtr)
+_GetPrevDirectoryPath = _wrap(rlapi.GetPrevDirectoryPath, CharPtr, CharPtr)
+_GetWorkingDirectory = _wrap(rlapi.GetWorkingDirectory, CharPtr)
+_GetApplicationDirectory = _wrap(rlapi.GetApplicationDirectory, CharPtr)
+_ChangeDirectory = _wrap(rlapi.ChangeDirectory, Bool, CharPtr)
+_IsPathFile = _wrap(rlapi.IsPathFile, Bool, CharPtr)
+_LoadDirectoryFiles = _wrap(rlapi.LoadDirectoryFiles, FilePathList, CharPtr)
+_LoadDirectoryFilesEx = _wrap(rlapi.LoadDirectoryFilesEx, FilePathList, CharPtr, CharPtr, Bool)
+_UnloadDirectoryFiles = _wrap(rlapi.UnloadDirectoryFiles, None, FilePathList)
+_IsFileDropped = _wrap(rlapi.IsFileDropped, Bool)
+_LoadDroppedFiles = _wrap(rlapi.LoadDroppedFiles, FilePathList)
+_UnloadDroppedFiles = _wrap(rlapi.UnloadDroppedFiles, None, FilePathList)
+_GetFileModTime = _wrap(rlapi.GetFileModTime, Long, CharPtr)
+_CompressData = _wrap(rlapi.CompressData, UCharPtr, UCharPtr, Int, IntPtr)
+_DecompressData = _wrap(rlapi.DecompressData, UCharPtr, UCharPtr, Int, IntPtr)
+_EncodeDataBase64 = _wrap(rlapi.EncodeDataBase64, CharPtr, UCharPtr, Int, IntPtr)
+_DecodeDataBase64 = _wrap(rlapi.DecodeDataBase64, UCharPtr, UCharPtr, IntPtr)
+_LoadAutomationEventList = _wrap(rlapi.LoadAutomationEventList, AutomationEventList, CharPtr)
+_UnloadAutomationEventList = _wrap(rlapi.UnloadAutomationEventList, None, AutomationEventListPtr)
+_ExportAutomationEventList = _wrap(rlapi.ExportAutomationEventList, Bool, AutomationEventList, CharPtr)
+_SetAutomationEventList = _wrap(rlapi.SetAutomationEventList, None, AutomationEventListPtr)
+_SetAutomationEventBaseFrame = _wrap(rlapi.SetAutomationEventBaseFrame, None, Int)
+_StartAutomationEventRecording = _wrap(rlapi.StartAutomationEventRecording, None)
+_StopAutomationEventRecording = _wrap(rlapi.StopAutomationEventRecording, None)
+_PlayAutomationEvent = _wrap(rlapi.PlayAutomationEvent, None, AutomationEvent)
+_IsKeyPressed = _wrap(rlapi.IsKeyPressed, Bool, Int)
+_IsKeyPressedRepeat = _wrap(rlapi.IsKeyPressedRepeat, Bool, Int)
+_IsKeyDown = _wrap(rlapi.IsKeyDown, Bool, Int)
+_IsKeyReleased = _wrap(rlapi.IsKeyReleased, Bool, Int)
+_IsKeyUp = _wrap(rlapi.IsKeyUp, Bool, Int)
+_GetKeyPressed = _wrap(rlapi.GetKeyPressed, Int)
+_GetCharPressed = _wrap(rlapi.GetCharPressed, Int)
+_SetExitKey = _wrap(rlapi.SetExitKey, None, Int)
+_IsGamepadAvailable = _wrap(rlapi.IsGamepadAvailable, Bool, Int)
+_GetGamepadName = _wrap(rlapi.GetGamepadName, CharPtr, Int)
+_IsGamepadButtonPressed = _wrap(rlapi.IsGamepadButtonPressed, Bool, Int, Int)
+_IsGamepadButtonDown = _wrap(rlapi.IsGamepadButtonDown, Bool, Int, Int)
+_IsGamepadButtonReleased = _wrap(rlapi.IsGamepadButtonReleased, Bool, Int, Int)
+_IsGamepadButtonUp = _wrap(rlapi.IsGamepadButtonUp, Bool, Int, Int)
+_GetGamepadButtonPressed = _wrap(rlapi.GetGamepadButtonPressed, Int)
+_GetGamepadAxisCount = _wrap(rlapi.GetGamepadAxisCount, Int, Int)
+_GetGamepadAxisMovement = _wrap(rlapi.GetGamepadAxisMovement, Float, Int, Int)
+_SetGamepadMappings = _wrap(rlapi.SetGamepadMappings, Int, CharPtr)
+_IsMouseButtonPressed = _wrap(rlapi.IsMouseButtonPressed, Bool, Int)
+_IsMouseButtonDown = _wrap(rlapi.IsMouseButtonDown, Bool, Int)
+_IsMouseButtonReleased = _wrap(rlapi.IsMouseButtonReleased, Bool, Int)
+_IsMouseButtonUp = _wrap(rlapi.IsMouseButtonUp, Bool, Int)
+_GetMouseX = _wrap(rlapi.GetMouseX, Int)
+_GetMouseY = _wrap(rlapi.GetMouseY, Int)
+_GetMousePosition = _wrap(rlapi.GetMousePosition, Vector2)
+_GetMouseDelta = _wrap(rlapi.GetMouseDelta, Vector2)
+_SetMousePosition = _wrap(rlapi.SetMousePosition, None, Int, Int)
+_SetMouseOffset = _wrap(rlapi.SetMouseOffset, None, Int, Int)
+_SetMouseScale = _wrap(rlapi.SetMouseScale, None, Float, Float)
+_GetMouseWheelMove = _wrap(rlapi.GetMouseWheelMove, Float)
+_GetMouseWheelMoveV = _wrap(rlapi.GetMouseWheelMoveV, Vector2)
+_SetMouseCursor = _wrap(rlapi.SetMouseCursor, None, Int)
+_GetTouchX = _wrap(rlapi.GetTouchX, Int)
+_GetTouchY = _wrap(rlapi.GetTouchY, Int)
+_GetTouchPosition = _wrap(rlapi.GetTouchPosition, Vector2, Int)
+_GetTouchPointId = _wrap(rlapi.GetTouchPointId, Int, Int)
+_GetTouchPointCount = _wrap(rlapi.GetTouchPointCount, Int)
+_SetGesturesEnabled = _wrap(rlapi.SetGesturesEnabled, None, UInt)
+_IsGestureDetected = _wrap(rlapi.IsGestureDetected, Bool, UInt)
+_GetGestureDetected = _wrap(rlapi.GetGestureDetected, Int)
+_GetGestureHoldDuration = _wrap(rlapi.GetGestureHoldDuration, Float)
+_GetGestureDragVector = _wrap(rlapi.GetGestureDragVector, Vector2)
+_GetGestureDragAngle = _wrap(rlapi.GetGestureDragAngle, Float)
+_GetGesturePinchVector = _wrap(rlapi.GetGesturePinchVector, Vector2)
+_GetGesturePinchAngle = _wrap(rlapi.GetGesturePinchAngle, Float)
+_UpdateCamera = _wrap(rlapi.UpdateCamera, None, CameraPtr, Int)
+_UpdateCameraPro = _wrap(rlapi.UpdateCameraPro, None, CameraPtr, Vector3, Vector3, Float)
+_SetShapesTexture = _wrap(rlapi.SetShapesTexture, None, Texture2D, Rectangle)
+_DrawPixel = _wrap(rlapi.DrawPixel, None, Int, Int, Color)
+_DrawPixelV = _wrap(rlapi.DrawPixelV, None, Vector2, Color)
+_DrawLine = _wrap(rlapi.DrawLine, None, Int, Int, Int, Int, Color)
+_DrawLineV = _wrap(rlapi.DrawLineV, None, Vector2, Vector2, Color)
+_DrawLineEx = _wrap(rlapi.DrawLineEx, None, Vector2, Vector2, Float, Color)
+_DrawLineStrip = _wrap(rlapi.DrawLineStrip, None, Vector2Ptr, Int, Color)
+_DrawLineBezier = _wrap(rlapi.DrawLineBezier, None, Vector2, Vector2, Float, Color)
+_DrawCircle = _wrap(rlapi.DrawCircle, None, Int, Int, Float, Color)
+_DrawCircleSector = _wrap(rlapi.DrawCircleSector, None, Vector2, Float, Float, Float, Int, Color)
+_DrawCircleSectorLines = _wrap(rlapi.DrawCircleSectorLines, None, Vector2, Float, Float, Float, Int, Color)
+_DrawCircleGradient = _wrap(rlapi.DrawCircleGradient, None, Int, Int, Float, Color, Color)
+_DrawCircleV = _wrap(rlapi.DrawCircleV, None, Vector2, Float, Color)
+_DrawCircleLines = _wrap(rlapi.DrawCircleLines, None, Int, Int, Float, Color)
+_DrawCircleLinesV = _wrap(rlapi.DrawCircleLinesV, None, Vector2, Float, Color)
+_DrawEllipse = _wrap(rlapi.DrawEllipse, None, Int, Int, Float, Float, Color)
+_DrawEllipseLines = _wrap(rlapi.DrawEllipseLines, None, Int, Int, Float, Float, Color)
+_DrawRing = _wrap(rlapi.DrawRing, None, Vector2, Float, Float, Float, Float, Int, Color)
+_DrawRingLines = _wrap(rlapi.DrawRingLines, None, Vector2, Float, Float, Float, Float, Int, Color)
+_DrawRectangle = _wrap(rlapi.DrawRectangle, None, Int, Int, Int, Int, Color)
+_DrawRectangleV = _wrap(rlapi.DrawRectangleV, None, Vector2, Vector2, Color)
+_DrawRectangleRec = _wrap(rlapi.DrawRectangleRec, None, Rectangle, Color)
+_DrawRectanglePro = _wrap(rlapi.DrawRectanglePro, None, Rectangle, Vector2, Float, Color)
+_DrawRectangleGradientV = _wrap(rlapi.DrawRectangleGradientV, None, Int, Int, Int, Int, Color, Color)
+_DrawRectangleGradientH = _wrap(rlapi.DrawRectangleGradientH, None, Int, Int, Int, Int, Color, Color)
+_DrawRectangleGradientEx = _wrap(rlapi.DrawRectangleGradientEx, None, Rectangle, Color, Color, Color, Color)
+_DrawRectangleLines = _wrap(rlapi.DrawRectangleLines, None, Int, Int, Int, Int, Color)
+_DrawRectangleLinesEx = _wrap(rlapi.DrawRectangleLinesEx, None, Rectangle, Float, Color)
+_DrawRectangleRounded = _wrap(rlapi.DrawRectangleRounded, None, Rectangle, Float, Int, Color)
+_DrawRectangleRoundedLines = _wrap(rlapi.DrawRectangleRoundedLines, None, Rectangle, Float, Int, Float, Color)
+_DrawTriangle = _wrap(rlapi.DrawTriangle, None, Vector2, Vector2, Vector2, Color)
+_DrawTriangleLines = _wrap(rlapi.DrawTriangleLines, None, Vector2, Vector2, Vector2, Color)
+_DrawTriangleFan = _wrap(rlapi.DrawTriangleFan, None, Vector2Ptr, Int, Color)
+_DrawTriangleStrip = _wrap(rlapi.DrawTriangleStrip, None, Vector2Ptr, Int, Color)
+_DrawPoly = _wrap(rlapi.DrawPoly, None, Vector2, Int, Float, Float, Color)
+_DrawPolyLines = _wrap(rlapi.DrawPolyLines, None, Vector2, Int, Float, Float, Color)
+_DrawPolyLinesEx = _wrap(rlapi.DrawPolyLinesEx, None, Vector2, Int, Float, Float, Float, Color)
+_DrawSplineLinear = _wrap(rlapi.DrawSplineLinear, None, Vector2Ptr, Int, Float, Color)
+_DrawSplineBasis = _wrap(rlapi.DrawSplineBasis, None, Vector2Ptr, Int, Float, Color)
+_DrawSplineCatmullRom = _wrap(rlapi.DrawSplineCatmullRom, None, Vector2Ptr, Int, Float, Color)
+_DrawSplineBezierQuadratic = _wrap(rlapi.DrawSplineBezierQuadratic, None, Vector2Ptr, Int, Float, Color)
+_DrawSplineBezierCubic = _wrap(rlapi.DrawSplineBezierCubic, None, Vector2Ptr, Int, Float, Color)
+_DrawSplineSegmentLinear = _wrap(rlapi.DrawSplineSegmentLinear, None, Vector2, Vector2, Float, Color)
+_DrawSplineSegmentBasis = _wrap(rlapi.DrawSplineSegmentBasis, None, Vector2, Vector2, Vector2, Vector2, Float, Color)
+_DrawSplineSegmentCatmullRom = _wrap(rlapi.DrawSplineSegmentCatmullRom, None, Vector2, Vector2, Vector2, Vector2, Float, Color)
+_DrawSplineSegmentBezierQuadratic = _wrap(rlapi.DrawSplineSegmentBezierQuadratic, None, Vector2, Vector2, Vector2, Float, Color)
+_DrawSplineSegmentBezierCubic = _wrap(rlapi.DrawSplineSegmentBezierCubic, None, Vector2, Vector2, Vector2, Vector2, Float, Color)
+_GetSplinePointLinear = _wrap(rlapi.GetSplinePointLinear, Vector2, Vector2, Vector2, Float)
+_GetSplinePointBasis = _wrap(rlapi.GetSplinePointBasis, Vector2, Vector2, Vector2, Vector2, Vector2, Float)
+_GetSplinePointCatmullRom = _wrap(rlapi.GetSplinePointCatmullRom, Vector2, Vector2, Vector2, Vector2, Vector2, Float)
+_GetSplinePointBezierQuad = _wrap(rlapi.GetSplinePointBezierQuad, Vector2, Vector2, Vector2, Vector2, Float)
+_GetSplinePointBezierCubic = _wrap(rlapi.GetSplinePointBezierCubic, Vector2, Vector2, Vector2, Vector2, Vector2, Float)
+_CheckCollisionRecs = _wrap(rlapi.CheckCollisionRecs, Bool, Rectangle, Rectangle)
+_CheckCollisionCircles = _wrap(rlapi.CheckCollisionCircles, Bool, Vector2, Float, Vector2, Float)
+_CheckCollisionCircleRec = _wrap(rlapi.CheckCollisionCircleRec, Bool, Vector2, Float, Rectangle)
+_CheckCollisionPointRec = _wrap(rlapi.CheckCollisionPointRec, Bool, Vector2, Rectangle)
+_CheckCollisionPointCircle = _wrap(rlapi.CheckCollisionPointCircle, Bool, Vector2, Vector2, Float)
+_CheckCollisionPointTriangle = _wrap(rlapi.CheckCollisionPointTriangle, Bool, Vector2, Vector2, Vector2, Vector2)
+_CheckCollisionPointPoly = _wrap(rlapi.CheckCollisionPointPoly, Bool, Vector2, Vector2Ptr, Int)
+_CheckCollisionLines = _wrap(rlapi.CheckCollisionLines, Bool, Vector2, Vector2, Vector2, Vector2, Vector2Ptr)
+_CheckCollisionPointLine = _wrap(rlapi.CheckCollisionPointLine, Bool, Vector2, Vector2, Vector2, Int)
+_GetCollisionRec = _wrap(rlapi.GetCollisionRec, Rectangle, Rectangle, Rectangle)
+_LoadImage = _wrap(rlapi.LoadImage, Image, CharPtr)
+_LoadImageRaw = _wrap(rlapi.LoadImageRaw, Image, CharPtr, Int, Int, Int, Int)
+_LoadImageSvg = _wrap(rlapi.LoadImageSvg, Image, CharPtr, Int, Int)
+_LoadImageAnim = _wrap(rlapi.LoadImageAnim, Image, CharPtr, IntPtr)
+_LoadImageFromMemory = _wrap(rlapi.LoadImageFromMemory, Image, CharPtr, UCharPtr, Int)
+_LoadImageFromTexture = _wrap(rlapi.LoadImageFromTexture, Image, Texture2D)
+_LoadImageFromScreen = _wrap(rlapi.LoadImageFromScreen, Image)
+_IsImageReady = _wrap(rlapi.IsImageReady, Bool, Image)
+_UnloadImage = _wrap(rlapi.UnloadImage, None, Image)
+_ExportImage = _wrap(rlapi.ExportImage, Bool, Image, CharPtr)
+_ExportImageToMemory = _wrap(rlapi.ExportImageToMemory, UCharPtr, Image, CharPtr, IntPtr)
+_ExportImageAsCode = _wrap(rlapi.ExportImageAsCode, Bool, Image, CharPtr)
+_GenImageColor = _wrap(rlapi.GenImageColor, Image, Int, Int, Color)
+_GenImageGradientLinear = _wrap(rlapi.GenImageGradientLinear, Image, Int, Int, Int, Color, Color)
+_GenImageGradientRadial = _wrap(rlapi.GenImageGradientRadial, Image, Int, Int, Float, Color, Color)
+_GenImageGradientSquare = _wrap(rlapi.GenImageGradientSquare, Image, Int, Int, Float, Color, Color)
+_GenImageChecked = _wrap(rlapi.GenImageChecked, Image, Int, Int, Int, Int, Color, Color)
+_GenImageWhiteNoise = _wrap(rlapi.GenImageWhiteNoise, Image, Int, Int, Float)
+_GenImagePerlinNoise = _wrap(rlapi.GenImagePerlinNoise, Image, Int, Int, Int, Int, Float)
+_GenImageCellular = _wrap(rlapi.GenImageCellular, Image, Int, Int, Int)
+_GenImageText = _wrap(rlapi.GenImageText, Image, Int, Int, CharPtr)
+_ImageCopy = _wrap(rlapi.ImageCopy, Image, Image)
+_ImageFromImage = _wrap(rlapi.ImageFromImage, Image, Image, Rectangle)
+_ImageText = _wrap(rlapi.ImageText, Image, CharPtr, Int, Color)
+_ImageTextEx = _wrap(rlapi.ImageTextEx, Image, Font, CharPtr, Float, Float, Color)
+_ImageFormat = _wrap(rlapi.ImageFormat, None, ImagePtr, Int)
+_ImageToPOT = _wrap(rlapi.ImageToPOT, None, ImagePtr, Color)
+_ImageCrop = _wrap(rlapi.ImageCrop, None, ImagePtr, Rectangle)
+_ImageAlphaCrop = _wrap(rlapi.ImageAlphaCrop, None, ImagePtr, Float)
+_ImageAlphaClear = _wrap(rlapi.ImageAlphaClear, None, ImagePtr, Color, Float)
+_ImageAlphaMask = _wrap(rlapi.ImageAlphaMask, None, ImagePtr, Image)
+_ImageAlphaPremultiply = _wrap(rlapi.ImageAlphaPremultiply, None, ImagePtr)
+_ImageBlurGaussian = _wrap(rlapi.ImageBlurGaussian, None, ImagePtr, Int)
+_ImageResize = _wrap(rlapi.ImageResize, None, ImagePtr, Int, Int)
+_ImageResizeNN = _wrap(rlapi.ImageResizeNN, None, ImagePtr, Int, Int)
+_ImageResizeCanvas = _wrap(rlapi.ImageResizeCanvas, None, ImagePtr, Int, Int, Int, Int, Color)
+_ImageMipmaps = _wrap(rlapi.ImageMipmaps, None, ImagePtr)
+_ImageDither = _wrap(rlapi.ImageDither, None, ImagePtr, Int, Int, Int, Int)
+_ImageFlipVertical = _wrap(rlapi.ImageFlipVertical, None, ImagePtr)
+_ImageFlipHorizontal = _wrap(rlapi.ImageFlipHorizontal, None, ImagePtr)
+_ImageRotate = _wrap(rlapi.ImageRotate, None, ImagePtr, Int)
+_ImageRotateCW = _wrap(rlapi.ImageRotateCW, None, ImagePtr)
+_ImageRotateCCW = _wrap(rlapi.ImageRotateCCW, None, ImagePtr)
+_ImageColorTint = _wrap(rlapi.ImageColorTint, None, ImagePtr, Color)
+_ImageColorInvert = _wrap(rlapi.ImageColorInvert, None, ImagePtr)
+_ImageColorGrayscale = _wrap(rlapi.ImageColorGrayscale, None, ImagePtr)
+_ImageColorContrast = _wrap(rlapi.ImageColorContrast, None, ImagePtr, Float)
+_ImageColorBrightness = _wrap(rlapi.ImageColorBrightness, None, ImagePtr, Int)
+_ImageColorReplace = _wrap(rlapi.ImageColorReplace, None, ImagePtr, Color, Color)
+_LoadImageColors = _wrap(rlapi.LoadImageColors, ColorPtr, Image)
+_LoadImagePalette = _wrap(rlapi.LoadImagePalette, ColorPtr, Image, Int, IntPtr)
+_UnloadImageColors = _wrap(rlapi.UnloadImageColors, None, ColorPtr)
+_UnloadImagePalette = _wrap(rlapi.UnloadImagePalette, None, ColorPtr)
+_GetImageAlphaBorder = _wrap(rlapi.GetImageAlphaBorder, Rectangle, Image, Float)
+_GetImageColor = _wrap(rlapi.GetImageColor, Color, Image, Int, Int)
+_ImageClearBackground = _wrap(rlapi.ImageClearBackground, None, ImagePtr, Color)
+_ImageDrawPixel = _wrap(rlapi.ImageDrawPixel, None, ImagePtr, Int, Int, Color)
+_ImageDrawPixelV = _wrap(rlapi.ImageDrawPixelV, None, ImagePtr, Vector2, Color)
+_ImageDrawLine = _wrap(rlapi.ImageDrawLine, None, ImagePtr, Int, Int, Int, Int, Color)
+_ImageDrawLineV = _wrap(rlapi.ImageDrawLineV, None, ImagePtr, Vector2, Vector2, Color)
+_ImageDrawCircle = _wrap(rlapi.ImageDrawCircle, None, ImagePtr, Int, Int, Int, Color)
+_ImageDrawCircleV = _wrap(rlapi.ImageDrawCircleV, None, ImagePtr, Vector2, Int, Color)
+_ImageDrawCircleLines = _wrap(rlapi.ImageDrawCircleLines, None, ImagePtr, Int, Int, Int, Color)
+_ImageDrawCircleLinesV = _wrap(rlapi.ImageDrawCircleLinesV, None, ImagePtr, Vector2, Int, Color)
+_ImageDrawRectangle = _wrap(rlapi.ImageDrawRectangle, None, ImagePtr, Int, Int, Int, Int, Color)
+_ImageDrawRectangleV = _wrap(rlapi.ImageDrawRectangleV, None, ImagePtr, Vector2, Vector2, Color)
+_ImageDrawRectangleRec = _wrap(rlapi.ImageDrawRectangleRec, None, ImagePtr, Rectangle, Color)
+_ImageDrawRectangleLines = _wrap(rlapi.ImageDrawRectangleLines, None, ImagePtr, Rectangle, Int, Color)
+_ImageDraw = _wrap(rlapi.ImageDraw, None, ImagePtr, Image, Rectangle, Rectangle, Color)
+_ImageDrawText = _wrap(rlapi.ImageDrawText, None, ImagePtr, CharPtr, Int, Int, Int, Color)
+_ImageDrawTextEx = _wrap(rlapi.ImageDrawTextEx, None, ImagePtr, Font, CharPtr, Vector2, Float, Float, Color)
+_LoadTexture = _wrap(rlapi.LoadTexture, Texture2D, CharPtr)
+_LoadTextureFromImage = _wrap(rlapi.LoadTextureFromImage, Texture2D, Image)
+_LoadTextureCubemap = _wrap(rlapi.LoadTextureCubemap, TextureCubemap, Image, Int)
+_LoadRenderTexture = _wrap(rlapi.LoadRenderTexture, RenderTexture2D, Int, Int)
+_IsTextureReady = _wrap(rlapi.IsTextureReady, Bool, Texture2D)
+_UnloadTexture = _wrap(rlapi.UnloadTexture, None, Texture2D)
+_IsRenderTextureReady = _wrap(rlapi.IsRenderTextureReady, Bool, RenderTexture2D)
+_UnloadRenderTexture = _wrap(rlapi.UnloadRenderTexture, None, RenderTexture2D)
+_UpdateTexture = _wrap(rlapi.UpdateTexture, None, Texture2D, VoidPtr)
+_UpdateTextureRec = _wrap(rlapi.UpdateTextureRec, None, Texture2D, Rectangle, VoidPtr)
+_GenTextureMipmaps = _wrap(rlapi.GenTextureMipmaps, None, Texture2DPtr)
+_SetTextureFilter = _wrap(rlapi.SetTextureFilter, None, Texture2D, Int)
+_SetTextureWrap = _wrap(rlapi.SetTextureWrap, None, Texture2D, Int)
+_DrawTexture = _wrap(rlapi.DrawTexture, None, Texture2D, Int, Int, Color)
+_DrawTextureV = _wrap(rlapi.DrawTextureV, None, Texture2D, Vector2, Color)
+_DrawTextureEx = _wrap(rlapi.DrawTextureEx, None, Texture2D, Vector2, Float, Float, Color)
+_DrawTextureRec = _wrap(rlapi.DrawTextureRec, None, Texture2D, Rectangle, Vector2, Color)
+_DrawTexturePro = _wrap(rlapi.DrawTexturePro, None, Texture2D, Rectangle, Rectangle, Vector2, Float, Color)
+_DrawTextureNPatch = _wrap(rlapi.DrawTextureNPatch, None, Texture2D, NPatchInfo, Rectangle, Vector2, Float, Color)
+_Fade = _wrap(rlapi.Fade, Color, Color, Float)
+_ColorToInt = _wrap(rlapi.ColorToInt, Int, Color)
+_ColorNormalize = _wrap(rlapi.ColorNormalize, Vector4, Color)
+_ColorFromNormalized = _wrap(rlapi.ColorFromNormalized, Color, Vector4)
+_ColorToHSV = _wrap(rlapi.ColorToHSV, Vector3, Color)
+_ColorFromHSV = _wrap(rlapi.ColorFromHSV, Color, Float, Float, Float)
+_ColorTint = _wrap(rlapi.ColorTint, Color, Color, Color)
+_ColorBrightness = _wrap(rlapi.ColorBrightness, Color, Color, Float)
+_ColorContrast = _wrap(rlapi.ColorContrast, Color, Color, Float)
+_ColorAlpha = _wrap(rlapi.ColorAlpha, Color, Color, Float)
+_ColorAlphaBlend = _wrap(rlapi.ColorAlphaBlend, Color, Color, Color, Color)
+_GetColor = _wrap(rlapi.GetColor, Color, UInt)
+_GetPixelColor = _wrap(rlapi.GetPixelColor, Color, VoidPtr, Int)
+_SetPixelColor = _wrap(rlapi.SetPixelColor, None, VoidPtr, Color, Int)
+_GetPixelDataSize = _wrap(rlapi.GetPixelDataSize, Int, Int, Int, Int)
+_GetFontDefault = _wrap(rlapi.GetFontDefault, Font)
+_LoadFont = _wrap(rlapi.LoadFont, Font, CharPtr)
+_LoadFontEx = _wrap(rlapi.LoadFontEx, Font, CharPtr, Int, IntPtr, Int)
+_LoadFontFromImage = _wrap(rlapi.LoadFontFromImage, Font, Image, Color, Int)
+_LoadFontFromMemory = _wrap(rlapi.LoadFontFromMemory, Font, CharPtr, UCharPtr, Int, Int, IntPtr, Int)
+_IsFontReady = _wrap(rlapi.IsFontReady, Bool, Font)
+_LoadFontData = _wrap(rlapi.LoadFontData, GlyphInfoPtr, UCharPtr, Int, Int, IntPtr, Int, Int)
+_GenImageFontAtlas = _wrap(rlapi.GenImageFontAtlas, Image, GlyphInfoPtr, RectanglePtrPtr, Int, Int, Int, Int)
+_UnloadFontData = _wrap(rlapi.UnloadFontData, None, GlyphInfoPtr, Int)
+_UnloadFont = _wrap(rlapi.UnloadFont, None, Font)
+_ExportFontAsCode = _wrap(rlapi.ExportFontAsCode, Bool, Font, CharPtr)
+_DrawFPS = _wrap(rlapi.DrawFPS, None, Int, Int)
+_DrawText = _wrap(rlapi.DrawText, None, CharPtr, Int, Int, Int, Color)
+_DrawTextEx = _wrap(rlapi.DrawTextEx, None, Font, CharPtr, Vector2, Float, Float, Color)
+_DrawTextPro = _wrap(rlapi.DrawTextPro, None, Font, CharPtr, Vector2, Vector2, Float, Float, Float, Color)
+_DrawTextCodepoint = _wrap(rlapi.DrawTextCodepoint, None, Font, Int, Vector2, Float, Color)
+_DrawTextCodepoints = _wrap(rlapi.DrawTextCodepoints, None, Font, IntPtr, Int, Vector2, Float, Float, Color)
+_SetTextLineSpacing = _wrap(rlapi.SetTextLineSpacing, None, Int)
+_MeasureText = _wrap(rlapi.MeasureText, Int, CharPtr, Int)
+_MeasureTextEx = _wrap(rlapi.MeasureTextEx, Vector2, Font, CharPtr, Float, Float)
+_GetGlyphIndex = _wrap(rlapi.GetGlyphIndex, Int, Font, Int)
+_GetGlyphInfo = _wrap(rlapi.GetGlyphInfo, GlyphInfo, Font, Int)
+_GetGlyphAtlasRec = _wrap(rlapi.GetGlyphAtlasRec, Rectangle, Font, Int)
+_LoadUTF8 = _wrap(rlapi.LoadUTF8, CharPtr, IntPtr, Int)
+_UnloadUTF8 = _wrap(rlapi.UnloadUTF8, None, CharPtr)
+_LoadCodepoints = _wrap(rlapi.LoadCodepoints, IntPtr, CharPtr, IntPtr)
+_UnloadCodepoints = _wrap(rlapi.UnloadCodepoints, None, IntPtr)
+_GetCodepointCount = _wrap(rlapi.GetCodepointCount, Int, CharPtr)
+_GetCodepoint = _wrap(rlapi.GetCodepoint, Int, CharPtr, IntPtr)
+_GetCodepointNext = _wrap(rlapi.GetCodepointNext, Int, CharPtr, IntPtr)
+_GetCodepointPrevious = _wrap(rlapi.GetCodepointPrevious, Int, CharPtr, IntPtr)
+_CodepointToUTF8 = _wrap(rlapi.CodepointToUTF8, CharPtr, Int, IntPtr)
+_TextCopy = _wrap(rlapi.TextCopy, Int, CharPtr, CharPtr)
+_TextIsEqual = _wrap(rlapi.TextIsEqual, Bool, CharPtr, CharPtr)
+_TextLength = _wrap(rlapi.TextLength, UInt, CharPtr)
+_TextFormat = _wrap(rlapi.TextFormat, CharPtr, CharPtr)
+_TextSubtext = _wrap(rlapi.TextSubtext, CharPtr, CharPtr, Int, Int)
+_TextReplace = _wrap(rlapi.TextReplace, CharPtr, CharPtr, CharPtr, CharPtr)
+_TextInsert = _wrap(rlapi.TextInsert, CharPtr, CharPtr, CharPtr, Int)
+_TextJoin = _wrap(rlapi.TextJoin, CharPtr, CharPtrPtr, Int, CharPtr)
+_TextSplit = _wrap(rlapi.TextSplit, CharPtrPtr, CharPtr, Char, IntPtr)
+_TextAppend = _wrap(rlapi.TextAppend, None, CharPtr, CharPtr, IntPtr)
+_TextFindIndex = _wrap(rlapi.TextFindIndex, Int, CharPtr, CharPtr)
+_TextToUpper = _wrap(rlapi.TextToUpper, CharPtr, CharPtr)
+_TextToLower = _wrap(rlapi.TextToLower, CharPtr, CharPtr)
+_TextToPascal = _wrap(rlapi.TextToPascal, CharPtr, CharPtr)
+_TextToInteger = _wrap(rlapi.TextToInteger, Int, CharPtr)
+_DrawLine3D = _wrap(rlapi.DrawLine3D, None, Vector3, Vector3, Color)
+_DrawPoint3D = _wrap(rlapi.DrawPoint3D, None, Vector3, Color)
+_DrawCircle3D = _wrap(rlapi.DrawCircle3D, None, Vector3, Float, Vector3, Float, Color)
+_DrawTriangle3D = _wrap(rlapi.DrawTriangle3D, None, Vector3, Vector3, Vector3, Color)
+_DrawTriangleStrip3D = _wrap(rlapi.DrawTriangleStrip3D, None, Vector3Ptr, Int, Color)
+_DrawCube = _wrap(rlapi.DrawCube, None, Vector3, Float, Float, Float, Color)
+_DrawCubeV = _wrap(rlapi.DrawCubeV, None, Vector3, Vector3, Color)
+_DrawCubeWires = _wrap(rlapi.DrawCubeWires, None, Vector3, Float, Float, Float, Color)
+_DrawCubeWiresV = _wrap(rlapi.DrawCubeWiresV, None, Vector3, Vector3, Color)
+_DrawSphere = _wrap(rlapi.DrawSphere, None, Vector3, Float, Color)
+_DrawSphereEx = _wrap(rlapi.DrawSphereEx, None, Vector3, Float, Int, Int, Color)
+_DrawSphereWires = _wrap(rlapi.DrawSphereWires, None, Vector3, Float, Int, Int, Color)
+_DrawCylinder = _wrap(rlapi.DrawCylinder, None, Vector3, Float, Float, Float, Int, Color)
+_DrawCylinderEx = _wrap(rlapi.DrawCylinderEx, None, Vector3, Vector3, Float, Float, Int, Color)
+_DrawCylinderWires = _wrap(rlapi.DrawCylinderWires, None, Vector3, Float, Float, Float, Int, Color)
+_DrawCylinderWiresEx = _wrap(rlapi.DrawCylinderWiresEx, None, Vector3, Vector3, Float, Float, Int, Color)
+_DrawCapsule = _wrap(rlapi.DrawCapsule, None, Vector3, Vector3, Float, Int, Int, Color)
+_DrawCapsuleWires = _wrap(rlapi.DrawCapsuleWires, None, Vector3, Vector3, Float, Int, Int, Color)
+_DrawPlane = _wrap(rlapi.DrawPlane, None, Vector3, Vector2, Color)
+_DrawRay = _wrap(rlapi.DrawRay, None, Ray, Color)
+_DrawGrid = _wrap(rlapi.DrawGrid, None, Int, Float)
+_LoadModel = _wrap(rlapi.LoadModel, Model, CharPtr)
+_LoadModelFromMesh = _wrap(rlapi.LoadModelFromMesh, Model, Mesh)
+_IsModelReady = _wrap(rlapi.IsModelReady, Bool, Model)
+_UnloadModel = _wrap(rlapi.UnloadModel, None, Model)
+_GetModelBoundingBox = _wrap(rlapi.GetModelBoundingBox, BoundingBox, Model)
+_DrawModel = _wrap(rlapi.DrawModel, None, Model, Vector3, Float, Color)
+_DrawModelEx = _wrap(rlapi.DrawModelEx, None, Model, Vector3, Vector3, Float, Vector3, Color)
+_DrawModelWires = _wrap(rlapi.DrawModelWires, None, Model, Vector3, Float, Color)
+_DrawModelWiresEx = _wrap(rlapi.DrawModelWiresEx, None, Model, Vector3, Vector3, Float, Vector3, Color)
+_DrawBoundingBox = _wrap(rlapi.DrawBoundingBox, None, BoundingBox, Color)
+_DrawBillboard = _wrap(rlapi.DrawBillboard, None, Camera, Texture2D, Vector3, Float, Color)
+_DrawBillboardRec = _wrap(rlapi.DrawBillboardRec, None, Camera, Texture2D, Rectangle, Vector3, Vector2, Color)
+_DrawBillboardPro = _wrap(rlapi.DrawBillboardPro, None, Camera, Texture2D, Rectangle, Vector3, Vector3, Vector2, Vector2, Float, Color)
+_UploadMesh = _wrap(rlapi.UploadMesh, None, MeshPtr, Bool)
+_UpdateMeshBuffer = _wrap(rlapi.UpdateMeshBuffer, None, Mesh, Int, VoidPtr, Int, Int)
+_UnloadMesh = _wrap(rlapi.UnloadMesh, None, Mesh)
+_DrawMesh = _wrap(rlapi.DrawMesh, None, Mesh, Material, Matrix)
+_DrawMeshInstanced = _wrap(rlapi.DrawMeshInstanced, None, Mesh, Material, MatrixPtr, Int)
+_ExportMesh = _wrap(rlapi.ExportMesh, Bool, Mesh, CharPtr)
+_GetMeshBoundingBox = _wrap(rlapi.GetMeshBoundingBox, BoundingBox, Mesh)
+_GenMeshTangents = _wrap(rlapi.GenMeshTangents, None, MeshPtr)
+_GenMeshPoly = _wrap(rlapi.GenMeshPoly, Mesh, Int, Float)
+_GenMeshPlane = _wrap(rlapi.GenMeshPlane, Mesh, Float, Float, Int, Int)
+_GenMeshCube = _wrap(rlapi.GenMeshCube, Mesh, Float, Float, Float)
+_GenMeshSphere = _wrap(rlapi.GenMeshSphere, Mesh, Float, Int, Int)
+_GenMeshHemiSphere = _wrap(rlapi.GenMeshHemiSphere, Mesh, Float, Int, Int)
+_GenMeshCylinder = _wrap(rlapi.GenMeshCylinder, Mesh, Float, Float, Int)
+_GenMeshCone = _wrap(rlapi.GenMeshCone, Mesh, Float, Float, Int)
+_GenMeshTorus = _wrap(rlapi.GenMeshTorus, Mesh, Float, Float, Int, Int)
+_GenMeshKnot = _wrap(rlapi.GenMeshKnot, Mesh, Float, Float, Int, Int)
+_GenMeshHeightmap = _wrap(rlapi.GenMeshHeightmap, Mesh, Image, Vector3)
+_GenMeshCubicmap = _wrap(rlapi.GenMeshCubicmap, Mesh, Image, Vector3)
+_LoadMaterials = _wrap(rlapi.LoadMaterials, MaterialPtr, CharPtr, IntPtr)
+_LoadMaterialDefault = _wrap(rlapi.LoadMaterialDefault, Material)
+_IsMaterialReady = _wrap(rlapi.IsMaterialReady, Bool, Material)
+_UnloadMaterial = _wrap(rlapi.UnloadMaterial, None, Material)
+_SetMaterialTexture = _wrap(rlapi.SetMaterialTexture, None, MaterialPtr, Int, Texture2D)
+_SetModelMeshMaterial = _wrap(rlapi.SetModelMeshMaterial, None, ModelPtr, Int, Int)
+_LoadModelAnimations = _wrap(rlapi.LoadModelAnimations, ModelAnimationPtr, CharPtr, IntPtr)
+_UpdateModelAnimation = _wrap(rlapi.UpdateModelAnimation, None, Model, ModelAnimation, Int)
+_UnloadModelAnimation = _wrap(rlapi.UnloadModelAnimation, None, ModelAnimation)
+_UnloadModelAnimations = _wrap(rlapi.UnloadModelAnimations, None, ModelAnimationPtr, Int)
+_IsModelAnimationValid = _wrap(rlapi.IsModelAnimationValid, Bool, Model, ModelAnimation)
+_CheckCollisionSpheres = _wrap(rlapi.CheckCollisionSpheres, Bool, Vector3, Float, Vector3, Float)
+_CheckCollisionBoxes = _wrap(rlapi.CheckCollisionBoxes, Bool, BoundingBox, BoundingBox)
+_CheckCollisionBoxSphere = _wrap(rlapi.CheckCollisionBoxSphere, Bool, BoundingBox, Vector3, Float)
+_GetRayCollisionSphere = _wrap(rlapi.GetRayCollisionSphere, RayCollision, Ray, Vector3, Float)
+_GetRayCollisionBox = _wrap(rlapi.GetRayCollisionBox, RayCollision, Ray, BoundingBox)
+_GetRayCollisionMesh = _wrap(rlapi.GetRayCollisionMesh, RayCollision, Ray, Mesh, Matrix)
+_GetRayCollisionTriangle = _wrap(rlapi.GetRayCollisionTriangle, RayCollision, Ray, Vector3, Vector3, Vector3)
+_GetRayCollisionQuad = _wrap(rlapi.GetRayCollisionQuad, RayCollision, Ray, Vector3, Vector3, Vector3, Vector3)
+_InitAudioDevice = _wrap(rlapi.InitAudioDevice, None)
+_CloseAudioDevice = _wrap(rlapi.CloseAudioDevice, None)
+_IsAudioDeviceReady = _wrap(rlapi.IsAudioDeviceReady, Bool)
+_SetMasterVolume = _wrap(rlapi.SetMasterVolume, None, Float)
+_GetMasterVolume = _wrap(rlapi.GetMasterVolume, Float)
+_LoadWave = _wrap(rlapi.LoadWave, Wave, CharPtr)
+_LoadWaveFromMemory = _wrap(rlapi.LoadWaveFromMemory, Wave, CharPtr, UCharPtr, Int)
+_IsWaveReady = _wrap(rlapi.IsWaveReady, Bool, Wave)
+_LoadSound = _wrap(rlapi.LoadSound, Sound, CharPtr)
+_LoadSoundFromWave = _wrap(rlapi.LoadSoundFromWave, Sound, Wave)
+_LoadSoundAlias = _wrap(rlapi.LoadSoundAlias, Sound, Sound)
+_IsSoundReady = _wrap(rlapi.IsSoundReady, Bool, Sound)
+_UpdateSound = _wrap(rlapi.UpdateSound, None, Sound, VoidPtr, Int)
+_UnloadWave = _wrap(rlapi.UnloadWave, None, Wave)
+_UnloadSound = _wrap(rlapi.UnloadSound, None, Sound)
+_UnloadSoundAlias = _wrap(rlapi.UnloadSoundAlias, None, Sound)
+_ExportWave = _wrap(rlapi.ExportWave, Bool, Wave, CharPtr)
+_ExportWaveAsCode = _wrap(rlapi.ExportWaveAsCode, Bool, Wave, CharPtr)
+_PlaySound = _wrap(rlapi.PlaySound, None, Sound)
+_StopSound = _wrap(rlapi.StopSound, None, Sound)
+_PauseSound = _wrap(rlapi.PauseSound, None, Sound)
+_ResumeSound = _wrap(rlapi.ResumeSound, None, Sound)
+_IsSoundPlaying = _wrap(rlapi.IsSoundPlaying, Bool, Sound)
+_SetSoundVolume = _wrap(rlapi.SetSoundVolume, None, Sound, Float)
+_SetSoundPitch = _wrap(rlapi.SetSoundPitch, None, Sound, Float)
+_SetSoundPan = _wrap(rlapi.SetSoundPan, None, Sound, Float)
+_WaveCopy = _wrap(rlapi.WaveCopy, Wave, Wave)
+_WaveCrop = _wrap(rlapi.WaveCrop, None, WavePtr, Int, Int)
+_WaveFormat = _wrap(rlapi.WaveFormat, None, WavePtr, Int, Int, Int)
+_LoadWaveSamples = _wrap(rlapi.LoadWaveSamples, FloatPtr, Wave)
+_UnloadWaveSamples = _wrap(rlapi.UnloadWaveSamples, None, FloatPtr)
+_LoadMusicStream = _wrap(rlapi.LoadMusicStream, Music, CharPtr)
+_LoadMusicStreamFromMemory = _wrap(rlapi.LoadMusicStreamFromMemory, Music, CharPtr, UCharPtr, Int)
+_IsMusicReady = _wrap(rlapi.IsMusicReady, Bool, Music)
+_UnloadMusicStream = _wrap(rlapi.UnloadMusicStream, None, Music)
+_PlayMusicStream = _wrap(rlapi.PlayMusicStream, None, Music)
+_IsMusicStreamPlaying = _wrap(rlapi.IsMusicStreamPlaying, Bool, Music)
+_UpdateMusicStream = _wrap(rlapi.UpdateMusicStream, None, Music)
+_StopMusicStream = _wrap(rlapi.StopMusicStream, None, Music)
+_PauseMusicStream = _wrap(rlapi.PauseMusicStream, None, Music)
+_ResumeMusicStream = _wrap(rlapi.ResumeMusicStream, None, Music)
+_SeekMusicStream = _wrap(rlapi.SeekMusicStream, None, Music, Float)
+_SetMusicVolume = _wrap(rlapi.SetMusicVolume, None, Music, Float)
+_SetMusicPitch = _wrap(rlapi.SetMusicPitch, None, Music, Float)
+_SetMusicPan = _wrap(rlapi.SetMusicPan, None, Music, Float)
+_GetMusicTimeLength = _wrap(rlapi.GetMusicTimeLength, Float, Music)
+_GetMusicTimePlayed = _wrap(rlapi.GetMusicTimePlayed, Float, Music)
+_LoadAudioStream = _wrap(rlapi.LoadAudioStream, AudioStream, UInt, UInt, UInt)
+_IsAudioStreamReady = _wrap(rlapi.IsAudioStreamReady, Bool, AudioStream)
+_UnloadAudioStream = _wrap(rlapi.UnloadAudioStream, None, AudioStream)
+_UpdateAudioStream = _wrap(rlapi.UpdateAudioStream, None, AudioStream, VoidPtr, Int)
+_IsAudioStreamProcessed = _wrap(rlapi.IsAudioStreamProcessed, Bool, AudioStream)
+_PlayAudioStream = _wrap(rlapi.PlayAudioStream, None, AudioStream)
+_PauseAudioStream = _wrap(rlapi.PauseAudioStream, None, AudioStream)
+_ResumeAudioStream = _wrap(rlapi.ResumeAudioStream, None, AudioStream)
+_IsAudioStreamPlaying = _wrap(rlapi.IsAudioStreamPlaying, Bool, AudioStream)
+_StopAudioStream = _wrap(rlapi.StopAudioStream, None, AudioStream)
+_SetAudioStreamVolume = _wrap(rlapi.SetAudioStreamVolume, None, AudioStream, Float)
+_SetAudioStreamPitch = _wrap(rlapi.SetAudioStreamPitch, None, AudioStream, Float)
+_SetAudioStreamPan = _wrap(rlapi.SetAudioStreamPan, None, AudioStream, Float)
+_SetAudioStreamBufferSizeDefault = _wrap(rlapi.SetAudioStreamBufferSizeDefault, None, Int)
+_SetAudioStreamCallback = _wrap(rlapi.SetAudioStreamCallback, None, AudioStream, AudioCallback)
+_AttachAudioStreamProcessor = _wrap(rlapi.AttachAudioStreamProcessor, None, AudioStream, AudioCallback)
+_DetachAudioStreamProcessor = _wrap(rlapi.DetachAudioStreamProcessor, None, AudioStream, AudioCallback)
+_AttachAudioMixedProcessor = _wrap(rlapi.AttachAudioMixedProcessor, None, AudioCallback)
+_DetachAudioMixedProcessor = _wrap(rlapi.DetachAudioMixedProcessor, None, AudioCallback)
+
+
+# rlapi::raymath
+# ------------------------------------------------------------------------------
+
+float3._fields_ = [
+    ('v', c_float * 3),
+]
+
+
+float16._fields_ = [
+    ('v', c_float * 16),
+]
+
+
+_Clamp = _wrap(rlapi.Clamp, Float, Float, Float, Float)
+_Lerp = _wrap(rlapi.Lerp, Float, Float, Float, Float)
+_Normalize = _wrap(rlapi.Normalize, Float, Float, Float, Float)
+_Remap = _wrap(rlapi.Remap, Float, Float, Float, Float, Float, Float)
+_Wrap = _wrap(rlapi.Wrap, Float, Float, Float, Float)
+_FloatEquals = _wrap(rlapi.FloatEquals, Int, Float, Float)
+_Vector2Zero = _wrap(rlapi.Vector2Zero, Vector2)
+_Vector2One = _wrap(rlapi.Vector2One, Vector2)
+_Vector2Add = _wrap(rlapi.Vector2Add, Vector2, Vector2, Vector2)
+_Vector2AddValue = _wrap(rlapi.Vector2AddValue, Vector2, Vector2, Float)
+_Vector2Subtract = _wrap(rlapi.Vector2Subtract, Vector2, Vector2, Vector2)
+_Vector2SubtractValue = _wrap(rlapi.Vector2SubtractValue, Vector2, Vector2, Float)
+_Vector2Length = _wrap(rlapi.Vector2Length, Float, Vector2)
+_Vector2LengthSqr = _wrap(rlapi.Vector2LengthSqr, Float, Vector2)
+_Vector2DotProduct = _wrap(rlapi.Vector2DotProduct, Float, Vector2, Vector2)
+_Vector2Distance = _wrap(rlapi.Vector2Distance, Float, Vector2, Vector2)
+_Vector2DistanceSqr = _wrap(rlapi.Vector2DistanceSqr, Float, Vector2, Vector2)
+_Vector2Angle = _wrap(rlapi.Vector2Angle, Float, Vector2, Vector2)
+_Vector2LineAngle = _wrap(rlapi.Vector2LineAngle, Float, Vector2, Vector2)
+_Vector2Scale = _wrap(rlapi.Vector2Scale, Vector2, Vector2, Float)
+_Vector2Multiply = _wrap(rlapi.Vector2Multiply, Vector2, Vector2, Vector2)
+_Vector2Negate = _wrap(rlapi.Vector2Negate, Vector2, Vector2)
+_Vector2Divide = _wrap(rlapi.Vector2Divide, Vector2, Vector2, Vector2)
+_Vector2Normalize = _wrap(rlapi.Vector2Normalize, Vector2, Vector2)
+_Vector2Transform = _wrap(rlapi.Vector2Transform, Vector2, Vector2, Matrix)
+_Vector2Lerp = _wrap(rlapi.Vector2Lerp, Vector2, Vector2, Vector2, Float)
+_Vector2Reflect = _wrap(rlapi.Vector2Reflect, Vector2, Vector2, Vector2)
+_Vector2Rotate = _wrap(rlapi.Vector2Rotate, Vector2, Vector2, Float)
+_Vector2MoveTowards = _wrap(rlapi.Vector2MoveTowards, Vector2, Vector2, Vector2, Float)
+_Vector2Invert = _wrap(rlapi.Vector2Invert, Vector2, Vector2)
+_Vector2Clamp = _wrap(rlapi.Vector2Clamp, Vector2, Vector2, Vector2, Vector2)
+_Vector2ClampValue = _wrap(rlapi.Vector2ClampValue, Vector2, Vector2, Float, Float)
+_Vector2Equals = _wrap(rlapi.Vector2Equals, Int, Vector2, Vector2)
+_Vector3Zero = _wrap(rlapi.Vector3Zero, Vector3)
+_Vector3One = _wrap(rlapi.Vector3One, Vector3)
+_Vector3Add = _wrap(rlapi.Vector3Add, Vector3, Vector3, Vector3)
+_Vector3AddValue = _wrap(rlapi.Vector3AddValue, Vector3, Vector3, Float)
+_Vector3Subtract = _wrap(rlapi.Vector3Subtract, Vector3, Vector3, Vector3)
+_Vector3SubtractValue = _wrap(rlapi.Vector3SubtractValue, Vector3, Vector3, Float)
+_Vector3Scale = _wrap(rlapi.Vector3Scale, Vector3, Vector3, Float)
+_Vector3Multiply = _wrap(rlapi.Vector3Multiply, Vector3, Vector3, Vector3)
+_Vector3CrossProduct = _wrap(rlapi.Vector3CrossProduct, Vector3, Vector3, Vector3)
+_Vector3Perpendicular = _wrap(rlapi.Vector3Perpendicular, Vector3, Vector3)
+_Vector3Length = _wrap(rlapi.Vector3Length, Float, Vector3)
+_Vector3LengthSqr = _wrap(rlapi.Vector3LengthSqr, Float, Vector3)
+_Vector3DotProduct = _wrap(rlapi.Vector3DotProduct, Float, Vector3, Vector3)
+_Vector3Distance = _wrap(rlapi.Vector3Distance, Float, Vector3, Vector3)
+_Vector3DistanceSqr = _wrap(rlapi.Vector3DistanceSqr, Float, Vector3, Vector3)
+_Vector3Angle = _wrap(rlapi.Vector3Angle, Float, Vector3, Vector3)
+_Vector3Negate = _wrap(rlapi.Vector3Negate, Vector3, Vector3)
+_Vector3Divide = _wrap(rlapi.Vector3Divide, Vector3, Vector3, Vector3)
+_Vector3Normalize = _wrap(rlapi.Vector3Normalize, Vector3, Vector3)
+_Vector3Project = _wrap(rlapi.Vector3Project, Vector3, Vector3, Vector3)
+_Vector3Reject = _wrap(rlapi.Vector3Reject, Vector3, Vector3, Vector3)
+_Vector3OrthoNormalize = _wrap(rlapi.Vector3OrthoNormalize, None, Vector3Ptr, Vector3Ptr)
+_Vector3Transform = _wrap(rlapi.Vector3Transform, Vector3, Vector3, Matrix)
+_Vector3RotateByQuaternion = _wrap(rlapi.Vector3RotateByQuaternion, Vector3, Vector3, Quaternion)
+_Vector3RotateByAxisAngle = _wrap(rlapi.Vector3RotateByAxisAngle, Vector3, Vector3, Vector3, Float)
+_Vector3Lerp = _wrap(rlapi.Vector3Lerp, Vector3, Vector3, Vector3, Float)
+_Vector3Reflect = _wrap(rlapi.Vector3Reflect, Vector3, Vector3, Vector3)
+_Vector3Min = _wrap(rlapi.Vector3Min, Vector3, Vector3, Vector3)
+_Vector3Max = _wrap(rlapi.Vector3Max, Vector3, Vector3, Vector3)
+_Vector3Barycenter = _wrap(rlapi.Vector3Barycenter, Vector3, Vector3, Vector3, Vector3, Vector3)
+_Vector3Unproject = _wrap(rlapi.Vector3Unproject, Vector3, Vector3, Matrix, Matrix)
+_Vector3ToFloatV = _wrap(rlapi.Vector3ToFloatV, float3, Vector3)
+_Vector3Invert = _wrap(rlapi.Vector3Invert, Vector3, Vector3)
+_Vector3Clamp = _wrap(rlapi.Vector3Clamp, Vector3, Vector3, Vector3, Vector3)
+_Vector3ClampValue = _wrap(rlapi.Vector3ClampValue, Vector3, Vector3, Float, Float)
+_Vector3Equals = _wrap(rlapi.Vector3Equals, Int, Vector3, Vector3)
+_Vector3Refract = _wrap(rlapi.Vector3Refract, Vector3, Vector3, Vector3, Float)
+_MatrixDeterminant = _wrap(rlapi.MatrixDeterminant, Float, Matrix)
+_MatrixTrace = _wrap(rlapi.MatrixTrace, Float, Matrix)
+_MatrixTranspose = _wrap(rlapi.MatrixTranspose, Matrix, Matrix)
+_MatrixInvert = _wrap(rlapi.MatrixInvert, Matrix, Matrix)
+_MatrixIdentity = _wrap(rlapi.MatrixIdentity, Matrix)
+_MatrixAdd = _wrap(rlapi.MatrixAdd, Matrix, Matrix, Matrix)
+_MatrixSubtract = _wrap(rlapi.MatrixSubtract, Matrix, Matrix, Matrix)
+_MatrixMultiply = _wrap(rlapi.MatrixMultiply, Matrix, Matrix, Matrix)
+_MatrixTranslate = _wrap(rlapi.MatrixTranslate, Matrix, Float, Float, Float)
+_MatrixRotate = _wrap(rlapi.MatrixRotate, Matrix, Vector3, Float)
+_MatrixRotateX = _wrap(rlapi.MatrixRotateX, Matrix, Float)
+_MatrixRotateY = _wrap(rlapi.MatrixRotateY, Matrix, Float)
+_MatrixRotateZ = _wrap(rlapi.MatrixRotateZ, Matrix, Float)
+_MatrixRotateXYZ = _wrap(rlapi.MatrixRotateXYZ, Matrix, Vector3)
+_MatrixRotateZYX = _wrap(rlapi.MatrixRotateZYX, Matrix, Vector3)
+_MatrixScale = _wrap(rlapi.MatrixScale, Matrix, Float, Float, Float)
+_MatrixFrustum = _wrap(rlapi.MatrixFrustum, Matrix, Double, Double, Double, Double, Double, Double)
+_MatrixPerspective = _wrap(rlapi.MatrixPerspective, Matrix, Double, Double, Double, Double)
+_MatrixOrtho = _wrap(rlapi.MatrixOrtho, Matrix, Double, Double, Double, Double, Double, Double)
+_MatrixLookAt = _wrap(rlapi.MatrixLookAt, Matrix, Vector3, Vector3, Vector3)
+_MatrixToFloatV = _wrap(rlapi.MatrixToFloatV, float16, Matrix)
+_QuaternionAdd = _wrap(rlapi.QuaternionAdd, Quaternion, Quaternion, Quaternion)
+_QuaternionAddValue = _wrap(rlapi.QuaternionAddValue, Quaternion, Quaternion, Float)
+_QuaternionSubtract = _wrap(rlapi.QuaternionSubtract, Quaternion, Quaternion, Quaternion)
+_QuaternionSubtractValue = _wrap(rlapi.QuaternionSubtractValue, Quaternion, Quaternion, Float)
+_QuaternionIdentity = _wrap(rlapi.QuaternionIdentity, Quaternion)
+_QuaternionLength = _wrap(rlapi.QuaternionLength, Float, Quaternion)
+_QuaternionNormalize = _wrap(rlapi.QuaternionNormalize, Quaternion, Quaternion)
+_QuaternionInvert = _wrap(rlapi.QuaternionInvert, Quaternion, Quaternion)
+_QuaternionMultiply = _wrap(rlapi.QuaternionMultiply, Quaternion, Quaternion, Quaternion)
+_QuaternionScale = _wrap(rlapi.QuaternionScale, Quaternion, Quaternion, Float)
+_QuaternionDivide = _wrap(rlapi.QuaternionDivide, Quaternion, Quaternion, Quaternion)
+_QuaternionLerp = _wrap(rlapi.QuaternionLerp, Quaternion, Quaternion, Quaternion, Float)
+_QuaternionNlerp = _wrap(rlapi.QuaternionNlerp, Quaternion, Quaternion, Quaternion, Float)
+_QuaternionSlerp = _wrap(rlapi.QuaternionSlerp, Quaternion, Quaternion, Quaternion, Float)
+_QuaternionFromVector3ToVector3 = _wrap(rlapi.QuaternionFromVector3ToVector3, Quaternion, Vector3, Vector3)
+_QuaternionFromMatrix = _wrap(rlapi.QuaternionFromMatrix, Quaternion, Matrix)
+_QuaternionToMatrix = _wrap(rlapi.QuaternionToMatrix, Matrix, Quaternion)
+_QuaternionFromAxisAngle = _wrap(rlapi.QuaternionFromAxisAngle, Quaternion, Vector3, Float)
+_QuaternionToAxisAngle = _wrap(rlapi.QuaternionToAxisAngle, None, Quaternion, Vector3Ptr, FloatPtr)
+_QuaternionFromEuler = _wrap(rlapi.QuaternionFromEuler, Quaternion, Float, Float, Float)
+_QuaternionToEuler = _wrap(rlapi.QuaternionToEuler, Vector3, Quaternion)
+_QuaternionTransform = _wrap(rlapi.QuaternionTransform, Quaternion, Quaternion, Matrix)
+_QuaternionEquals = _wrap(rlapi.QuaternionEquals, Int, Quaternion, Quaternion)
+
+
+# rlapi::rlgl
+# ------------------------------------------------------------------------------
+
+rlVertexBuffer._fields_ = [
+    ('element_count', c_int),
+    ('vertices', POINTER(c_float)),
+    ('texcoords', POINTER(c_float)),
+    ('colors', c_ubyte),
+    ('indices', POINTER(c_uint)),
+    ('indices', POINTER(c_ushort)),
+    ('vao_id', c_uint),
+    ('vbo_id', c_uint * 4),
+]
+
+
+rlDrawCall._fields_ = [
+    ('mode', c_int),
+    ('vertex_count', c_int),
+    ('vertex_alignment', c_int),
+    ('texture_id', c_uint),
+]
+
+
+rlRenderBatch._fields_ = [
+    ('buffer_count', c_int),
+    ('current_buffer', c_int),
+    ('vertex_buffer', rlVertexBufferPtr),
+    ('draws', rlDrawCallPtr),
+    ('draw_counter', c_int),
+    ('current_depth', c_float),
+]
+
+
+_rlMatrixMode = _wrap(rlapi.rlMatrixMode, None, Int)
+_rlPushMatrix = _wrap(rlapi.rlPushMatrix, None)
+_rlPopMatrix = _wrap(rlapi.rlPopMatrix, None)
+_rlLoadIdentity = _wrap(rlapi.rlLoadIdentity, None)
+_rlTranslatef = _wrap(rlapi.rlTranslatef, None, Float, Float, Float)
+_rlRotatef = _wrap(rlapi.rlRotatef, None, Float, Float, Float, Float)
+_rlScalef = _wrap(rlapi.rlScalef, None, Float, Float, Float)
+_rlMultMatrixf = _wrap(rlapi.rlMultMatrixf, None, FloatPtr)
+_rlFrustum = _wrap(rlapi.rlFrustum, None, Double, Double, Double, Double, Double, Double)
+_rlOrtho = _wrap(rlapi.rlOrtho, None, Double, Double, Double, Double, Double, Double)
+_rlViewport = _wrap(rlapi.rlViewport, None, Int, Int, Int, Int)
+_rlBegin = _wrap(rlapi.rlBegin, None, Int)
+_rlEnd = _wrap(rlapi.rlEnd, None)
+_rlVertex2i = _wrap(rlapi.rlVertex2i, None, Int, Int)
+_rlVertex2f = _wrap(rlapi.rlVertex2f, None, Float, Float)
+_rlVertex3f = _wrap(rlapi.rlVertex3f, None, Float, Float, Float)
+_rlTexCoord2f = _wrap(rlapi.rlTexCoord2f, None, Float, Float)
+_rlNormal3f = _wrap(rlapi.rlNormal3f, None, Float, Float, Float)
+_rlColor4ub = _wrap(rlapi.rlColor4ub, None, UChar, UChar, UChar, UChar)
+_rlColor3f = _wrap(rlapi.rlColor3f, None, Float, Float, Float)
+_rlColor4f = _wrap(rlapi.rlColor4f, None, Float, Float, Float, Float)
+_rlEnableVertexArray = _wrap(rlapi.rlEnableVertexArray, Bool, UInt)
+_rlDisableVertexArray = _wrap(rlapi.rlDisableVertexArray, None)
+_rlEnableVertexBuffer = _wrap(rlapi.rlEnableVertexBuffer, None, UInt)
+_rlDisableVertexBuffer = _wrap(rlapi.rlDisableVertexBuffer, None)
+_rlEnableVertexBufferElement = _wrap(rlapi.rlEnableVertexBufferElement, None, UInt)
+_rlDisableVertexBufferElement = _wrap(rlapi.rlDisableVertexBufferElement, None)
+_rlEnableVertexAttribute = _wrap(rlapi.rlEnableVertexAttribute, None, UInt)
+_rlDisableVertexAttribute = _wrap(rlapi.rlDisableVertexAttribute, None, UInt)
+_rlActiveTextureSlot = _wrap(rlapi.rlActiveTextureSlot, None, Int)
+_rlEnableTexture = _wrap(rlapi.rlEnableTexture, None, UInt)
+_rlDisableTexture = _wrap(rlapi.rlDisableTexture, None)
+_rlEnableTextureCubemap = _wrap(rlapi.rlEnableTextureCubemap, None, UInt)
+_rlDisableTextureCubemap = _wrap(rlapi.rlDisableTextureCubemap, None)
+_rlTextureParameters = _wrap(rlapi.rlTextureParameters, None, UInt, Int, Int)
+_rlCubemapParameters = _wrap(rlapi.rlCubemapParameters, None, UInt, Int, Int)
+_rlEnableShader = _wrap(rlapi.rlEnableShader, None, UInt)
+_rlDisableShader = _wrap(rlapi.rlDisableShader, None)
+_rlEnableFramebuffer = _wrap(rlapi.rlEnableFramebuffer, None, UInt)
+_rlDisableFramebuffer = _wrap(rlapi.rlDisableFramebuffer, None)
+_rlActiveDrawBuffers = _wrap(rlapi.rlActiveDrawBuffers, None, Int)
+_rlBlitFramebuffer = _wrap(rlapi.rlBlitFramebuffer, None, Int, Int, Int, Int, Int, Int, Int, Int, Int)
+_rlEnableColorBlend = _wrap(rlapi.rlEnableColorBlend, None)
+_rlDisableColorBlend = _wrap(rlapi.rlDisableColorBlend, None)
+_rlEnableDepthTest = _wrap(rlapi.rlEnableDepthTest, None)
+_rlDisableDepthTest = _wrap(rlapi.rlDisableDepthTest, None)
+_rlEnableDepthMask = _wrap(rlapi.rlEnableDepthMask, None)
+_rlDisableDepthMask = _wrap(rlapi.rlDisableDepthMask, None)
+_rlEnableBackfaceCulling = _wrap(rlapi.rlEnableBackfaceCulling, None)
+_rlDisableBackfaceCulling = _wrap(rlapi.rlDisableBackfaceCulling, None)
+_rlSetCullFace = _wrap(rlapi.rlSetCullFace, None, Int)
+_rlEnableScissorTest = _wrap(rlapi.rlEnableScissorTest, None)
+_rlDisableScissorTest = _wrap(rlapi.rlDisableScissorTest, None)
+_rlScissor = _wrap(rlapi.rlScissor, None, Int, Int, Int, Int)
+_rlEnableWireMode = _wrap(rlapi.rlEnableWireMode, None)
+_rlEnablePointMode = _wrap(rlapi.rlEnablePointMode, None)
+_rlDisableWireMode = _wrap(rlapi.rlDisableWireMode, None)
+_rlSetLineWidth = _wrap(rlapi.rlSetLineWidth, None, Float)
+_rlGetLineWidth = _wrap(rlapi.rlGetLineWidth, Float)
+_rlEnableSmoothLines = _wrap(rlapi.rlEnableSmoothLines, None)
+_rlDisableSmoothLines = _wrap(rlapi.rlDisableSmoothLines, None)
+_rlEnableStereoRender = _wrap(rlapi.rlEnableStereoRender, None)
+_rlDisableStereoRender = _wrap(rlapi.rlDisableStereoRender, None)
+_rlIsStereoRenderEnabled = _wrap(rlapi.rlIsStereoRenderEnabled, Bool)
+_rlClearColor = _wrap(rlapi.rlClearColor, None, UChar, UChar, UChar, UChar)
+_rlClearScreenBuffers = _wrap(rlapi.rlClearScreenBuffers, None)
+_rlCheckErrors = _wrap(rlapi.rlCheckErrors, None)
+_rlSetBlendMode = _wrap(rlapi.rlSetBlendMode, None, Int)
+_rlSetBlendFactors = _wrap(rlapi.rlSetBlendFactors, None, Int, Int, Int)
+_rlSetBlendFactorsSeparate = _wrap(rlapi.rlSetBlendFactorsSeparate, None, Int, Int, Int, Int, Int, Int)
+_rlglInit = _wrap(rlapi.rlglInit, None, Int, Int)
+_rlglClose = _wrap(rlapi.rlglClose, None)
+_rlLoadExtensions = _wrap(rlapi.rlLoadExtensions, None, VoidPtr)
+_rlGetVersion = _wrap(rlapi.rlGetVersion, Int)
+_rlSetFramebufferWidth = _wrap(rlapi.rlSetFramebufferWidth, None, Int)
+_rlGetFramebufferWidth = _wrap(rlapi.rlGetFramebufferWidth, Int)
+_rlSetFramebufferHeight = _wrap(rlapi.rlSetFramebufferHeight, None, Int)
+_rlGetFramebufferHeight = _wrap(rlapi.rlGetFramebufferHeight, Int)
+_rlGetTextureIdDefault = _wrap(rlapi.rlGetTextureIdDefault, UInt)
+_rlGetShaderIdDefault = _wrap(rlapi.rlGetShaderIdDefault, UInt)
+_rlGetShaderLocsDefault = _wrap(rlapi.rlGetShaderLocsDefault, IntPtr)
+_rlLoadRenderBatch = _wrap(rlapi.rlLoadRenderBatch, rlRenderBatch, Int, Int)
+_rlUnloadRenderBatch = _wrap(rlapi.rlUnloadRenderBatch, None, rlRenderBatch)
+_rlDrawRenderBatch = _wrap(rlapi.rlDrawRenderBatch, None, rlRenderBatchPtr)
+_rlSetRenderBatchActive = _wrap(rlapi.rlSetRenderBatchActive, None, rlRenderBatchPtr)
+_rlDrawRenderBatchActive = _wrap(rlapi.rlDrawRenderBatchActive, None)
+_rlCheckRenderBatchLimit = _wrap(rlapi.rlCheckRenderBatchLimit, Bool, Int)
+_rlSetTexture = _wrap(rlapi.rlSetTexture, None, UInt)
+_rlLoadVertexArray = _wrap(rlapi.rlLoadVertexArray, UInt)
+_rlLoadVertexBuffer = _wrap(rlapi.rlLoadVertexBuffer, UInt, VoidPtr, Int, Bool)
+_rlLoadVertexBufferElement = _wrap(rlapi.rlLoadVertexBufferElement, UInt, VoidPtr, Int, Bool)
+_rlUpdateVertexBuffer = _wrap(rlapi.rlUpdateVertexBuffer, None, UInt, VoidPtr, Int, Int)
+_rlUpdateVertexBufferElements = _wrap(rlapi.rlUpdateVertexBufferElements, None, UInt, VoidPtr, Int, Int)
+_rlUnloadVertexArray = _wrap(rlapi.rlUnloadVertexArray, None, UInt)
+_rlUnloadVertexBuffer = _wrap(rlapi.rlUnloadVertexBuffer, None, UInt)
+_rlSetVertexAttribute = _wrap(rlapi.rlSetVertexAttribute, None, UInt, Int, Int, Bool, Int, VoidPtr)
+_rlSetVertexAttributeDivisor = _wrap(rlapi.rlSetVertexAttributeDivisor, None, UInt, Int)
+_rlSetVertexAttributeDefault = _wrap(rlapi.rlSetVertexAttributeDefault, None, Int, VoidPtr, Int, Int)
+_rlDrawVertexArray = _wrap(rlapi.rlDrawVertexArray, None, Int, Int)
+_rlDrawVertexArrayElements = _wrap(rlapi.rlDrawVertexArrayElements, None, Int, Int, VoidPtr)
+_rlDrawVertexArrayInstanced = _wrap(rlapi.rlDrawVertexArrayInstanced, None, Int, Int, Int)
+_rlDrawVertexArrayElementsInstanced = _wrap(rlapi.rlDrawVertexArrayElementsInstanced, None, Int, Int, VoidPtr, Int)
+_rlLoadTexture = _wrap(rlapi.rlLoadTexture, UInt, VoidPtr, Int, Int, Int, Int)
+_rlLoadTextureDepth = _wrap(rlapi.rlLoadTextureDepth, UInt, Int, Int, Bool)
+_rlLoadTextureCubemap = _wrap(rlapi.rlLoadTextureCubemap, UInt, VoidPtr, Int, Int)
+_rlUpdateTexture = _wrap(rlapi.rlUpdateTexture, None, UInt, Int, Int, Int, Int, Int, VoidPtr)
+_rlGetGlTextureFormats = _wrap(rlapi.rlGetGlTextureFormats, None, Int, UIntPtr, UIntPtr, UIntPtr)
+_rlGetPixelFormatName = _wrap(rlapi.rlGetPixelFormatName, CharPtr, UInt)
+_rlUnloadTexture = _wrap(rlapi.rlUnloadTexture, None, UInt)
+_rlGenTextureMipmaps = _wrap(rlapi.rlGenTextureMipmaps, None, UInt, Int, Int, Int, IntPtr)
+_rlReadTexturePixels = _wrap(rlapi.rlReadTexturePixels, VoidPtr, UInt, Int, Int, Int)
+_rlReadScreenPixels = _wrap(rlapi.rlReadScreenPixels, UCharPtr, Int, Int)
+_rlLoadFramebuffer = _wrap(rlapi.rlLoadFramebuffer, UInt, Int, Int)
+_rlFramebufferAttach = _wrap(rlapi.rlFramebufferAttach, None, UInt, UInt, Int, Int, Int)
+_rlFramebufferComplete = _wrap(rlapi.rlFramebufferComplete, Bool, UInt)
+_rlUnloadFramebuffer = _wrap(rlapi.rlUnloadFramebuffer, None, UInt)
+_rlLoadShaderCode = _wrap(rlapi.rlLoadShaderCode, UInt, CharPtr, CharPtr)
+_rlCompileShader = _wrap(rlapi.rlCompileShader, UInt, CharPtr, Int)
+_rlLoadShaderProgram = _wrap(rlapi.rlLoadShaderProgram, UInt, UInt, UInt)
+_rlUnloadShaderProgram = _wrap(rlapi.rlUnloadShaderProgram, None, UInt)
+_rlGetLocationUniform = _wrap(rlapi.rlGetLocationUniform, Int, UInt, CharPtr)
+_rlGetLocationAttrib = _wrap(rlapi.rlGetLocationAttrib, Int, UInt, CharPtr)
+_rlSetUniform = _wrap(rlapi.rlSetUniform, None, Int, VoidPtr, Int, Int)
+_rlSetUniformMatrix = _wrap(rlapi.rlSetUniformMatrix, None, Int, Matrix)
+_rlSetUniformSampler = _wrap(rlapi.rlSetUniformSampler, None, Int, UInt)
+_rlSetShader = _wrap(rlapi.rlSetShader, None, UInt, IntPtr)
+_rlLoadComputeShaderProgram = _wrap(rlapi.rlLoadComputeShaderProgram, UInt, UInt)
+_rlComputeShaderDispatch = _wrap(rlapi.rlComputeShaderDispatch, None, UInt, UInt, UInt)
+_rlLoadShaderBuffer = _wrap(rlapi.rlLoadShaderBuffer, UInt, UInt, VoidPtr, Int)
+_rlUnloadShaderBuffer = _wrap(rlapi.rlUnloadShaderBuffer, None, UInt)
+_rlUpdateShaderBuffer = _wrap(rlapi.rlUpdateShaderBuffer, None, UInt, VoidPtr, UInt, UInt)
+_rlBindShaderBuffer = _wrap(rlapi.rlBindShaderBuffer, None, UInt, UInt)
+_rlReadShaderBuffer = _wrap(rlapi.rlReadShaderBuffer, None, UInt, VoidPtr, UInt, UInt)
+_rlCopyShaderBuffer = _wrap(rlapi.rlCopyShaderBuffer, None, UInt, UInt, UInt, UInt, UInt)
+_rlGetShaderBufferSize = _wrap(rlapi.rlGetShaderBufferSize, UInt, UInt)
+_rlBindImageTexture = _wrap(rlapi.rlBindImageTexture, None, UInt, UInt, Int, Bool)
+_rlGetMatrixModelview = _wrap(rlapi.rlGetMatrixModelview, Matrix)
+_rlGetMatrixProjection = _wrap(rlapi.rlGetMatrixProjection, Matrix)
+_rlGetMatrixTransform = _wrap(rlapi.rlGetMatrixTransform, Matrix)
+_rlGetMatrixProjectionStereo = _wrap(rlapi.rlGetMatrixProjectionStereo, Matrix, Int)
+_rlGetMatrixViewOffsetStereo = _wrap(rlapi.rlGetMatrixViewOffsetStereo, Matrix, Int)
+_rlSetMatrixProjection = _wrap(rlapi.rlSetMatrixProjection, None, Matrix)
+_rlSetMatrixModelview = _wrap(rlapi.rlSetMatrixModelview, None, Matrix)
+_rlSetMatrixProjectionStereo = _wrap(rlapi.rlSetMatrixProjectionStereo, None, Matrix, Matrix)
+_rlSetMatrixViewOffsetStereo = _wrap(rlapi.rlSetMatrixViewOffsetStereo, None, Matrix, Matrix)
+_rlLoadDrawCube = _wrap(rlapi.rlLoadDrawCube, None)
+_rlLoadDrawQuad = _wrap(rlapi.rlLoadDrawQuad, None)
+
+# endregion (internals)
+
+# region DEFINES
+
+# rlapi::raylib
+# ------------------------------------------------------------------------------
+RAYLIB_VERSION_MAJOR = 5
+
+RAYLIB_VERSION_MINOR = 0
+
+RAYLIB_VERSION_PATCH = 0
+
+RAYLIB_VERSION = 5.0
 
 PI = 3.141592653589793
 
-DEG2RAD = (PI / 180.0)
+DEG2RAD = PI / 180.0
 
-RAD2DEG = (180.0 / PI)
+RAD2DEG = 180.0 / PI
+
 # Light Gray
-LIGHTGRAY = Color( 200, 200, 200, 255 )
-# Gray
-GRAY = Color( 130, 130, 130, 255 )
-# Dark Gray
-DARKGRAY = Color( 80, 80, 80, 255 )
-# Yellow
-YELLOW = Color( 253, 249, 0, 255 )
-# Gold
-GOLD = Color( 255, 203, 0, 255 )
-# Orange
-ORANGE = Color( 255, 161, 0, 255 )
-# Pink
-PINK = Color( 255, 109, 194, 255 )
-# Red
-RED = Color( 230, 41, 55, 255 )
-# Maroon
-MAROON = Color( 190, 33, 55, 255 )
-# Green
-GREEN = Color( 0, 228, 48, 255 )
-# Lime
-LIME = Color( 0, 158, 47, 255 )
-# Dark Green
-DARKGREEN = Color( 0, 117, 44, 255 )
-# Sky Blue
-SKYBLUE = Color( 102, 191, 255, 255 )
-# Blue
-BLUE = Color( 0, 121, 241, 255 )
-# Dark Blue
-DARKBLUE = Color( 0, 82, 172, 255 )
-# Purple
-PURPLE = Color( 200, 122, 255, 255 )
-# Violet
-VIOLET = Color( 135, 60, 190, 255 )
-# Dark Purple
-DARKPURPLE = Color( 112, 31, 126, 255 )
-# Beige
-BEIGE = Color( 211, 176, 131, 255 )
-# Brown
-BROWN = Color( 127, 106, 79, 255 )
-# Dark Brown
-DARKBROWN = Color( 76, 63, 47, 255 )
-# White
-WHITE = Color( 255, 255, 255, 255 )
-# Black
-BLACK = Color( 0, 0, 0, 255 )
-# Blank (Transparent)
-BLANK = Color( 0, 0, 0, 0 )
-# Magenta
-MAGENTA = Color( 255, 0, 255, 255 )
-# My own White (raylib logo)
-RAYWHITE = Color( 245, 245, 245, 255 )
+LIGHTGRAY = Color(200, 200, 200, 255)
 
-RLGL_VERSION = '4.0'
+# Gray
+GRAY = Color(130, 130, 130, 255)
+
+# Dark Gray
+DARKGRAY = Color(80, 80, 80, 255)
+
+# Yellow
+YELLOW = Color(253, 249, 0, 255)
+
+# Gold
+GOLD = Color(255, 203, 0, 255)
+
+# Orange
+ORANGE = Color(255, 161, 0, 255)
+
+# Pink
+PINK = Color(255, 109, 194, 255)
+
+# Red
+RED = Color(230, 41, 55, 255)
+
+# Maroon
+MAROON = Color(190, 33, 55, 255)
+
+# Green
+GREEN = Color(0, 228, 48, 255)
+
+# Lime
+LIME = Color(0, 158, 47, 255)
+
+# Dark Green
+DARKGREEN = Color(0, 117, 44, 255)
+
+# Sky Blue
+SKYBLUE = Color(102, 191, 255, 255)
+
+# Blue
+BLUE = Color(0, 121, 241, 255)
+
+# Dark Blue
+DARKBLUE = Color(0, 82, 172, 255)
+
+# Purple
+PURPLE = Color(200, 122, 255, 255)
+
+# Violet
+VIOLET = Color(135, 60, 190, 255)
+
+# Dark Purple
+DARKPURPLE = Color(112, 31, 126, 255)
+
+# Beige
+BEIGE = Color(211, 176, 131, 255)
+
+# Brown
+BROWN = Color(127, 106, 79, 255)
+
+# Dark Brown
+DARKBROWN = Color(76, 63, 47, 255)
+
+# White
+WHITE = Color(255, 255, 255, 255)
+
+# Black
+BLACK = Color(0, 0, 0, 255)
+
+# Blank (Transparent)
+BLANK = Color(0, 0, 0, 0)
+
+# Magenta
+MAGENTA = Color(255, 0, 255, 255)
+
+# My own White (raylib logo)
+RAYWHITE = Color(245, 245, 245, 255)
+
+MOUSE_LEFT_BUTTON = MOUSE_BUTTON_LEFT
+
+MOUSE_RIGHT_BUTTON = MOUSE_BUTTON_RIGHT
+
+MOUSE_MIDDLE_BUTTON = MOUSE_BUTTON_MIDDLE
+
+MATERIAL_MAP_DIFFUSE = MATERIAL_MAP_ALBEDO
+
+MATERIAL_MAP_SPECULAR = MATERIAL_MAP_METALNESS
+
+SHADER_LOC_MAP_DIFFUSE = SHADER_LOC_MAP_ALBEDO
+
+SHADER_LOC_MAP_SPECULAR = SHADER_LOC_MAP_METALNESS
+
+
+# rlapi::raymath
+# ------------------------------------------------------------------------------
+EPSILON = 1e-06
+
+
+# rlapi::rlgl
+# ------------------------------------------------------------------------------
+RLGL_VERSION = 4.5
 
 RL_DEFAULT_BATCH_BUFFER_ELEMENTS = 8192
 
+# Default number of batch buffers (multi-buffering)
 RL_DEFAULT_BATCH_BUFFERS = 1
 
+# Default number of batch draw calls (by state changes: mode, texture)
 RL_DEFAULT_BATCH_DRAWCALLS = 256
 
+# Maximum number of textures units that can be activated on batch drawing (SetShaderValueTexture())
 RL_DEFAULT_BATCH_MAX_TEXTURE_UNITS = 4
 
+# Maximum size of Matrix stack
 RL_MAX_MATRIX_STACK_SIZE = 32
 
+# Maximum number of shader locations supported
 RL_MAX_SHADER_LOCATIONS = 32
 
+# Default near cull distance
 RL_CULL_DISTANCE_NEAR = 0.01
 
+# Default far cull distance
 RL_CULL_DISTANCE_FAR = 1000.0
 
+# GL_TEXTURE_WRAP_S
 RL_TEXTURE_WRAP_S = 10242
 
+# GL_TEXTURE_WRAP_T
 RL_TEXTURE_WRAP_T = 10243
 
+# GL_TEXTURE_MAG_FILTER
 RL_TEXTURE_MAG_FILTER = 10240
 
+# GL_TEXTURE_MIN_FILTER
 RL_TEXTURE_MIN_FILTER = 10241
 
+# GL_NEAREST
 RL_TEXTURE_FILTER_NEAREST = 9728
 
+# GL_LINEAR
 RL_TEXTURE_FILTER_LINEAR = 9729
 
+# GL_NEAREST_MIPMAP_NEAREST
 RL_TEXTURE_FILTER_MIP_NEAREST = 9984
 
+# GL_NEAREST_MIPMAP_LINEAR
 RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR = 9986
 
+# GL_LINEAR_MIPMAP_NEAREST
 RL_TEXTURE_FILTER_LINEAR_MIP_NEAREST = 9985
 
+# GL_LINEAR_MIPMAP_LINEAR
 RL_TEXTURE_FILTER_MIP_LINEAR = 9987
 
+# Anisotropic filter (custom identifier)
 RL_TEXTURE_FILTER_ANISOTROPIC = 12288
 
+# Texture mipmap bias, percentage ratio (custom identifier)
+RL_TEXTURE_MIPMAP_BIAS_RATIO = 16384
+
+# GL_REPEAT
 RL_TEXTURE_WRAP_REPEAT = 10497
 
+# GL_CLAMP_TO_EDGE
 RL_TEXTURE_WRAP_CLAMP = 33071
 
+# GL_MIRRORED_REPEAT
 RL_TEXTURE_WRAP_MIRROR_REPEAT = 33648
 
+# GL_MIRROR_CLAMP_EXT
 RL_TEXTURE_WRAP_MIRROR_CLAMP = 34626
 
+# GL_MODELVIEW
 RL_MODELVIEW = 5888
 
+# GL_PROJECTION
 RL_PROJECTION = 5889
 
+# GL_TEXTURE
 RL_TEXTURE = 5890
 
+# GL_LINES
 RL_LINES = 1
 
+# GL_TRIANGLES
 RL_TRIANGLES = 4
 
+# GL_QUADS
 RL_QUADS = 7
 
+# GL_UNSIGNED_BYTE
 RL_UNSIGNED_BYTE = 5121
 
+# GL_FLOAT
 RL_FLOAT = 5126
 
+# GL_STREAM_DRAW
 RL_STREAM_DRAW = 35040
 
+# GL_STREAM_READ
 RL_STREAM_READ = 35041
 
+# GL_STREAM_COPY
 RL_STREAM_COPY = 35042
 
+# GL_STATIC_DRAW
 RL_STATIC_DRAW = 35044
 
+# GL_STATIC_READ
 RL_STATIC_READ = 35045
 
+# GL_STATIC_COPY
 RL_STATIC_COPY = 35046
 
+# GL_DYNAMIC_DRAW
 RL_DYNAMIC_DRAW = 35048
 
+# GL_DYNAMIC_READ
 RL_DYNAMIC_READ = 35049
 
+# GL_DYNAMIC_COPY
 RL_DYNAMIC_COPY = 35050
 
+# GL_FRAGMENT_SHADER
 RL_FRAGMENT_SHADER = 35632
 
+# GL_VERTEX_SHADER
 RL_VERTEX_SHADER = 35633
 
+# GL_COMPUTE_SHADER
 RL_COMPUTE_SHADER = 37305
 
-# Logging: Redirect trace log messages
-TraceLogCallback = CFUNCTYPE(None, Int, CharPtr, VoidPtr)
+# GL_ZERO
+RL_ZERO = 0
 
-# FileIO: Load binary data
-LoadFileDataCallback = CFUNCTYPE(UCharPtr, CharPtr, UIntPtr)
+# GL_ONE
+RL_ONE = 1
 
-# FileIO: Save binary data
-SaveFileDataCallback = CFUNCTYPE(Bool, CharPtr, VoidPtr, UInt)
+# GL_SRC_COLOR
+RL_SRC_COLOR = 768
 
-# FileIO: Load text data
-LoadFileTextCallback = CFUNCTYPE(CharPtr, CharPtr)
+# GL_ONE_MINUS_SRC_COLOR
+RL_ONE_MINUS_SRC_COLOR = 769
 
-# FileIO: Save text data
-SaveFileTextCallback = CFUNCTYPE(Bool, CharPtr, CharPtr)
+# GL_SRC_ALPHA
+RL_SRC_ALPHA = 770
 
-# 
-AudioCallback = CFUNCTYPE(None, VoidPtr, UInt)
-_InitWindow = _wrap(rlapi.InitWindow, [Int, Int, CharPtr], None)
-_WindowShouldClose = _wrap(rlapi.WindowShouldClose, [], Bool)
-_CloseWindow = _wrap(rlapi.CloseWindow, [], None)
-_IsWindowReady = _wrap(rlapi.IsWindowReady, [], Bool)
-_IsWindowFullscreen = _wrap(rlapi.IsWindowFullscreen, [], Bool)
-_IsWindowHidden = _wrap(rlapi.IsWindowHidden, [], Bool)
-_IsWindowMinimized = _wrap(rlapi.IsWindowMinimized, [], Bool)
-_IsWindowMaximized = _wrap(rlapi.IsWindowMaximized, [], Bool)
-_IsWindowFocused = _wrap(rlapi.IsWindowFocused, [], Bool)
-_IsWindowResized = _wrap(rlapi.IsWindowResized, [], Bool)
-_IsWindowState = _wrap(rlapi.IsWindowState, [UInt], Bool)
-_SetWindowState = _wrap(rlapi.SetWindowState, [UInt], None)
-_ClearWindowState = _wrap(rlapi.ClearWindowState, [UInt], None)
-_ToggleFullscreen = _wrap(rlapi.ToggleFullscreen, [], None)
-_MaximizeWindow = _wrap(rlapi.MaximizeWindow, [], None)
-_MinimizeWindow = _wrap(rlapi.MinimizeWindow, [], None)
-_RestoreWindow = _wrap(rlapi.RestoreWindow, [], None)
-_SetWindowIcon = _wrap(rlapi.SetWindowIcon, [Image], None)
-_SetWindowTitle = _wrap(rlapi.SetWindowTitle, [CharPtr], None)
-_SetWindowPosition = _wrap(rlapi.SetWindowPosition, [Int, Int], None)
-_SetWindowMonitor = _wrap(rlapi.SetWindowMonitor, [Int], None)
-_SetWindowMinSize = _wrap(rlapi.SetWindowMinSize, [Int, Int], None)
-_SetWindowSize = _wrap(rlapi.SetWindowSize, [Int, Int], None)
-_SetWindowOpacity = _wrap(rlapi.SetWindowOpacity, [Float], None)
-_GetWindowHandle = _wrap(rlapi.GetWindowHandle, [], VoidPtr)
-_GetScreenWidth = _wrap(rlapi.GetScreenWidth, [], Int)
-_GetScreenHeight = _wrap(rlapi.GetScreenHeight, [], Int)
-_GetRenderWidth = _wrap(rlapi.GetRenderWidth, [], Int)
-_GetRenderHeight = _wrap(rlapi.GetRenderHeight, [], Int)
-_GetMonitorCount = _wrap(rlapi.GetMonitorCount, [], Int)
-_GetCurrentMonitor = _wrap(rlapi.GetCurrentMonitor, [], Int)
-_GetMonitorPosition = _wrap(rlapi.GetMonitorPosition, [Int], Vector2)
-_GetMonitorWidth = _wrap(rlapi.GetMonitorWidth, [Int], Int)
-_GetMonitorHeight = _wrap(rlapi.GetMonitorHeight, [Int], Int)
-_GetMonitorPhysicalWidth = _wrap(rlapi.GetMonitorPhysicalWidth, [Int], Int)
-_GetMonitorPhysicalHeight = _wrap(rlapi.GetMonitorPhysicalHeight, [Int], Int)
-_GetMonitorRefreshRate = _wrap(rlapi.GetMonitorRefreshRate, [Int], Int)
-_GetWindowPosition = _wrap(rlapi.GetWindowPosition, [], Vector2)
-_GetWindowScaleDPI = _wrap(rlapi.GetWindowScaleDPI, [], Vector2)
-_GetMonitorName = _wrap(rlapi.GetMonitorName, [Int], CharPtr)
-_SetClipboardText = _wrap(rlapi.SetClipboardText, [CharPtr], None)
-_GetClipboardText = _wrap(rlapi.GetClipboardText, [], CharPtr)
-_EnableEventWaiting = _wrap(rlapi.EnableEventWaiting, [], None)
-_DisableEventWaiting = _wrap(rlapi.DisableEventWaiting, [], None)
-_SwapScreenBuffer = _wrap(rlapi.SwapScreenBuffer, [], None)
-_PollInputEvents = _wrap(rlapi.PollInputEvents, [], None)
-_WaitTime = _wrap(rlapi.WaitTime, [Double], None)
-_ShowCursor = _wrap(rlapi.ShowCursor, [], None)
-_HideCursor = _wrap(rlapi.HideCursor, [], None)
-_IsCursorHidden = _wrap(rlapi.IsCursorHidden, [], Bool)
-_EnableCursor = _wrap(rlapi.EnableCursor, [], None)
-_DisableCursor = _wrap(rlapi.DisableCursor, [], None)
-_IsCursorOnScreen = _wrap(rlapi.IsCursorOnScreen, [], Bool)
-_ClearBackground = _wrap(rlapi.ClearBackground, [Color], None)
-_BeginDrawing = _wrap(rlapi.BeginDrawing, [], None)
-_EndDrawing = _wrap(rlapi.EndDrawing, [], None)
-_BeginMode2D = _wrap(rlapi.BeginMode2D, [Camera2D], None)
-_EndMode2D = _wrap(rlapi.EndMode2D, [], None)
-_BeginMode3D = _wrap(rlapi.BeginMode3D, [Camera3D], None)
-_EndMode3D = _wrap(rlapi.EndMode3D, [], None)
-_BeginTextureMode = _wrap(rlapi.BeginTextureMode, [RenderTexture2D], None)
-_EndTextureMode = _wrap(rlapi.EndTextureMode, [], None)
-_BeginShaderMode = _wrap(rlapi.BeginShaderMode, [Shader], None)
-_EndShaderMode = _wrap(rlapi.EndShaderMode, [], None)
-_BeginBlendMode = _wrap(rlapi.BeginBlendMode, [Int], None)
-_EndBlendMode = _wrap(rlapi.EndBlendMode, [], None)
-_BeginScissorMode = _wrap(rlapi.BeginScissorMode, [Int, Int, Int, Int], None)
-_EndScissorMode = _wrap(rlapi.EndScissorMode, [], None)
-_BeginVrStereoMode = _wrap(rlapi.BeginVrStereoMode, [VrStereoConfig], None)
-_EndVrStereoMode = _wrap(rlapi.EndVrStereoMode, [], None)
-_LoadVrStereoConfig = _wrap(rlapi.LoadVrStereoConfig, [VrDeviceInfo], VrStereoConfig)
-_UnloadVrStereoConfig = _wrap(rlapi.UnloadVrStereoConfig, [VrStereoConfig], None)
-_LoadShader = _wrap(rlapi.LoadShader, [CharPtr, CharPtr], Shader)
-_LoadShaderFromMemory = _wrap(rlapi.LoadShaderFromMemory, [CharPtr, CharPtr], Shader)
-_GetShaderLocation = _wrap(rlapi.GetShaderLocation, [Shader, CharPtr], Int)
-_GetShaderLocationAttrib = _wrap(rlapi.GetShaderLocationAttrib, [Shader, CharPtr], Int)
-_SetShaderValue = _wrap(rlapi.SetShaderValue, [Shader, Int, VoidPtr, Int], None)
-_SetShaderValueV = _wrap(rlapi.SetShaderValueV, [Shader, Int, VoidPtr, Int, Int], None)
-_SetShaderValueMatrix = _wrap(rlapi.SetShaderValueMatrix, [Shader, Int, Matrix], None)
-_SetShaderValueTexture = _wrap(rlapi.SetShaderValueTexture, [Shader, Int, Texture2D], None)
-_UnloadShader = _wrap(rlapi.UnloadShader, [Shader], None)
-_GetMouseRay = _wrap(rlapi.GetMouseRay, [Vector2, Camera], Ray)
-_GetCameraMatrix = _wrap(rlapi.GetCameraMatrix, [Camera], Matrix)
-_GetCameraMatrix2D = _wrap(rlapi.GetCameraMatrix2D, [Camera2D], Matrix)
-_GetWorldToScreen = _wrap(rlapi.GetWorldToScreen, [Vector3, Camera], Vector2)
-_GetScreenToWorld2D = _wrap(rlapi.GetScreenToWorld2D, [Vector2, Camera2D], Vector2)
-_GetWorldToScreenEx = _wrap(rlapi.GetWorldToScreenEx, [Vector3, Camera, Int, Int], Vector2)
-_GetWorldToScreen2D = _wrap(rlapi.GetWorldToScreen2D, [Vector2, Camera2D], Vector2)
-_SetTargetFPS = _wrap(rlapi.SetTargetFPS, [Int], None)
-_GetFPS = _wrap(rlapi.GetFPS, [], Int)
-_GetFrameTime = _wrap(rlapi.GetFrameTime, [], Float)
-_GetTime = _wrap(rlapi.GetTime, [], Double)
-_GetRandomValue = _wrap(rlapi.GetRandomValue, [Int, Int], Int)
-_SetRandomSeed = _wrap(rlapi.SetRandomSeed, [UInt], None)
-_TakeScreenshot = _wrap(rlapi.TakeScreenshot, [CharPtr], None)
-_SetConfigFlags = _wrap(rlapi.SetConfigFlags, [UInt], None)
-_TraceLog = _wrap(rlapi.TraceLog, [Int, CharPtr, VoidPtr], None)
-_SetTraceLogLevel = _wrap(rlapi.SetTraceLogLevel, [Int], None)
-_MemAlloc = _wrap(rlapi.MemAlloc, [Int], VoidPtr)
-_MemRealloc = _wrap(rlapi.MemRealloc, [VoidPtr, Int], VoidPtr)
-_MemFree = _wrap(rlapi.MemFree, [VoidPtr], None)
-_OpenURL = _wrap(rlapi.OpenURL, [CharPtr], None)
-_SetTraceLogCallback = _wrap(rlapi.SetTraceLogCallback, [TraceLogCallback], None)
-_SetLoadFileDataCallback = _wrap(rlapi.SetLoadFileDataCallback, [LoadFileDataCallback], None)
-_SetSaveFileDataCallback = _wrap(rlapi.SetSaveFileDataCallback, [SaveFileDataCallback], None)
-_SetLoadFileTextCallback = _wrap(rlapi.SetLoadFileTextCallback, [LoadFileTextCallback], None)
-_SetSaveFileTextCallback = _wrap(rlapi.SetSaveFileTextCallback, [SaveFileTextCallback], None)
-_LoadFileData = _wrap(rlapi.LoadFileData, [CharPtr, UIntPtr], UCharPtr)
-_UnloadFileData = _wrap(rlapi.UnloadFileData, [UCharPtr], None)
-_SaveFileData = _wrap(rlapi.SaveFileData, [CharPtr, VoidPtr, UInt], Bool)
-_ExportDataAsCode = _wrap(rlapi.ExportDataAsCode, [CharPtr, UInt, CharPtr], Bool)
-_LoadFileText = _wrap(rlapi.LoadFileText, [CharPtr], CharPtr)
-_UnloadFileText = _wrap(rlapi.UnloadFileText, [CharPtr], None)
-_SaveFileText = _wrap(rlapi.SaveFileText, [CharPtr, CharPtr], Bool)
-_FileExists = _wrap(rlapi.FileExists, [CharPtr], Bool)
-_DirectoryExists = _wrap(rlapi.DirectoryExists, [CharPtr], Bool)
-_IsFileExtension = _wrap(rlapi.IsFileExtension, [CharPtr, CharPtr], Bool)
-_GetFileLength = _wrap(rlapi.GetFileLength, [CharPtr], Int)
-_GetFileExtension = _wrap(rlapi.GetFileExtension, [CharPtr], CharPtr)
-_GetFileName = _wrap(rlapi.GetFileName, [CharPtr], CharPtr)
-_GetFileNameWithoutExt = _wrap(rlapi.GetFileNameWithoutExt, [CharPtr], CharPtr)
-_GetDirectoryPath = _wrap(rlapi.GetDirectoryPath, [CharPtr], CharPtr)
-_GetPrevDirectoryPath = _wrap(rlapi.GetPrevDirectoryPath, [CharPtr], CharPtr)
-_GetWorkingDirectory = _wrap(rlapi.GetWorkingDirectory, [], CharPtr)
-_GetApplicationDirectory = _wrap(rlapi.GetApplicationDirectory, [], CharPtr)
-_ChangeDirectory = _wrap(rlapi.ChangeDirectory, [CharPtr], Bool)
-_IsPathFile = _wrap(rlapi.IsPathFile, [CharPtr], Bool)
-_LoadDirectoryFiles = _wrap(rlapi.LoadDirectoryFiles, [CharPtr], FilePathList)
-_LoadDirectoryFilesEx = _wrap(rlapi.LoadDirectoryFilesEx, [CharPtr, CharPtr, Bool], FilePathList)
-_UnloadDirectoryFiles = _wrap(rlapi.UnloadDirectoryFiles, [FilePathList], None)
-_IsFileDropped = _wrap(rlapi.IsFileDropped, [], Bool)
-_LoadDroppedFiles = _wrap(rlapi.LoadDroppedFiles, [], FilePathList)
-_UnloadDroppedFiles = _wrap(rlapi.UnloadDroppedFiles, [FilePathList], None)
-_GetFileModTime = _wrap(rlapi.GetFileModTime, [CharPtr], Long)
-_CompressData = _wrap(rlapi.CompressData, [UCharPtr, Int, IntPtr], UCharPtr)
-_DecompressData = _wrap(rlapi.DecompressData, [UCharPtr, Int, IntPtr], UCharPtr)
-_EncodeDataBase64 = _wrap(rlapi.EncodeDataBase64, [UCharPtr, Int, IntPtr], CharPtr)
-_DecodeDataBase64 = _wrap(rlapi.DecodeDataBase64, [UCharPtr, IntPtr], UCharPtr)
-_IsKeyPressed = _wrap(rlapi.IsKeyPressed, [Int], Bool)
-_IsKeyDown = _wrap(rlapi.IsKeyDown, [Int], Bool)
-_IsKeyReleased = _wrap(rlapi.IsKeyReleased, [Int], Bool)
-_IsKeyUp = _wrap(rlapi.IsKeyUp, [Int], Bool)
-_SetExitKey = _wrap(rlapi.SetExitKey, [Int], None)
-_GetKeyPressed = _wrap(rlapi.GetKeyPressed, [], Int)
-_GetCharPressed = _wrap(rlapi.GetCharPressed, [], Int)
-_IsGamepadAvailable = _wrap(rlapi.IsGamepadAvailable, [Int], Bool)
-_GetGamepadName = _wrap(rlapi.GetGamepadName, [Int], CharPtr)
-_IsGamepadButtonPressed = _wrap(rlapi.IsGamepadButtonPressed, [Int, Int], Bool)
-_IsGamepadButtonDown = _wrap(rlapi.IsGamepadButtonDown, [Int, Int], Bool)
-_IsGamepadButtonReleased = _wrap(rlapi.IsGamepadButtonReleased, [Int, Int], Bool)
-_IsGamepadButtonUp = _wrap(rlapi.IsGamepadButtonUp, [Int, Int], Bool)
-_GetGamepadButtonPressed = _wrap(rlapi.GetGamepadButtonPressed, [], Int)
-_GetGamepadAxisCount = _wrap(rlapi.GetGamepadAxisCount, [Int], Int)
-_GetGamepadAxisMovement = _wrap(rlapi.GetGamepadAxisMovement, [Int, Int], Float)
-_SetGamepadMappings = _wrap(rlapi.SetGamepadMappings, [CharPtr], Int)
-_IsMouseButtonPressed = _wrap(rlapi.IsMouseButtonPressed, [Int], Bool)
-_IsMouseButtonDown = _wrap(rlapi.IsMouseButtonDown, [Int], Bool)
-_IsMouseButtonReleased = _wrap(rlapi.IsMouseButtonReleased, [Int], Bool)
-_IsMouseButtonUp = _wrap(rlapi.IsMouseButtonUp, [Int], Bool)
-_GetMouseX = _wrap(rlapi.GetMouseX, [], Int)
-_GetMouseY = _wrap(rlapi.GetMouseY, [], Int)
-_GetMousePosition = _wrap(rlapi.GetMousePosition, [], Vector2)
-_GetMouseDelta = _wrap(rlapi.GetMouseDelta, [], Vector2)
-_SetMousePosition = _wrap(rlapi.SetMousePosition, [Int, Int], None)
-_SetMouseOffset = _wrap(rlapi.SetMouseOffset, [Int, Int], None)
-_SetMouseScale = _wrap(rlapi.SetMouseScale, [Float, Float], None)
-_GetMouseWheelMove = _wrap(rlapi.GetMouseWheelMove, [], Float)
-_GetMouseWheelMoveV = _wrap(rlapi.GetMouseWheelMoveV, [], Vector2)
-_SetMouseCursor = _wrap(rlapi.SetMouseCursor, [Int], None)
-_GetTouchX = _wrap(rlapi.GetTouchX, [], Int)
-_GetTouchY = _wrap(rlapi.GetTouchY, [], Int)
-_GetTouchPosition = _wrap(rlapi.GetTouchPosition, [Int], Vector2)
-_GetTouchPointId = _wrap(rlapi.GetTouchPointId, [Int], Int)
-_GetTouchPointCount = _wrap(rlapi.GetTouchPointCount, [], Int)
-_SetGesturesEnabled = _wrap(rlapi.SetGesturesEnabled, [UInt], None)
-_IsGestureDetected = _wrap(rlapi.IsGestureDetected, [Int], Bool)
-_GetGestureDetected = _wrap(rlapi.GetGestureDetected, [], Int)
-_GetGestureHoldDuration = _wrap(rlapi.GetGestureHoldDuration, [], Float)
-_GetGestureDragVector = _wrap(rlapi.GetGestureDragVector, [], Vector2)
-_GetGestureDragAngle = _wrap(rlapi.GetGestureDragAngle, [], Float)
-_GetGesturePinchVector = _wrap(rlapi.GetGesturePinchVector, [], Vector2)
-_GetGesturePinchAngle = _wrap(rlapi.GetGesturePinchAngle, [], Float)
-_SetCameraMode = _wrap(rlapi.SetCameraMode, [Camera, Int], None)
-_UpdateCamera = _wrap(rlapi.UpdateCamera, [CameraPtr], None)
-_SetCameraPanControl = _wrap(rlapi.SetCameraPanControl, [Int], None)
-_SetCameraAltControl = _wrap(rlapi.SetCameraAltControl, [Int], None)
-_SetCameraSmoothZoomControl = _wrap(rlapi.SetCameraSmoothZoomControl, [Int], None)
-_SetCameraMoveControls = _wrap(rlapi.SetCameraMoveControls, [Int, Int, Int, Int, Int, Int], None)
-_SetShapesTexture = _wrap(rlapi.SetShapesTexture, [Texture2D, Rectangle], None)
-_DrawPixel = _wrap(rlapi.DrawPixel, [Int, Int, Color], None)
-_DrawPixelV = _wrap(rlapi.DrawPixelV, [Vector2, Color], None)
-_DrawLine = _wrap(rlapi.DrawLine, [Int, Int, Int, Int, Color], None)
-_DrawLineV = _wrap(rlapi.DrawLineV, [Vector2, Vector2, Color], None)
-_DrawLineEx = _wrap(rlapi.DrawLineEx, [Vector2, Vector2, Float, Color], None)
-_DrawLineBezier = _wrap(rlapi.DrawLineBezier, [Vector2, Vector2, Float, Color], None)
-_DrawLineBezierQuad = _wrap(rlapi.DrawLineBezierQuad, [Vector2, Vector2, Vector2, Float, Color], None)
-_DrawLineBezierCubic = _wrap(rlapi.DrawLineBezierCubic, [Vector2, Vector2, Vector2, Vector2, Float, Color], None)
-_DrawLineStrip = _wrap(rlapi.DrawLineStrip, [Vector2Ptr, Int, Color], None)
-_DrawCircle = _wrap(rlapi.DrawCircle, [Int, Int, Float, Color], None)
-_DrawCircleSector = _wrap(rlapi.DrawCircleSector, [Vector2, Float, Float, Float, Int, Color], None)
-_DrawCircleSectorLines = _wrap(rlapi.DrawCircleSectorLines, [Vector2, Float, Float, Float, Int, Color], None)
-_DrawCircleGradient = _wrap(rlapi.DrawCircleGradient, [Int, Int, Float, Color, Color], None)
-_DrawCircleV = _wrap(rlapi.DrawCircleV, [Vector2, Float, Color], None)
-_DrawCircleLines = _wrap(rlapi.DrawCircleLines, [Int, Int, Float, Color], None)
-_DrawEllipse = _wrap(rlapi.DrawEllipse, [Int, Int, Float, Float, Color], None)
-_DrawEllipseLines = _wrap(rlapi.DrawEllipseLines, [Int, Int, Float, Float, Color], None)
-_DrawRing = _wrap(rlapi.DrawRing, [Vector2, Float, Float, Float, Float, Int, Color], None)
-_DrawRingLines = _wrap(rlapi.DrawRingLines, [Vector2, Float, Float, Float, Float, Int, Color], None)
-_DrawRectangle = _wrap(rlapi.DrawRectangle, [Int, Int, Int, Int, Color], None)
-_DrawRectangleV = _wrap(rlapi.DrawRectangleV, [Vector2, Vector2, Color], None)
-_DrawRectangleRec = _wrap(rlapi.DrawRectangleRec, [Rectangle, Color], None)
-_DrawRectanglePro = _wrap(rlapi.DrawRectanglePro, [Rectangle, Vector2, Float, Color], None)
-_DrawRectangleGradientV = _wrap(rlapi.DrawRectangleGradientV, [Int, Int, Int, Int, Color, Color], None)
-_DrawRectangleGradientH = _wrap(rlapi.DrawRectangleGradientH, [Int, Int, Int, Int, Color, Color], None)
-_DrawRectangleGradientEx = _wrap(rlapi.DrawRectangleGradientEx, [Rectangle, Color, Color, Color, Color], None)
-_DrawRectangleLines = _wrap(rlapi.DrawRectangleLines, [Int, Int, Int, Int, Color], None)
-_DrawRectangleLinesEx = _wrap(rlapi.DrawRectangleLinesEx, [Rectangle, Float, Color], None)
-_DrawRectangleRounded = _wrap(rlapi.DrawRectangleRounded, [Rectangle, Float, Int, Color], None)
-_DrawRectangleRoundedLines = _wrap(rlapi.DrawRectangleRoundedLines, [Rectangle, Float, Int, Float, Color], None)
-_DrawTriangle = _wrap(rlapi.DrawTriangle, [Vector2, Vector2, Vector2, Color], None)
-_DrawTriangleLines = _wrap(rlapi.DrawTriangleLines, [Vector2, Vector2, Vector2, Color], None)
-_DrawTriangleFan = _wrap(rlapi.DrawTriangleFan, [Vector2Ptr, Int, Color], None)
-_DrawTriangleStrip = _wrap(rlapi.DrawTriangleStrip, [Vector2Ptr, Int, Color], None)
-_DrawPoly = _wrap(rlapi.DrawPoly, [Vector2, Int, Float, Float, Color], None)
-_DrawPolyLines = _wrap(rlapi.DrawPolyLines, [Vector2, Int, Float, Float, Color], None)
-_DrawPolyLinesEx = _wrap(rlapi.DrawPolyLinesEx, [Vector2, Int, Float, Float, Float, Color], None)
-_CheckCollisionRecs = _wrap(rlapi.CheckCollisionRecs, [Rectangle, Rectangle], Bool)
-_CheckCollisionCircles = _wrap(rlapi.CheckCollisionCircles, [Vector2, Float, Vector2, Float], Bool)
-_CheckCollisionCircleRec = _wrap(rlapi.CheckCollisionCircleRec, [Vector2, Float, Rectangle], Bool)
-_CheckCollisionPointRec = _wrap(rlapi.CheckCollisionPointRec, [Vector2, Rectangle], Bool)
-_CheckCollisionPointCircle = _wrap(rlapi.CheckCollisionPointCircle, [Vector2, Vector2, Float], Bool)
-_CheckCollisionPointTriangle = _wrap(rlapi.CheckCollisionPointTriangle, [Vector2, Vector2, Vector2, Vector2], Bool)
-_CheckCollisionLines = _wrap(rlapi.CheckCollisionLines, [Vector2, Vector2, Vector2, Vector2, Vector2Ptr], Bool)
-_CheckCollisionPointLine = _wrap(rlapi.CheckCollisionPointLine, [Vector2, Vector2, Vector2, Int], Bool)
-_GetCollisionRec = _wrap(rlapi.GetCollisionRec, [Rectangle, Rectangle], Rectangle)
-_LoadImage = _wrap(rlapi.LoadImage, [CharPtr], Image)
-_LoadImageRaw = _wrap(rlapi.LoadImageRaw, [CharPtr, Int, Int, Int, Int], Image)
-_LoadImageAnim = _wrap(rlapi.LoadImageAnim, [CharPtr, IntPtr], Image)
-_LoadImageFromMemory = _wrap(rlapi.LoadImageFromMemory, [CharPtr, UCharPtr, Int], Image)
-_LoadImageFromTexture = _wrap(rlapi.LoadImageFromTexture, [Texture2D], Image)
-_LoadImageFromScreen = _wrap(rlapi.LoadImageFromScreen, [], Image)
-_UnloadImage = _wrap(rlapi.UnloadImage, [Image], None)
-_ExportImage = _wrap(rlapi.ExportImage, [Image, CharPtr], Bool)
-_ExportImageAsCode = _wrap(rlapi.ExportImageAsCode, [Image, CharPtr], Bool)
-_GenImageColor = _wrap(rlapi.GenImageColor, [Int, Int, Color], Image)
-_GenImageGradientV = _wrap(rlapi.GenImageGradientV, [Int, Int, Color, Color], Image)
-_GenImageGradientH = _wrap(rlapi.GenImageGradientH, [Int, Int, Color, Color], Image)
-_GenImageGradientRadial = _wrap(rlapi.GenImageGradientRadial, [Int, Int, Float, Color, Color], Image)
-_GenImageChecked = _wrap(rlapi.GenImageChecked, [Int, Int, Int, Int, Color, Color], Image)
-_GenImageWhiteNoise = _wrap(rlapi.GenImageWhiteNoise, [Int, Int, Float], Image)
-_GenImageCellular = _wrap(rlapi.GenImageCellular, [Int, Int, Int], Image)
-_ImageCopy = _wrap(rlapi.ImageCopy, [Image], Image)
-_ImageFromImage = _wrap(rlapi.ImageFromImage, [Image, Rectangle], Image)
-_ImageText = _wrap(rlapi.ImageText, [CharPtr, Int, Color], Image)
-_ImageTextEx = _wrap(rlapi.ImageTextEx, [Font, CharPtr, Float, Float, Color], Image)
-_ImageFormat = _wrap(rlapi.ImageFormat, [ImagePtr, Int], None)
-_ImageToPOT = _wrap(rlapi.ImageToPOT, [ImagePtr, Color], None)
-_ImageCrop = _wrap(rlapi.ImageCrop, [ImagePtr, Rectangle], None)
-_ImageAlphaCrop = _wrap(rlapi.ImageAlphaCrop, [ImagePtr, Float], None)
-_ImageAlphaClear = _wrap(rlapi.ImageAlphaClear, [ImagePtr, Color, Float], None)
-_ImageAlphaMask = _wrap(rlapi.ImageAlphaMask, [ImagePtr, Image], None)
-_ImageAlphaPremultiply = _wrap(rlapi.ImageAlphaPremultiply, [ImagePtr], None)
-_ImageResize = _wrap(rlapi.ImageResize, [ImagePtr, Int, Int], None)
-_ImageResizeNN = _wrap(rlapi.ImageResizeNN, [ImagePtr, Int, Int], None)
-_ImageResizeCanvas = _wrap(rlapi.ImageResizeCanvas, [ImagePtr, Int, Int, Int, Int, Color], None)
-_ImageMipmaps = _wrap(rlapi.ImageMipmaps, [ImagePtr], None)
-_ImageDither = _wrap(rlapi.ImageDither, [ImagePtr, Int, Int, Int, Int], None)
-_ImageFlipVertical = _wrap(rlapi.ImageFlipVertical, [ImagePtr], None)
-_ImageFlipHorizontal = _wrap(rlapi.ImageFlipHorizontal, [ImagePtr], None)
-_ImageRotateCW = _wrap(rlapi.ImageRotateCW, [ImagePtr], None)
-_ImageRotateCCW = _wrap(rlapi.ImageRotateCCW, [ImagePtr], None)
-_ImageColorTint = _wrap(rlapi.ImageColorTint, [ImagePtr, Color], None)
-_ImageColorInvert = _wrap(rlapi.ImageColorInvert, [ImagePtr], None)
-_ImageColorGrayscale = _wrap(rlapi.ImageColorGrayscale, [ImagePtr], None)
-_ImageColorContrast = _wrap(rlapi.ImageColorContrast, [ImagePtr, Float], None)
-_ImageColorBrightness = _wrap(rlapi.ImageColorBrightness, [ImagePtr, Int], None)
-_ImageColorReplace = _wrap(rlapi.ImageColorReplace, [ImagePtr, Color, Color], None)
-_LoadImageColors = _wrap(rlapi.LoadImageColors, [Image], ColorPtr)
-_LoadImagePalette = _wrap(rlapi.LoadImagePalette, [Image, Int, IntPtr], ColorPtr)
-_UnloadImageColors = _wrap(rlapi.UnloadImageColors, [ColorPtr], None)
-_UnloadImagePalette = _wrap(rlapi.UnloadImagePalette, [ColorPtr], None)
-_GetImageAlphaBorder = _wrap(rlapi.GetImageAlphaBorder, [Image, Float], Rectangle)
-_GetImageColor = _wrap(rlapi.GetImageColor, [Image, Int, Int], Color)
-_ImageClearBackground = _wrap(rlapi.ImageClearBackground, [ImagePtr, Color], None)
-_ImageDrawPixel = _wrap(rlapi.ImageDrawPixel, [ImagePtr, Int, Int, Color], None)
-_ImageDrawPixelV = _wrap(rlapi.ImageDrawPixelV, [ImagePtr, Vector2, Color], None)
-_ImageDrawLine = _wrap(rlapi.ImageDrawLine, [ImagePtr, Int, Int, Int, Int, Color], None)
-_ImageDrawLineV = _wrap(rlapi.ImageDrawLineV, [ImagePtr, Vector2, Vector2, Color], None)
-_ImageDrawCircle = _wrap(rlapi.ImageDrawCircle, [ImagePtr, Int, Int, Int, Color], None)
-_ImageDrawCircleV = _wrap(rlapi.ImageDrawCircleV, [ImagePtr, Vector2, Int, Color], None)
-_ImageDrawRectangle = _wrap(rlapi.ImageDrawRectangle, [ImagePtr, Int, Int, Int, Int, Color], None)
-_ImageDrawRectangleV = _wrap(rlapi.ImageDrawRectangleV, [ImagePtr, Vector2, Vector2, Color], None)
-_ImageDrawRectangleRec = _wrap(rlapi.ImageDrawRectangleRec, [ImagePtr, Rectangle, Color], None)
-_ImageDrawRectangleLines = _wrap(rlapi.ImageDrawRectangleLines, [ImagePtr, Rectangle, Int, Color], None)
-_ImageDraw = _wrap(rlapi.ImageDraw, [ImagePtr, Image, Rectangle, Rectangle, Color], None)
-_ImageDrawText = _wrap(rlapi.ImageDrawText, [ImagePtr, CharPtr, Int, Int, Int, Color], None)
-_ImageDrawTextEx = _wrap(rlapi.ImageDrawTextEx, [ImagePtr, Font, CharPtr, Vector2, Float, Float, Color], None)
-_LoadTexture = _wrap(rlapi.LoadTexture, [CharPtr], Texture2D)
-_LoadTextureFromImage = _wrap(rlapi.LoadTextureFromImage, [Image], Texture2D)
-_LoadTextureCubemap = _wrap(rlapi.LoadTextureCubemap, [Image, Int], TextureCubemap)
-_LoadRenderTexture = _wrap(rlapi.LoadRenderTexture, [Int, Int], RenderTexture2D)
-_UnloadTexture = _wrap(rlapi.UnloadTexture, [Texture2D], None)
-_UnloadRenderTexture = _wrap(rlapi.UnloadRenderTexture, [RenderTexture2D], None)
-_UpdateTexture = _wrap(rlapi.UpdateTexture, [Texture2D, VoidPtr], None)
-_UpdateTextureRec = _wrap(rlapi.UpdateTextureRec, [Texture2D, Rectangle, VoidPtr], None)
-_GenTextureMipmaps = _wrap(rlapi.GenTextureMipmaps, [Texture2DPtr], None)
-_SetTextureFilter = _wrap(rlapi.SetTextureFilter, [Texture2D, Int], None)
-_SetTextureWrap = _wrap(rlapi.SetTextureWrap, [Texture2D, Int], None)
-_DrawTexture = _wrap(rlapi.DrawTexture, [Texture2D, Int, Int, Color], None)
-_DrawTextureV = _wrap(rlapi.DrawTextureV, [Texture2D, Vector2, Color], None)
-_DrawTextureEx = _wrap(rlapi.DrawTextureEx, [Texture2D, Vector2, Float, Float, Color], None)
-_DrawTextureRec = _wrap(rlapi.DrawTextureRec, [Texture2D, Rectangle, Vector2, Color], None)
-_DrawTextureQuad = _wrap(rlapi.DrawTextureQuad, [Texture2D, Vector2, Vector2, Rectangle, Color], None)
-_DrawTextureTiled = _wrap(rlapi.DrawTextureTiled, [Texture2D, Rectangle, Rectangle, Vector2, Float, Float, Color], None)
-_DrawTexturePro = _wrap(rlapi.DrawTexturePro, [Texture2D, Rectangle, Rectangle, Vector2, Float, Color], None)
-_DrawTextureNPatch = _wrap(rlapi.DrawTextureNPatch, [Texture2D, NPatchInfo, Rectangle, Vector2, Float, Color], None)
-_DrawTexturePoly = _wrap(rlapi.DrawTexturePoly, [Texture2D, Vector2, Vector2Ptr, Vector2Ptr, Int, Color], None)
-_Fade = _wrap(rlapi.Fade, [Color, Float], Color)
-_ColorToInt = _wrap(rlapi.ColorToInt, [Color], Int)
-_ColorNormalize = _wrap(rlapi.ColorNormalize, [Color], Vector4)
-_ColorFromNormalized = _wrap(rlapi.ColorFromNormalized, [Vector4], Color)
-_ColorToHSV = _wrap(rlapi.ColorToHSV, [Color], Vector3)
-_ColorFromHSV = _wrap(rlapi.ColorFromHSV, [Float, Float, Float], Color)
-_ColorAlpha = _wrap(rlapi.ColorAlpha, [Color, Float], Color)
-_ColorAlphaBlend = _wrap(rlapi.ColorAlphaBlend, [Color, Color, Color], Color)
-_GetColor = _wrap(rlapi.GetColor, [UInt], Color)
-_GetPixelColor = _wrap(rlapi.GetPixelColor, [VoidPtr, Int], Color)
-_SetPixelColor = _wrap(rlapi.SetPixelColor, [VoidPtr, Color, Int], None)
-_GetPixelDataSize = _wrap(rlapi.GetPixelDataSize, [Int, Int, Int], Int)
-_GetFontDefault = _wrap(rlapi.GetFontDefault, [], Font)
-_LoadFont = _wrap(rlapi.LoadFont, [CharPtr], Font)
-_LoadFontEx = _wrap(rlapi.LoadFontEx, [CharPtr, Int, IntPtr, Int], Font)
-_LoadFontFromImage = _wrap(rlapi.LoadFontFromImage, [Image, Color, Int], Font)
-_LoadFontFromMemory = _wrap(rlapi.LoadFontFromMemory, [CharPtr, UCharPtr, Int, Int, IntPtr, Int], Font)
-_LoadFontData = _wrap(rlapi.LoadFontData, [UCharPtr, Int, Int, IntPtr, Int, Int], GlyphInfoPtr)
-_GenImageFontAtlas = _wrap(rlapi.GenImageFontAtlas, [GlyphInfoPtr, RectanglePtr, Int, Int, Int, Int], Image)
-_UnloadFontData = _wrap(rlapi.UnloadFontData, [GlyphInfoPtr, Int], None)
-_UnloadFont = _wrap(rlapi.UnloadFont, [Font], None)
-_ExportFontAsCode = _wrap(rlapi.ExportFontAsCode, [Font, CharPtr], Bool)
-_DrawFPS = _wrap(rlapi.DrawFPS, [Int, Int], None)
-_DrawText = _wrap(rlapi.DrawText, [CharPtr, Int, Int, Int, Color], None)
-_DrawTextEx = _wrap(rlapi.DrawTextEx, [Font, CharPtr, Vector2, Float, Float, Color], None)
-_DrawTextPro = _wrap(rlapi.DrawTextPro, [Font, CharPtr, Vector2, Vector2, Float, Float, Float, Color], None)
-_DrawTextCodepoint = _wrap(rlapi.DrawTextCodepoint, [Font, Int, Vector2, Float, Color], None)
-_DrawTextCodepoints = _wrap(rlapi.DrawTextCodepoints, [Font, IntPtr, Int, Vector2, Float, Float, Color], None)
-_MeasureText = _wrap(rlapi.MeasureText, [CharPtr, Int], Int)
-_MeasureTextEx = _wrap(rlapi.MeasureTextEx, [Font, CharPtr, Float, Float], Vector2)
-_GetGlyphIndex = _wrap(rlapi.GetGlyphIndex, [Font, Int], Int)
-_GetGlyphInfo = _wrap(rlapi.GetGlyphInfo, [Font, Int], GlyphInfo)
-_GetGlyphAtlasRec = _wrap(rlapi.GetGlyphAtlasRec, [Font, Int], Rectangle)
-_LoadCodepoints = _wrap(rlapi.LoadCodepoints, [CharPtr, IntPtr], IntPtr)
-_UnloadCodepoints = _wrap(rlapi.UnloadCodepoints, [IntPtr], None)
-_GetCodepointCount = _wrap(rlapi.GetCodepointCount, [CharPtr], Int)
-_GetCodepoint = _wrap(rlapi.GetCodepoint, [CharPtr, IntPtr], Int)
-_CodepointToUTF8 = _wrap(rlapi.CodepointToUTF8, [Int, IntPtr], CharPtr)
-_TextCodepointsToUTF8 = _wrap(rlapi.TextCodepointsToUTF8, [IntPtr, Int], CharPtr)
-_TextCopy = _wrap(rlapi.TextCopy, [CharPtr, CharPtr], Int)
-_TextIsEqual = _wrap(rlapi.TextIsEqual, [CharPtr, CharPtr], Bool)
-_TextLength = _wrap(rlapi.TextLength, [CharPtr], UInt)
-_TextFormat = _wrap(rlapi.TextFormat, [CharPtr, VoidPtr], CharPtr)
-_TextSubtext = _wrap(rlapi.TextSubtext, [CharPtr, Int, Int], CharPtr)
-_TextReplace = _wrap(rlapi.TextReplace, [CharPtr, CharPtr, CharPtr], CharPtr)
-_TextInsert = _wrap(rlapi.TextInsert, [CharPtr, CharPtr, Int], CharPtr)
-_TextJoin = _wrap(rlapi.TextJoin, [CharPtrPtr, Int, CharPtr], CharPtr)
-_TextSplit = _wrap(rlapi.TextSplit, [CharPtr, Char, IntPtr], CharPtrPtr)
-_TextAppend = _wrap(rlapi.TextAppend, [CharPtr, CharPtr, IntPtr], None)
-_TextFindIndex = _wrap(rlapi.TextFindIndex, [CharPtr, CharPtr], Int)
-_TextToUpper = _wrap(rlapi.TextToUpper, [CharPtr], CharPtr)
-_TextToLower = _wrap(rlapi.TextToLower, [CharPtr], CharPtr)
-_TextToPascal = _wrap(rlapi.TextToPascal, [CharPtr], CharPtr)
-_TextToInteger = _wrap(rlapi.TextToInteger, [CharPtr], Int)
-_DrawLine3D = _wrap(rlapi.DrawLine3D, [Vector3, Vector3, Color], None)
-_DrawPoint3D = _wrap(rlapi.DrawPoint3D, [Vector3, Color], None)
-_DrawCircle3D = _wrap(rlapi.DrawCircle3D, [Vector3, Float, Vector3, Float, Color], None)
-_DrawTriangle3D = _wrap(rlapi.DrawTriangle3D, [Vector3, Vector3, Vector3, Color], None)
-_DrawTriangleStrip3D = _wrap(rlapi.DrawTriangleStrip3D, [Vector3Ptr, Int, Color], None)
-_DrawCube = _wrap(rlapi.DrawCube, [Vector3, Float, Float, Float, Color], None)
-_DrawCubeV = _wrap(rlapi.DrawCubeV, [Vector3, Vector3, Color], None)
-_DrawCubeWires = _wrap(rlapi.DrawCubeWires, [Vector3, Float, Float, Float, Color], None)
-_DrawCubeWiresV = _wrap(rlapi.DrawCubeWiresV, [Vector3, Vector3, Color], None)
-_DrawCubeTexture = _wrap(rlapi.DrawCubeTexture, [Texture2D, Vector3, Float, Float, Float, Color], None)
-_DrawCubeTextureRec = _wrap(rlapi.DrawCubeTextureRec, [Texture2D, Rectangle, Vector3, Float, Float, Float, Color], None)
-_DrawSphere = _wrap(rlapi.DrawSphere, [Vector3, Float, Color], None)
-_DrawSphereEx = _wrap(rlapi.DrawSphereEx, [Vector3, Float, Int, Int, Color], None)
-_DrawSphereWires = _wrap(rlapi.DrawSphereWires, [Vector3, Float, Int, Int, Color], None)
-_DrawCylinder = _wrap(rlapi.DrawCylinder, [Vector3, Float, Float, Float, Int, Color], None)
-_DrawCylinderEx = _wrap(rlapi.DrawCylinderEx, [Vector3, Vector3, Float, Float, Int, Color], None)
-_DrawCylinderWires = _wrap(rlapi.DrawCylinderWires, [Vector3, Float, Float, Float, Int, Color], None)
-_DrawCylinderWiresEx = _wrap(rlapi.DrawCylinderWiresEx, [Vector3, Vector3, Float, Float, Int, Color], None)
-_DrawPlane = _wrap(rlapi.DrawPlane, [Vector3, Vector2, Color], None)
-_DrawRay = _wrap(rlapi.DrawRay, [Ray, Color], None)
-_DrawGrid = _wrap(rlapi.DrawGrid, [Int, Float], None)
-_LoadModel = _wrap(rlapi.LoadModel, [CharPtr], Model)
-_LoadModelFromMesh = _wrap(rlapi.LoadModelFromMesh, [Mesh], Model)
-_UnloadModel = _wrap(rlapi.UnloadModel, [Model], None)
-_UnloadModelKeepMeshes = _wrap(rlapi.UnloadModelKeepMeshes, [Model], None)
-_GetModelBoundingBox = _wrap(rlapi.GetModelBoundingBox, [Model], BoundingBox)
-_DrawModel = _wrap(rlapi.DrawModel, [Model, Vector3, Float, Color], None)
-_DrawModelEx = _wrap(rlapi.DrawModelEx, [Model, Vector3, Vector3, Float, Vector3, Color], None)
-_DrawModelWires = _wrap(rlapi.DrawModelWires, [Model, Vector3, Float, Color], None)
-_DrawModelWiresEx = _wrap(rlapi.DrawModelWiresEx, [Model, Vector3, Vector3, Float, Vector3, Color], None)
-_DrawBoundingBox = _wrap(rlapi.DrawBoundingBox, [BoundingBox, Color], None)
-_DrawBillboard = _wrap(rlapi.DrawBillboard, [Camera, Texture2D, Vector3, Float, Color], None)
-_DrawBillboardRec = _wrap(rlapi.DrawBillboardRec, [Camera, Texture2D, Rectangle, Vector3, Vector2, Color], None)
-_DrawBillboardPro = _wrap(rlapi.DrawBillboardPro, [Camera, Texture2D, Rectangle, Vector3, Vector3, Vector2, Vector2, Float, Color], None)
-_UploadMesh = _wrap(rlapi.UploadMesh, [MeshPtr, Bool], None)
-_UpdateMeshBuffer = _wrap(rlapi.UpdateMeshBuffer, [Mesh, Int, VoidPtr, Int, Int], None)
-_UnloadMesh = _wrap(rlapi.UnloadMesh, [Mesh], None)
-_DrawMesh = _wrap(rlapi.DrawMesh, [Mesh, Material, Matrix], None)
-_DrawMeshInstanced = _wrap(rlapi.DrawMeshInstanced, [Mesh, Material, MatrixPtr, Int], None)
-_ExportMesh = _wrap(rlapi.ExportMesh, [Mesh, CharPtr], Bool)
-_GetMeshBoundingBox = _wrap(rlapi.GetMeshBoundingBox, [Mesh], BoundingBox)
-_GenMeshTangents = _wrap(rlapi.GenMeshTangents, [MeshPtr], None)
-_GenMeshPoly = _wrap(rlapi.GenMeshPoly, [Int, Float], Mesh)
-_GenMeshPlane = _wrap(rlapi.GenMeshPlane, [Float, Float, Int, Int], Mesh)
-_GenMeshCube = _wrap(rlapi.GenMeshCube, [Float, Float, Float], Mesh)
-_GenMeshSphere = _wrap(rlapi.GenMeshSphere, [Float, Int, Int], Mesh)
-_GenMeshHemiSphere = _wrap(rlapi.GenMeshHemiSphere, [Float, Int, Int], Mesh)
-_GenMeshCylinder = _wrap(rlapi.GenMeshCylinder, [Float, Float, Int], Mesh)
-_GenMeshCone = _wrap(rlapi.GenMeshCone, [Float, Float, Int], Mesh)
-_GenMeshTorus = _wrap(rlapi.GenMeshTorus, [Float, Float, Int, Int], Mesh)
-_GenMeshKnot = _wrap(rlapi.GenMeshKnot, [Float, Float, Int, Int], Mesh)
-_GenMeshHeightmap = _wrap(rlapi.GenMeshHeightmap, [Image, Vector3], Mesh)
-_GenMeshCubicmap = _wrap(rlapi.GenMeshCubicmap, [Image, Vector3], Mesh)
-_LoadMaterials = _wrap(rlapi.LoadMaterials, [CharPtr, IntPtr], MaterialPtr)
-_LoadMaterialDefault = _wrap(rlapi.LoadMaterialDefault, [], Material)
-_UnloadMaterial = _wrap(rlapi.UnloadMaterial, [Material], None)
-_SetMaterialTexture = _wrap(rlapi.SetMaterialTexture, [MaterialPtr, Int, Texture2D], None)
-_SetModelMeshMaterial = _wrap(rlapi.SetModelMeshMaterial, [ModelPtr, Int, Int], None)
-_LoadModelAnimations = _wrap(rlapi.LoadModelAnimations, [CharPtr, UIntPtr], ModelAnimationPtr)
-_UpdateModelAnimation = _wrap(rlapi.UpdateModelAnimation, [Model, ModelAnimation, Int], None)
-_UnloadModelAnimation = _wrap(rlapi.UnloadModelAnimation, [ModelAnimation], None)
-_UnloadModelAnimations = _wrap(rlapi.UnloadModelAnimations, [ModelAnimationPtr, UInt], None)
-_IsModelAnimationValid = _wrap(rlapi.IsModelAnimationValid, [Model, ModelAnimation], Bool)
-_CheckCollisionSpheres = _wrap(rlapi.CheckCollisionSpheres, [Vector3, Float, Vector3, Float], Bool)
-_CheckCollisionBoxes = _wrap(rlapi.CheckCollisionBoxes, [BoundingBox, BoundingBox], Bool)
-_CheckCollisionBoxSphere = _wrap(rlapi.CheckCollisionBoxSphere, [BoundingBox, Vector3, Float], Bool)
-_GetRayCollisionSphere = _wrap(rlapi.GetRayCollisionSphere, [Ray, Vector3, Float], RayCollision)
-_GetRayCollisionBox = _wrap(rlapi.GetRayCollisionBox, [Ray, BoundingBox], RayCollision)
-_GetRayCollisionMesh = _wrap(rlapi.GetRayCollisionMesh, [Ray, Mesh, Matrix], RayCollision)
-_GetRayCollisionTriangle = _wrap(rlapi.GetRayCollisionTriangle, [Ray, Vector3, Vector3, Vector3], RayCollision)
-_GetRayCollisionQuad = _wrap(rlapi.GetRayCollisionQuad, [Ray, Vector3, Vector3, Vector3, Vector3], RayCollision)
-_InitAudioDevice = _wrap(rlapi.InitAudioDevice, [], None)
-_CloseAudioDevice = _wrap(rlapi.CloseAudioDevice, [], None)
-_IsAudioDeviceReady = _wrap(rlapi.IsAudioDeviceReady, [], Bool)
-_SetMasterVolume = _wrap(rlapi.SetMasterVolume, [Float], None)
-_LoadWave = _wrap(rlapi.LoadWave, [CharPtr], Wave)
-_LoadWaveFromMemory = _wrap(rlapi.LoadWaveFromMemory, [CharPtr, UCharPtr, Int], Wave)
-_LoadSound = _wrap(rlapi.LoadSound, [CharPtr], Sound)
-_LoadSoundFromWave = _wrap(rlapi.LoadSoundFromWave, [Wave], Sound)
-_UpdateSound = _wrap(rlapi.UpdateSound, [Sound, VoidPtr, Int], None)
-_UnloadWave = _wrap(rlapi.UnloadWave, [Wave], None)
-_UnloadSound = _wrap(rlapi.UnloadSound, [Sound], None)
-_ExportWave = _wrap(rlapi.ExportWave, [Wave, CharPtr], Bool)
-_ExportWaveAsCode = _wrap(rlapi.ExportWaveAsCode, [Wave, CharPtr], Bool)
-_PlaySound = _wrap(rlapi.PlaySound, [Sound], None)
-_StopSound = _wrap(rlapi.StopSound, [Sound], None)
-_PauseSound = _wrap(rlapi.PauseSound, [Sound], None)
-_ResumeSound = _wrap(rlapi.ResumeSound, [Sound], None)
-_PlaySoundMulti = _wrap(rlapi.PlaySoundMulti, [Sound], None)
-_StopSoundMulti = _wrap(rlapi.StopSoundMulti, [], None)
-_GetSoundsPlaying = _wrap(rlapi.GetSoundsPlaying, [], Int)
-_IsSoundPlaying = _wrap(rlapi.IsSoundPlaying, [Sound], Bool)
-_SetSoundVolume = _wrap(rlapi.SetSoundVolume, [Sound, Float], None)
-_SetSoundPitch = _wrap(rlapi.SetSoundPitch, [Sound, Float], None)
-_SetSoundPan = _wrap(rlapi.SetSoundPan, [Sound, Float], None)
-_WaveCopy = _wrap(rlapi.WaveCopy, [Wave], Wave)
-_WaveCrop = _wrap(rlapi.WaveCrop, [WavePtr, Int, Int], None)
-_WaveFormat = _wrap(rlapi.WaveFormat, [WavePtr, Int, Int, Int], None)
-_LoadWaveSamples = _wrap(rlapi.LoadWaveSamples, [Wave], FloatPtr)
-_UnloadWaveSamples = _wrap(rlapi.UnloadWaveSamples, [FloatPtr], None)
-_LoadMusicStream = _wrap(rlapi.LoadMusicStream, [CharPtr], Music)
-_LoadMusicStreamFromMemory = _wrap(rlapi.LoadMusicStreamFromMemory, [CharPtr, UCharPtr, Int], Music)
-_UnloadMusicStream = _wrap(rlapi.UnloadMusicStream, [Music], None)
-_PlayMusicStream = _wrap(rlapi.PlayMusicStream, [Music], None)
-_IsMusicStreamPlaying = _wrap(rlapi.IsMusicStreamPlaying, [Music], Bool)
-_UpdateMusicStream = _wrap(rlapi.UpdateMusicStream, [Music], None)
-_StopMusicStream = _wrap(rlapi.StopMusicStream, [Music], None)
-_PauseMusicStream = _wrap(rlapi.PauseMusicStream, [Music], None)
-_ResumeMusicStream = _wrap(rlapi.ResumeMusicStream, [Music], None)
-_SeekMusicStream = _wrap(rlapi.SeekMusicStream, [Music, Float], None)
-_SetMusicVolume = _wrap(rlapi.SetMusicVolume, [Music, Float], None)
-_SetMusicPitch = _wrap(rlapi.SetMusicPitch, [Music, Float], None)
-_SetMusicPan = _wrap(rlapi.SetMusicPan, [Music, Float], None)
-_GetMusicTimeLength = _wrap(rlapi.GetMusicTimeLength, [Music], Float)
-_GetMusicTimePlayed = _wrap(rlapi.GetMusicTimePlayed, [Music], Float)
-_LoadAudioStream = _wrap(rlapi.LoadAudioStream, [UInt, UInt, UInt], AudioStream)
-_UnloadAudioStream = _wrap(rlapi.UnloadAudioStream, [AudioStream], None)
-_UpdateAudioStream = _wrap(rlapi.UpdateAudioStream, [AudioStream, VoidPtr, Int], None)
-_IsAudioStreamProcessed = _wrap(rlapi.IsAudioStreamProcessed, [AudioStream], Bool)
-_PlayAudioStream = _wrap(rlapi.PlayAudioStream, [AudioStream], None)
-_PauseAudioStream = _wrap(rlapi.PauseAudioStream, [AudioStream], None)
-_ResumeAudioStream = _wrap(rlapi.ResumeAudioStream, [AudioStream], None)
-_IsAudioStreamPlaying = _wrap(rlapi.IsAudioStreamPlaying, [AudioStream], Bool)
-_StopAudioStream = _wrap(rlapi.StopAudioStream, [AudioStream], None)
-_SetAudioStreamVolume = _wrap(rlapi.SetAudioStreamVolume, [AudioStream, Float], None)
-_SetAudioStreamPitch = _wrap(rlapi.SetAudioStreamPitch, [AudioStream, Float], None)
-_SetAudioStreamPan = _wrap(rlapi.SetAudioStreamPan, [AudioStream, Float], None)
-_SetAudioStreamBufferSizeDefault = _wrap(rlapi.SetAudioStreamBufferSizeDefault, [Int], None)
-_SetAudioStreamCallback = _wrap(rlapi.SetAudioStreamCallback, [AudioStream, AudioCallback], None)
-_AttachAudioStreamProcessor = _wrap(rlapi.AttachAudioStreamProcessor, [AudioStream, AudioCallback], None)
-_DetachAudioStreamProcessor = _wrap(rlapi.DetachAudioStreamProcessor, [AudioStream, AudioCallback], None)
-_Clamp = _wrap(rlapi.Clamp, [Float, Float, Float], Float)
-_Lerp = _wrap(rlapi.Lerp, [Float, Float, Float], Float)
-_Normalize = _wrap(rlapi.Normalize, [Float, Float, Float], Float)
-_Remap = _wrap(rlapi.Remap, [Float, Float, Float, Float, Float], Float)
-_Wrap = _wrap(rlapi.Wrap, [Float, Float, Float], Float)
-_FloatEquals = _wrap(rlapi.FloatEquals, [Float, Float], Int)
-_Vector2Zero = _wrap(rlapi.Vector2Zero, [], Vector2)
-_Vector2One = _wrap(rlapi.Vector2One, [], Vector2)
-_Vector2Add = _wrap(rlapi.Vector2Add, [Vector2, Vector2], Vector2)
-_Vector2AddValue = _wrap(rlapi.Vector2AddValue, [Vector2, Float], Vector2)
-_Vector2Subtract = _wrap(rlapi.Vector2Subtract, [Vector2, Vector2], Vector2)
-_Vector2SubtractValue = _wrap(rlapi.Vector2SubtractValue, [Vector2, Float], Vector2)
-_Vector2Length = _wrap(rlapi.Vector2Length, [Vector2], Float)
-_Vector2LengthSqr = _wrap(rlapi.Vector2LengthSqr, [Vector2], Float)
-_Vector2DotProduct = _wrap(rlapi.Vector2DotProduct, [Vector2, Vector2], Float)
-_Vector2Distance = _wrap(rlapi.Vector2Distance, [Vector2, Vector2], Float)
-_Vector2DistanceSqr = _wrap(rlapi.Vector2DistanceSqr, [Vector2, Vector2], Float)
-_Vector2Angle = _wrap(rlapi.Vector2Angle, [Vector2, Vector2], Float)
-_Vector2Scale = _wrap(rlapi.Vector2Scale, [Vector2, Float], Vector2)
-_Vector2Multiply = _wrap(rlapi.Vector2Multiply, [Vector2, Vector2], Vector2)
-_Vector2Negate = _wrap(rlapi.Vector2Negate, [Vector2], Vector2)
-_Vector2Divide = _wrap(rlapi.Vector2Divide, [Vector2, Vector2], Vector2)
-_Vector2Normalize = _wrap(rlapi.Vector2Normalize, [Vector2], Vector2)
-_Vector2Transform = _wrap(rlapi.Vector2Transform, [Vector2, Matrix], Vector2)
-_Vector2Lerp = _wrap(rlapi.Vector2Lerp, [Vector2, Vector2, Float], Vector2)
-_Vector2Reflect = _wrap(rlapi.Vector2Reflect, [Vector2, Vector2], Vector2)
-_Vector2Rotate = _wrap(rlapi.Vector2Rotate, [Vector2, Float], Vector2)
-_Vector2MoveTowards = _wrap(rlapi.Vector2MoveTowards, [Vector2, Vector2, Float], Vector2)
-_Vector2Invert = _wrap(rlapi.Vector2Invert, [Vector2], Vector2)
-_Vector2Clamp = _wrap(rlapi.Vector2Clamp, [Vector2, Vector2, Vector2], Vector2)
-_Vector2ClampValue = _wrap(rlapi.Vector2ClampValue, [Vector2, Float, Float], Vector2)
-_Vector2Equals = _wrap(rlapi.Vector2Equals, [Vector2, Vector2], Int)
-_Vector3Zero = _wrap(rlapi.Vector3Zero, [], Vector3)
-_Vector3One = _wrap(rlapi.Vector3One, [], Vector3)
-_Vector3Add = _wrap(rlapi.Vector3Add, [Vector3, Vector3], Vector3)
-_Vector3AddValue = _wrap(rlapi.Vector3AddValue, [Vector3, Float], Vector3)
-_Vector3Subtract = _wrap(rlapi.Vector3Subtract, [Vector3, Vector3], Vector3)
-_Vector3SubtractValue = _wrap(rlapi.Vector3SubtractValue, [Vector3, Float], Vector3)
-_Vector3Scale = _wrap(rlapi.Vector3Scale, [Vector3, Float], Vector3)
-_Vector3Multiply = _wrap(rlapi.Vector3Multiply, [Vector3, Vector3], Vector3)
-_Vector3CrossProduct = _wrap(rlapi.Vector3CrossProduct, [Vector3, Vector3], Float)
-_Vector3Perpendicular = _wrap(rlapi.Vector3Perpendicular, [Vector3], Vector3)
-_Vector3Length = _wrap(rlapi.Vector3Length, [Vector3], Float)
-_Vector3LengthSqr = _wrap(rlapi.Vector3LengthSqr, [Vector3], Float)
-_Vector3DotProduct = _wrap(rlapi.Vector3DotProduct, [Vector3, Vector3], Float)
-_Vector3Distance = _wrap(rlapi.Vector3Distance, [Vector3, Vector3], Float)
-_Vector3DistanceSqr = _wrap(rlapi.Vector3DistanceSqr, [Vector3, Vector3], Float)
-_Vector3Angle = _wrap(rlapi.Vector3Angle, [Vector3, Vector3], Float)
-_Vector3Negate = _wrap(rlapi.Vector3Negate, [Vector3], Vector3)
-_Vector3Divide = _wrap(rlapi.Vector3Divide, [Vector3, Vector3], Float)
-_Vector3Normalize = _wrap(rlapi.Vector3Normalize, [Vector3], Vector3)
-_Vector3OrthoNormalize = _wrap(rlapi.Vector3OrthoNormalize, [Vector3Ptr, Vector3Ptr], Vector3)
-_Vector3Transform = _wrap(rlapi.Vector3Transform, [Vector3, Matrix], Vector3)
-_Vector3RotateByQuaternion = _wrap(rlapi.Vector3RotateByQuaternion, [Vector3, Quaternion], Vector3)
-_Vector3RotateByAxisAngle = _wrap(rlapi.Vector3RotateByAxisAngle, [Vector3, Vector3, Float], Vector3)
-_Vector3Lerp = _wrap(rlapi.Vector3Lerp, [Vector3, Vector3, Float], Vector3)
-_Vector3Reflect = _wrap(rlapi.Vector3Reflect, [Vector3, Vector3], Vector3)
-_Vector3Min = _wrap(rlapi.Vector3Min, [Vector3, Vector3], Vector3)
-_Vector3Max = _wrap(rlapi.Vector3Max, [Vector3, Vector3], Vector3)
-_Vector3Barycenter = _wrap(rlapi.Vector3Barycenter, [Vector3, Vector3, Vector3, Vector3], Vector3)
-_Vector3Unproject = _wrap(rlapi.Vector3Unproject, [Vector3, Matrix, Matrix], Vector3)
-_Vector3ToFloatV = _wrap(rlapi.Vector3ToFloatV, [Vector3], Float * 3)
-_Vector3Invert = _wrap(rlapi.Vector3Invert, [Vector3], Vector3)
-_Vector3Clamp = _wrap(rlapi.Vector3Clamp, [Vector3, Vector3, Vector3], Vector3)
-_Vector3ClampValue = _wrap(rlapi.Vector3ClampValue, [Vector3, Float, Float], Vector3)
-_Vector3Equals = _wrap(rlapi.Vector3Equals, [Vector3, Float, Float], Int)
-_Vector3Refract = _wrap(rlapi.Vector3Refract, [Vector3, Vector3, Float], Int)
-_MatrixDeterminant = _wrap(rlapi.MatrixDeterminant, [Matrix], Float)
-_MatrixTrace = _wrap(rlapi.MatrixTrace, [Matrix], Float)
-_MatrixTranspose = _wrap(rlapi.MatrixTranspose, [Matrix], Matrix)
-_MatrixInvert = _wrap(rlapi.MatrixInvert, [Matrix], Matrix)
-_MatrixIdentity = _wrap(rlapi.MatrixIdentity, [], Matrix)
-_MatrixAdd = _wrap(rlapi.MatrixAdd, [Matrix, Matrix], Matrix)
-_MatrixSubtract = _wrap(rlapi.MatrixSubtract, [Matrix, Matrix], Matrix)
-_MatrixMultiply = _wrap(rlapi.MatrixMultiply, [Matrix, Matrix], Matrix)
-_MatrixTranslate = _wrap(rlapi.MatrixTranslate, [Float, Float, Float], Matrix)
-_MatrixRotate = _wrap(rlapi.MatrixRotate, [Vector3, Float], Matrix)
-_MatrixRotateX = _wrap(rlapi.MatrixRotateX, [Float], Matrix)
-_MatrixRotateY = _wrap(rlapi.MatrixRotateY, [Float], Matrix)
-_MatrixRotateZ = _wrap(rlapi.MatrixRotateZ, [Float], Matrix)
-_MatrixRotateXYZ = _wrap(rlapi.MatrixRotateXYZ, [Vector3], Matrix)
-_MatrixRotateZYX = _wrap(rlapi.MatrixRotateZYX, [Vector3], Matrix)
-_MatrixScale = _wrap(rlapi.MatrixScale, [Float, Float, Float], Matrix)
-_MatrixFrustum = _wrap(rlapi.MatrixFrustum, [Float, Float, Float, Float, Float, Float], Matrix)
-_MatrixPerspective = _wrap(rlapi.MatrixPerspective, [Float, Float, Float, Float], Matrix)
-_MatrixOrtho = _wrap(rlapi.MatrixOrtho, [Float, Float, Float, Float, Float, Float], Matrix)
-_MatrixLookAt = _wrap(rlapi.MatrixLookAt, [Vector3, Vector3, Vector3], Matrix)
-_MatrixToFloatV = _wrap(rlapi.MatrixToFloatV, [Matrix], Float * 16)
-_QuaternionAdd = _wrap(rlapi.QuaternionAdd, [Quaternion, Quaternion], Quaternion)
-_QuaternionAddValue = _wrap(rlapi.QuaternionAddValue, [Quaternion, Float], Quaternion)
-_QuaternionSubtract = _wrap(rlapi.QuaternionSubtract, [Quaternion, Quaternion], Quaternion)
-_QuaternionSubtractValue = _wrap(rlapi.QuaternionSubtractValue, [Quaternion, Float], Quaternion)
-_QuaternionIdentity = _wrap(rlapi.QuaternionIdentity, [], Quaternion)
-_QuaternionLength = _wrap(rlapi.QuaternionLength, [Quaternion], Quaternion)
-_QuaternionNormalize = _wrap(rlapi.QuaternionNormalize, [Quaternion], Quaternion)
-_QuaternionInvert = _wrap(rlapi.QuaternionInvert, [Quaternion], Quaternion)
-_QuaternionMultiply = _wrap(rlapi.QuaternionMultiply, [Quaternion, Quaternion], Quaternion)
-_QuaternionScale = _wrap(rlapi.QuaternionScale, [Quaternion, Float], Quaternion)
-_QuaternionDivide = _wrap(rlapi.QuaternionDivide, [Quaternion, Quaternion], Quaternion)
-_QuaternionNlerp = _wrap(rlapi.QuaternionNlerp, [Quaternion, Quaternion, Float], Quaternion)
-_QuaternionSlerp = _wrap(rlapi.QuaternionSlerp, [Quaternion, Quaternion, Float], Quaternion)
-_QuaternionFromVector3ToVector3 = _wrap(rlapi.QuaternionFromVector3ToVector3, [Vector3, Vector3], Quaternion)
-_QuaternionToMatrix = _wrap(rlapi.QuaternionToMatrix, [Quaternion], Matrix)
-_QuaternionFromMatrix = _wrap(rlapi.QuaternionFromMatrix, [Matrix], Quaternion)
-_QuaternionFromAxisAngle = _wrap(rlapi.QuaternionFromAxisAngle, [Vector3, Float], Quaternion)
-_QuaternionToAxisAngle = _wrap(rlapi.QuaternionToAxisAngle, [Quaternion, Vector3Ptr, FloatPtr], None)
-_QuaternionFromEuler = _wrap(rlapi.QuaternionFromEuler, [Float, Float, Float], Quaternion)
-_QuaternionToEuler = _wrap(rlapi.QuaternionToEuler, [Quaternion], Vector3)
-_QuaternionTransform = _wrap(rlapi.QuaternionTransform, [Quaternion, Matrix], Quaternion)
-_QuaternionEquals = _wrap(rlapi.QuaternionEquals, [Quaternion, Quaternion], Int)
-_rlMatrixMode = _wrap(rlapi.rlMatrixMode, [Int], None)
-_rlPushMatrix = _wrap(rlapi.rlPushMatrix, [], None)
-_rlPopMatrix = _wrap(rlapi.rlPopMatrix, [], None)
-_rlLoadIdentity = _wrap(rlapi.rlLoadIdentity, [], None)
-_rlTranslatef = _wrap(rlapi.rlTranslatef, [Float, Float, Float], None)
-_rlRotatef = _wrap(rlapi.rlRotatef, [Float, Float, Float, Float], None)
-_rlScalef = _wrap(rlapi.rlScalef, [Float, Float, Float], None)
-_rlMultMatrixf = _wrap(rlapi.rlMultMatrixf, [FloatPtr], None)
-_rlFrustum = _wrap(rlapi.rlFrustum, [Double, Double, Double, Double, Double, Double], None)
-_rlOrtho = _wrap(rlapi.rlOrtho, [Double, Double, Double, Double, Double, Double], None)
-_rlViewport = _wrap(rlapi.rlViewport, [Int, Int, Int, Int], None)
-_rlBegin = _wrap(rlapi.rlBegin, [Int], None)
-_rlEnd = _wrap(rlapi.rlEnd, [], None)
-_rlVertex2i = _wrap(rlapi.rlVertex2i, [Int, Int], None)
-_rlVertex2f = _wrap(rlapi.rlVertex2f, [Float, Float], None)
-_rlVertex3f = _wrap(rlapi.rlVertex3f, [Float, Float, Float], None)
-_rlTexCoord2f = _wrap(rlapi.rlTexCoord2f, [Float, Float], None)
-_rlNormal3f = _wrap(rlapi.rlNormal3f, [Float, Float, Float], None)
-_rlColor4ub = _wrap(rlapi.rlColor4ub, [UChar, UChar, UChar, UChar], None)
-_rlColor3f = _wrap(rlapi.rlColor3f, [Float, Float, Float], None)
-_rlColor4f = _wrap(rlapi.rlColor4f, [Float, Float, Float, Float], None)
-_rlEnableVertexArray = _wrap(rlapi.rlEnableVertexArray, [UInt], Bool)
-_rlDisableVertexArray = _wrap(rlapi.rlDisableVertexArray, [], None)
-_rlEnableVertexBuffer = _wrap(rlapi.rlEnableVertexBuffer, [UInt], None)
-_rlDisableVertexBuffer = _wrap(rlapi.rlDisableVertexBuffer, [], None)
-_rlEnableVertexBufferElement = _wrap(rlapi.rlEnableVertexBufferElement, [UInt], None)
-_rlDisableVertexBufferElement = _wrap(rlapi.rlDisableVertexBufferElement, [], None)
-_rlEnableVertexAttribute = _wrap(rlapi.rlEnableVertexAttribute, [UInt], None)
-_rlDisableVertexAttribute = _wrap(rlapi.rlDisableVertexAttribute, [UInt], None)
-_rlActiveTextureSlot = _wrap(rlapi.rlActiveTextureSlot, [Int], None)
-_rlEnableTexture = _wrap(rlapi.rlEnableTexture, [UInt], None)
-_rlDisableTexture = _wrap(rlapi.rlDisableTexture, [], None)
-_rlEnableTextureCubemap = _wrap(rlapi.rlEnableTextureCubemap, [UInt], None)
-_rlDisableTextureCubemap = _wrap(rlapi.rlDisableTextureCubemap, [], None)
-_rlTextureParameters = _wrap(rlapi.rlTextureParameters, [UInt, Int, Int], None)
-_rlEnableShader = _wrap(rlapi.rlEnableShader, [UInt], None)
-_rlDisableShader = _wrap(rlapi.rlDisableShader, [], None)
-_rlEnableFramebuffer = _wrap(rlapi.rlEnableFramebuffer, [UInt], None)
-_rlDisableFramebuffer = _wrap(rlapi.rlDisableFramebuffer, [], None)
-_rlActiveDrawBuffers = _wrap(rlapi.rlActiveDrawBuffers, [Int], None)
-_rlEnableColorBlend = _wrap(rlapi.rlEnableColorBlend, [], None)
-_rlDisableColorBlend = _wrap(rlapi.rlDisableColorBlend, [], None)
-_rlEnableDepthTest = _wrap(rlapi.rlEnableDepthTest, [], None)
-_rlDisableDepthTest = _wrap(rlapi.rlDisableDepthTest, [], None)
-_rlEnableDepthMask = _wrap(rlapi.rlEnableDepthMask, [], None)
-_rlDisableDepthMask = _wrap(rlapi.rlDisableDepthMask, [], None)
-_rlEnableBackfaceCulling = _wrap(rlapi.rlEnableBackfaceCulling, [], None)
-_rlDisableBackfaceCulling = _wrap(rlapi.rlDisableBackfaceCulling, [], None)
-_rlEnableScissorTest = _wrap(rlapi.rlEnableScissorTest, [], None)
-_rlDisableScissorTest = _wrap(rlapi.rlDisableScissorTest, [], None)
-_rlScissor = _wrap(rlapi.rlScissor, [Int, Int, Int, Int], None)
-_rlEnableWireMode = _wrap(rlapi.rlEnableWireMode, [], None)
-_rlDisableWireMode = _wrap(rlapi.rlDisableWireMode, [], None)
-_rlSetLineWidth = _wrap(rlapi.rlSetLineWidth, [Float], None)
-_rlGetLineWidth = _wrap(rlapi.rlGetLineWidth, [], Float)
-_rlEnableSmoothLines = _wrap(rlapi.rlEnableSmoothLines, [], None)
-_rlDisableSmoothLines = _wrap(rlapi.rlDisableSmoothLines, [], None)
-_rlEnableStereoRender = _wrap(rlapi.rlEnableStereoRender, [], None)
-_rlDisableStereoRender = _wrap(rlapi.rlDisableStereoRender, [], None)
-_rlIsStereoRenderEnabled = _wrap(rlapi.rlIsStereoRenderEnabled, [], Bool)
-_rlClearColor = _wrap(rlapi.rlClearColor, [UChar, UChar, UChar, UChar], None)
-_rlClearScreenBuffers = _wrap(rlapi.rlClearScreenBuffers, [], None)
-_rlCheckErrors = _wrap(rlapi.rlCheckErrors, [], None)
-_rlSetBlendMode = _wrap(rlapi.rlSetBlendMode, [Int], None)
-_rlSetBlendFactors = _wrap(rlapi.rlSetBlendFactors, [Int, Int, Int], None)
-_rlglInit = _wrap(rlapi.rlglInit, [Int, Int], None)
-_rlglClose = _wrap(rlapi.rlglClose, [], None)
-_rlLoadExtensions = _wrap(rlapi.rlLoadExtensions, [VoidPtr], None)
-_rlGetVersion = _wrap(rlapi.rlGetVersion, [], Int)
-_rlSetFramebufferWidth = _wrap(rlapi.rlSetFramebufferWidth, [Int], None)
-_rlGetFramebufferWidth = _wrap(rlapi.rlGetFramebufferWidth, [], Int)
-_rlSetFramebufferHeight = _wrap(rlapi.rlSetFramebufferHeight, [Int], None)
-_rlGetFramebufferHeight = _wrap(rlapi.rlGetFramebufferHeight, [], Int)
-_rlGetTextureIdDefault = _wrap(rlapi.rlGetTextureIdDefault, [], UInt)
-_rlGetShaderIdDefault = _wrap(rlapi.rlGetShaderIdDefault, [], UInt)
-_rlGetShaderLocsDefault = _wrap(rlapi.rlGetShaderLocsDefault, [], IntPtr)
-_rlLoadRenderBatch = _wrap(rlapi.rlLoadRenderBatch, [Int, Int], rlRenderBatch)
-_rlUnloadRenderBatch = _wrap(rlapi.rlUnloadRenderBatch, [rlRenderBatch], None)
-_rlDrawRenderBatch = _wrap(rlapi.rlDrawRenderBatch, [rlRenderBatchPtr], None)
-_rlSetRenderBatchActive = _wrap(rlapi.rlSetRenderBatchActive, [rlRenderBatchPtr], None)
-_rlDrawRenderBatchActive = _wrap(rlapi.rlDrawRenderBatchActive, [], None)
-_rlCheckRenderBatchLimit = _wrap(rlapi.rlCheckRenderBatchLimit, [Int], Bool)
-_rlSetTexture = _wrap(rlapi.rlSetTexture, [UInt], None)
-_rlLoadVertexArray = _wrap(rlapi.rlLoadVertexArray, [], UInt)
-_rlLoadVertexBuffer = _wrap(rlapi.rlLoadVertexBuffer, [VoidPtr, Int, Bool], UInt)
-_rlLoadVertexBufferElement = _wrap(rlapi.rlLoadVertexBufferElement, [VoidPtr, Int, Bool], UInt)
-_rlUpdateVertexBuffer = _wrap(rlapi.rlUpdateVertexBuffer, [UInt, VoidPtr, Int, Int], None)
-_rlUpdateVertexBufferElements = _wrap(rlapi.rlUpdateVertexBufferElements, [UInt, VoidPtr, Int, Int], None)
-_rlUnloadVertexArray = _wrap(rlapi.rlUnloadVertexArray, [UInt], None)
-_rlUnloadVertexBuffer = _wrap(rlapi.rlUnloadVertexBuffer, [UInt], None)
-_rlSetVertexAttribute = _wrap(rlapi.rlSetVertexAttribute, [UInt, Int, Int, Bool, Int, VoidPtr], None)
-_rlSetVertexAttributeDivisor = _wrap(rlapi.rlSetVertexAttributeDivisor, [UInt, Int], None)
-_rlSetVertexAttributeDefault = _wrap(rlapi.rlSetVertexAttributeDefault, [Int, VoidPtr, Int, Int], None)
-_rlDrawVertexArray = _wrap(rlapi.rlDrawVertexArray, [Int, Int], None)
-_rlDrawVertexArrayElements = _wrap(rlapi.rlDrawVertexArrayElements, [Int, Int, VoidPtr], None)
-_rlDrawVertexArrayInstanced = _wrap(rlapi.rlDrawVertexArrayInstanced, [Int, Int, Int], None)
-_rlDrawVertexArrayElementsInstanced = _wrap(rlapi.rlDrawVertexArrayElementsInstanced, [Int, Int, VoidPtr, Int], None)
-_rlLoadTexture = _wrap(rlapi.rlLoadTexture, [VoidPtr, Int, Int, Int, Int], UInt)
-_rlLoadTextureDepth = _wrap(rlapi.rlLoadTextureDepth, [Int, Int, Bool], UInt)
-_rlLoadTextureCubemap = _wrap(rlapi.rlLoadTextureCubemap, [VoidPtr, Int, Int], UInt)
-_rlUpdateTexture = _wrap(rlapi.rlUpdateTexture, [UInt, Int, Int, Int, Int, Int, VoidPtr], None)
-_rlGetGlTextureFormats = _wrap(rlapi.rlGetGlTextureFormats, [Int, UIntPtr, UIntPtr, UIntPtr], None)
-_rlGetPixelFormatName = _wrap(rlapi.rlGetPixelFormatName, [UInt], CharPtr)
-_rlUnloadTexture = _wrap(rlapi.rlUnloadTexture, [UInt], None)
-_rlGenTextureMipmaps = _wrap(rlapi.rlGenTextureMipmaps, [UInt, Int, Int, Int, IntPtr], None)
-_rlReadTexturePixels = _wrap(rlapi.rlReadTexturePixels, [UInt, Int, Int, Int], VoidPtr)
-_rlReadScreenPixels = _wrap(rlapi.rlReadScreenPixels, [Int, Int], UCharPtr)
-_rlLoadFramebuffer = _wrap(rlapi.rlLoadFramebuffer, [Int, Int], UInt)
-_rlFramebufferAttach = _wrap(rlapi.rlFramebufferAttach, [UInt, UInt, Int, Int, Int], None)
-_rlFramebufferComplete = _wrap(rlapi.rlFramebufferComplete, [UInt], Bool)
-_rlUnloadFramebuffer = _wrap(rlapi.rlUnloadFramebuffer, [UInt], None)
-_rlLoadShaderCode = _wrap(rlapi.rlLoadShaderCode, [CharPtr, CharPtr], UInt)
-_rlCompileShader = _wrap(rlapi.rlCompileShader, [CharPtr, Int], UInt)
-_rlLoadShaderProgram = _wrap(rlapi.rlLoadShaderProgram, [UInt, UInt], UInt)
-_rlUnloadShaderProgram = _wrap(rlapi.rlUnloadShaderProgram, [UInt], None)
-_rlGetLocationUniform = _wrap(rlapi.rlGetLocationUniform, [UInt, CharPtr], Int)
-_rlGetLocationAttrib = _wrap(rlapi.rlGetLocationAttrib, [UInt, CharPtr], Int)
-_rlSetUniform = _wrap(rlapi.rlSetUniform, [Int, VoidPtr, Int, Int], None)
-_rlSetUniformMatrix = _wrap(rlapi.rlSetUniformMatrix, [Int, Matrix], None)
-_rlSetUniformSampler = _wrap(rlapi.rlSetUniformSampler, [Int, UInt], None)
-_rlSetShader = _wrap(rlapi.rlSetShader, [UInt, IntPtr], None)
-_rlLoadComputeShaderProgram = _wrap(rlapi.rlLoadComputeShaderProgram, [UInt], UInt)
-_rlComputeShaderDispatch = _wrap(rlapi.rlComputeShaderDispatch, [UInt, UInt, UInt], None)
-_rlLoadShaderBuffer = _wrap(rlapi.rlLoadShaderBuffer, [ULongLongPtr, VoidPtr, Int], UInt)
-_rlUnloadShaderBuffer = _wrap(rlapi.rlUnloadShaderBuffer, [UInt], None)
-_rlUpdateShaderBufferElements = _wrap(rlapi.rlUpdateShaderBufferElements, [UInt, VoidPtr, ULongLongPtr, ULongLongPtr], None)
-_rlGetShaderBufferSize = _wrap(rlapi.rlGetShaderBufferSize, [UInt], ULongLongPtr)
-_rlReadShaderBufferElements = _wrap(rlapi.rlReadShaderBufferElements, [UInt, VoidPtr, ULongLongPtr, ULongLongPtr], None)
-_rlBindShaderBuffer = _wrap(rlapi.rlBindShaderBuffer, [UInt, UInt], None)
-_rlCopyBuffersElements = _wrap(rlapi.rlCopyBuffersElements, [UInt, UInt, ULongLongPtr, ULongLongPtr, ULongLongPtr], None)
-_rlBindImageTexture = _wrap(rlapi.rlBindImageTexture, [UInt, UInt, UInt, Int], None)
-_rlGetMatrixModelview = _wrap(rlapi.rlGetMatrixModelview, [], Matrix)
-_rlGetMatrixProjection = _wrap(rlapi.rlGetMatrixProjection, [], Matrix)
-_rlGetMatrixTransform = _wrap(rlapi.rlGetMatrixTransform, [], Matrix)
-_rlGetMatrixProjectionStereo = _wrap(rlapi.rlGetMatrixProjectionStereo, [Int], Matrix)
-_rlGetMatrixViewOffsetStereo = _wrap(rlapi.rlGetMatrixViewOffsetStereo, [Int], Matrix)
-_rlSetMatrixProjection = _wrap(rlapi.rlSetMatrixProjection, [Matrix], None)
-_rlSetMatrixModelview = _wrap(rlapi.rlSetMatrixModelview, [Matrix], None)
-_rlSetMatrixProjectionStereo = _wrap(rlapi.rlSetMatrixProjectionStereo, [Matrix, Matrix], None)
-_rlSetMatrixViewOffsetStereo = _wrap(rlapi.rlSetMatrixViewOffsetStereo, [Matrix, Matrix], None)
-_rlLoadDrawCube = _wrap(rlapi.rlLoadDrawCube, [], None)
-_rlLoadDrawQuad = _wrap(rlapi.rlLoadDrawQuad, [], None)
+# GL_ONE_MINUS_SRC_ALPHA
+RL_ONE_MINUS_SRC_ALPHA = 771
 
+# GL_DST_ALPHA
+RL_DST_ALPHA = 772
+
+# GL_ONE_MINUS_DST_ALPHA
+RL_ONE_MINUS_DST_ALPHA = 773
+
+# GL_DST_COLOR
+RL_DST_COLOR = 774
+
+# GL_ONE_MINUS_DST_COLOR
+RL_ONE_MINUS_DST_COLOR = 775
+
+# GL_SRC_ALPHA_SATURATE
+RL_SRC_ALPHA_SATURATE = 776
+
+# GL_CONSTANT_COLOR
+RL_CONSTANT_COLOR = 32769
+
+# GL_ONE_MINUS_CONSTANT_COLOR
+RL_ONE_MINUS_CONSTANT_COLOR = 32770
+
+# GL_CONSTANT_ALPHA
+RL_CONSTANT_ALPHA = 32771
+
+# GL_ONE_MINUS_CONSTANT_ALPHA
+RL_ONE_MINUS_CONSTANT_ALPHA = 32772
+
+# GL_FUNC_ADD
+RL_FUNC_ADD = 32774
+
+# GL_MIN
+RL_MIN = 32775
+
+# GL_MAX
+RL_MAX = 32776
+
+# GL_FUNC_SUBTRACT
+RL_FUNC_SUBTRACT = 32778
+
+# GL_FUNC_REVERSE_SUBTRACT
+RL_FUNC_REVERSE_SUBTRACT = 32779
+
+# GL_BLEND_EQUATION
+RL_BLEND_EQUATION = 32777
+
+# GL_BLEND_EQUATION_RGB   // (Same as BLEND_EQUATION)
+RL_BLEND_EQUATION_RGB = 32777
+
+# GL_BLEND_EQUATION_ALPHA
+RL_BLEND_EQUATION_ALPHA = 34877
+
+# GL_BLEND_DST_RGB
+RL_BLEND_DST_RGB = 32968
+
+# GL_BLEND_SRC_RGB
+RL_BLEND_SRC_RGB = 32969
+
+# GL_BLEND_DST_ALPHA
+RL_BLEND_DST_ALPHA = 32970
+
+# GL_BLEND_SRC_ALPHA
+RL_BLEND_SRC_ALPHA = 32971
+
+# GL_BLEND_COLOR
+RL_BLEND_COLOR = 32773
+
+RL_SHADER_LOC_MAP_DIFFUSE = RL_SHADER_LOC_MAP_ALBEDO
+
+RL_SHADER_LOC_MAP_SPECULAR = RL_SHADER_LOC_MAP_METALNESS
+
+# endregion (defines)
+
+# region FUNCTIONS
+
+# rlapi::raylib
+# ------------------------------------------------------------------------------
 
 def init_window(width, height, title):
-    # type: (int, int, Union[str, CharPtr]) -> None
+    # type: (int, int, bytes | str | None) -> None
     """Initialize window and OpenGL context"""
-    _InitWindow(int(width), int(height), _str_in(title))
-
-
-def window_should_close():
-    # type: () -> bool
-    """Check if KEY_ESCAPE pressed or Close icon pressed"""
-    result = _WindowShouldClose()
-    return result
+    _InitWindow(_int(width), _int(height), _str_in(title))
 
 
 def close_window():
@@ -7851,78 +8792,82 @@ def close_window():
     _CloseWindow()
 
 
+def window_should_close():
+    # type: () -> bool
+    """Check if application should close (KEY_ESCAPE pressed or windows close icon clicked)"""
+    return _WindowShouldClose()
+
+
 def is_window_ready():
     # type: () -> bool
     """Check if window has been initialized successfully"""
-    result = _IsWindowReady()
-    return result
+    return _IsWindowReady()
 
 
 def is_window_fullscreen():
     # type: () -> bool
     """Check if window is currently fullscreen"""
-    result = _IsWindowFullscreen()
-    return result
+    return _IsWindowFullscreen()
 
 
 def is_window_hidden():
     # type: () -> bool
     """Check if window is currently hidden (only PLATFORM_DESKTOP)"""
-    result = _IsWindowHidden()
-    return result
+    return _IsWindowHidden()
 
 
 def is_window_minimized():
     # type: () -> bool
     """Check if window is currently minimized (only PLATFORM_DESKTOP)"""
-    result = _IsWindowMinimized()
-    return result
+    return _IsWindowMinimized()
 
 
 def is_window_maximized():
     # type: () -> bool
     """Check if window is currently maximized (only PLATFORM_DESKTOP)"""
-    result = _IsWindowMaximized()
-    return result
+    return _IsWindowMaximized()
 
 
 def is_window_focused():
     # type: () -> bool
     """Check if window is currently focused (only PLATFORM_DESKTOP)"""
-    result = _IsWindowFocused()
-    return result
+    return _IsWindowFocused()
 
 
 def is_window_resized():
     # type: () -> bool
     """Check if window has been resized last frame"""
-    result = _IsWindowResized()
-    return result
+    return _IsWindowResized()
 
 
 def is_window_state(flag):
     # type: (int) -> bool
     """Check if one specific window flag is enabled"""
-    result = _IsWindowState(flag)
-    return result
+    return _IsWindowState(_int(flag))
 
 
 def set_window_state(flags):
     # type: (int) -> None
     """Set window configuration state using flags (only PLATFORM_DESKTOP)"""
-    _SetWindowState(flags)
+    _SetWindowState(_int(flags))
 
 
 def clear_window_state(flags):
     # type: (int) -> None
     """Clear window configuration state flags"""
-    _ClearWindowState(flags)
+    _ClearWindowState(_int(flags))
 
 
 def toggle_fullscreen():
     # type: () -> None
     """Toggle window state: fullscreen/windowed (only PLATFORM_DESKTOP)"""
     _ToggleFullscreen()
+
+
+def toggle_borderless_windowed():
+    # type: () -> None
+    """Toggle window state: borderless windowed (only PLATFORM_DESKTOP)"""
+    _ToggleBorderlessWindowed()
 
 
 def maximize_window():
@@ -7945,168 +8890,170 @@ def restore_window():
 
 def set_window_icon(image):
     # type: (Image) -> None
-    """Set icon for window (only PLATFORM_DESKTOP)"""
+    """Set icon for window (single image, RGBA 32bit, only PLATFORM_DESKTOP)"""
     _SetWindowIcon(image)
 
 
+def set_window_icons(images, count):
+    # type: (ImagePtr, int) -> None
+    """Set icon for window (multiple images, RGBA 32bit, only PLATFORM_DESKTOP)"""
+    _SetWindowIcons(images, _int(count))
+
+
 def set_window_title(title):
-    # type: (Union[str, CharPtr]) -> None
-    """Set title for window (only PLATFORM_DESKTOP)"""
+    # type: (bytes | str | None) -> None
+    """Set title for window (only PLATFORM_DESKTOP and PLATFORM_WEB)"""
     _SetWindowTitle(_str_in(title))
 
 
 def set_window_position(x, y):
     # type: (int, int) -> None
     """Set window position on screen (only PLATFORM_DESKTOP)"""
-    _SetWindowPosition(int(x), int(y))
+    _SetWindowPosition(_int(x), _int(y))
 
 
 def set_window_monitor(monitor):
     # type: (int) -> None
-    """Set monitor for the current window (fullscreen mode)"""
-    _SetWindowMonitor(int(monitor))
+    """Set monitor for the current window"""
+    _SetWindowMonitor(_int(monitor))
 
 
 def set_window_min_size(width, height):
     # type: (int, int) -> None
     """Set window minimum dimensions (for FLAG_WINDOW_RESIZABLE)"""
-    _SetWindowMinSize(int(width), int(height))
+    _SetWindowMinSize(_int(width), _int(height))
+
+
+def set_window_max_size(width, height):
+    # type: (int, int) -> None
+    """Set window maximum dimensions (for FLAG_WINDOW_RESIZABLE)"""
+    _SetWindowMaxSize(_int(width), _int(height))
 
 
 def set_window_size(width, height):
     # type: (int, int) -> None
     """Set window dimensions"""
-    _SetWindowSize(int(width), int(height))
+    _SetWindowSize(_int(width), _int(height))
 
 
 def set_window_opacity(opacity):
     # type: (float) -> None
     """Set window opacity [0.0f..1.0f] (only PLATFORM_DESKTOP)"""
-    _SetWindowOpacity(float(opacity))
+    _SetWindowOpacity(_float(opacity))
+
+
+def set_window_focused():
+    # type: () -> None
+    """Set window focused (only PLATFORM_DESKTOP)"""
+    _SetWindowFocused()
 
 
 def get_window_handle():
-    # type: () -> bytes
+    # type: () -> bytes | str | None
     """Get native window handle"""
-    _GetWindowHandle()
+    return _GetWindowHandle()
 
 
 def get_screen_width():
     # type: () -> int
     """Get current screen width"""
-    result = _GetScreenWidth()
-    return result
+    return _GetScreenWidth()
 
 
 def get_screen_height():
     # type: () -> int
     """Get current screen height"""
-    result = _GetScreenHeight()
-    return result
+    return _GetScreenHeight()
 
 
 def get_render_width():
     # type: () -> int
     """Get current render width (it considers HiDPI)"""
-    result = _GetRenderWidth()
-    return result
+    return _GetRenderWidth()
 
 
 def get_render_height():
     # type: () -> int
     """Get current render height (it considers HiDPI)"""
-    result = _GetRenderHeight()
-    return result
+    return _GetRenderHeight()
 
 
 def get_monitor_count():
     # type: () -> int
     """Get number of connected monitors"""
-    result = _GetMonitorCount()
-    return result
+    return _GetMonitorCount()
 
 
 def get_current_monitor():
     # type: () -> int
     """Get current connected monitor"""
-    result = _GetCurrentMonitor()
-    return result
+    return _GetCurrentMonitor()
 
 
 def get_monitor_position(monitor):
     # type: (int) -> Vector2
     """Get specified monitor position"""
-    result = _GetMonitorPosition(int(monitor))
-    return result
+    return _GetMonitorPosition(_int(monitor))
 
 
 def get_monitor_width(monitor):
     # type: (int) -> int
     """Get specified monitor width (current video mode used by monitor)"""
-    result = _GetMonitorWidth(int(monitor))
-    return result
+    return _GetMonitorWidth(_int(monitor))
 
 
 def get_monitor_height(monitor):
     # type: (int) -> int
     """Get specified monitor height (current video mode used by monitor)"""
-    result = _GetMonitorHeight(int(monitor))
-    return result
+    return _GetMonitorHeight(_int(monitor))
 
 
 def get_monitor_physical_width(monitor):
     # type: (int) -> int
     """Get specified monitor physical width in millimetres"""
-    result = _GetMonitorPhysicalWidth(int(monitor))
-    return result
+    return _GetMonitorPhysicalWidth(_int(monitor))
 
 
 def get_monitor_physical_height(monitor):
     # type: (int) -> int
     """Get specified monitor physical height in millimetres"""
-    result = _GetMonitorPhysicalHeight(int(monitor))
-    return result
+    return _GetMonitorPhysicalHeight(_int(monitor))
 
 
 def get_monitor_refresh_rate(monitor):
     # type: (int) -> int
     """Get specified monitor refresh rate"""
-    result = _GetMonitorRefreshRate(int(monitor))
-    return result
+    return _GetMonitorRefreshRate(_int(monitor))
 
 
 def get_window_position():
     # type: () -> Vector2
     """Get window position XY on monitor"""
-    result = _GetWindowPosition()
-    return result
+    return _GetWindowPosition()
 
 
 def get_window_scale_dpi():
     # type: () -> Vector2
     """Get window scale DPI factor"""
-    result = _GetWindowScaleDPI()
-    return result
+    return _GetWindowScaleDPI()
 
 
 def get_monitor_name(monitor):
-    # type: (int) -> Union[str, CharPtr]
-    """Get the human-readable, UTF-8 encoded name of the primary monitor"""
-    result = _ptr_out(_GetMonitorName(int(monitor)))
-    return result
+    # type: (int) -> bytes | str | None
+    """Get the human-readable, UTF-8 encoded name of the specified monitor"""
+    return _str_out(_GetMonitorName(_int(monitor)))
 
 
 def set_clipboard_text(text):
-    # type: (Union[str, CharPtr]) -> None
+    # type: (bytes | str | None) -> None
     """Set clipboard text content"""
     _SetClipboardText(_str_in(text))
 
 
 def get_clipboard_text():
-    # type: () -> Union[str, CharPtr]
+    # type: () -> bytes | str | None
     """Get clipboard text content"""
-    result = _ptr_out(_GetClipboardText())
-    return result
+    return _str_out(_GetClipboardText())
 
 
 def enable_event_waiting():
@@ -8119,24 +9066,6 @@ def disable_event_waiting():
     # type: () -> None
     """Disable waiting for events on EndDrawing(), automatic events polling"""
     _DisableEventWaiting()
-
-
-def swap_screen_buffer():
-    # type: () -> None
-    """Swap back buffer with front buffer (screen drawing)"""
-    _SwapScreenBuffer()
-
-
-def poll_input_events():
-    # type: () -> None
-    """Register all input events"""
-    _PollInputEvents()
-
-
-def wait_time(seconds):
-    # type: (float) -> None
-    """Wait for some time (halt program execution)"""
-    _WaitTime(float(seconds))
 
 
 def show_cursor():
@@ -8154,8 +9083,7 @@ def hide_cursor():
 def is_cursor_hidden():
     # type: () -> bool
     """Check if cursor is not visible"""
-    result = _IsCursorHidden()
-    return result
+    return _IsCursorHidden()
 
 
 def enable_cursor():
@@ -8173,8 +9101,7 @@ def disable_cursor():
 def is_cursor_on_screen():
     # type: () -> bool
     """Check if cursor is on the screen"""
-    result = _IsCursorOnScreen()
-    return result
+    return _IsCursorOnScreen()
 
 
 def clear_background(color):
@@ -8246,7 +9173,7 @@ def end_shader_mode():
 def begin_blend_mode(mode):
     # type: (int) -> None
     """Begin blending mode (alpha, additive, multiplied, subtract, custom)"""
-    _BeginBlendMode(int(mode))
+    _BeginBlendMode(_int(mode))
 
 
 def end_blend_mode():
@@ -8258,7 +9185,7 @@ def end_blend_mode():
 def begin_scissor_mode(x, y, width, height):
     # type: (int, int, int, int) -> None
     """Begin scissor mode (define screen area for following drawing)"""
-    _BeginScissorMode(int(x), int(y), int(width), int(height))
+    _BeginScissorMode(_int(x), _int(y), _int(width), _int(height))
 
 
 def end_scissor_mode():
@@ -8282,8 +9209,7 @@ def end_vr_stereo_mode():
 def load_vr_stereo_config(device):
     # type: (VrDeviceInfo) -> VrStereoConfig
     """Load VR stereo config for VR simulator device parameters"""
-    result = _LoadVrStereoConfig(device)
-    return result
+    return _LoadVrStereoConfig(device)
 
 
 def unload_vr_stereo_config(config):
@@ -8293,55 +9219,57 @@ def unload_vr_stereo_config(config):
 
 
 def load_shader(vs_file_name, fs_file_name):
-    # type: (Union[str, CharPtr], Union[str, CharPtr]) -> Shader
+    # type: (bytes | str | None, bytes | str | None) -> Shader
     """Load shader from files and bind default locations"""
-    result = _LoadShader(_str_in(vs_file_name), _str_in(fs_file_name))
-    return result
+    return _LoadShader(_str_in(vs_file_name), _str_in(fs_file_name))
 
 
 def load_shader_from_memory(vs_code, fs_code):
-    # type: (Union[str, CharPtr], Union[str, CharPtr]) -> Shader
+    # type: (bytes | str | None, bytes | str | None) -> Shader
     """Load shader from code strings and bind default locations"""
-    result = _LoadShaderFromMemory(_str_in(vs_code), _str_in(fs_code))
-    return result
+    return _LoadShaderFromMemory(_str_in(vs_code), _str_in(fs_code))
+
+
+def is_shader_ready(shader):
+    # type: (Shader) -> bool
+    """Check if a shader is ready"""
+    return _IsShaderReady(shader)
 
 
 def get_shader_location(shader, uniform_name):
-    # type: (Shader, Union[str, CharPtr]) -> int
+    # type: (Shader, bytes | str | None) -> int
     """Get shader uniform location"""
-    result = _GetShaderLocation(shader, _str_in(uniform_name))
-    return result
+    return _GetShaderLocation(shader, _str_in(uniform_name))
 
 
 def get_shader_location_attrib(shader, attrib_name):
-    # type: (Shader, Union[str, CharPtr]) -> int
+    # type: (Shader, bytes | str | None) -> int
     """Get shader attribute location"""
-    result = _GetShaderLocationAttrib(shader, _str_in(attrib_name))
-    return result
+    return _GetShaderLocationAttrib(shader, _str_in(attrib_name))
 
 
 def set_shader_value(shader, loc_index, value, uniform_type):
-    # type: (Shader, int, bytes, int) -> None
+    # type: (Shader, int, bytes | str | None, int) -> None
     """Set shader uniform value"""
-    _SetShaderValue(shader, int(loc_index), value, int(uniform_type))
+    _SetShaderValue(shader, _int(loc_index), value, _int(uniform_type))
 
 
 def set_shader_value_v(shader, loc_index, value, uniform_type, count):
-    # type: (Shader, int, bytes, int, int) -> None
+    # type: (Shader, int, bytes | str | None, int, int) -> None
     """Set shader uniform value vector"""
-    _SetShaderValueV(shader, int(loc_index), value, int(uniform_type), int(count))
+    _SetShaderValueV(shader, _int(loc_index), value, _int(uniform_type), _int(count))
 
 
 def set_shader_value_matrix(shader, loc_index, mat):
     # type: (Shader, int, Matrix) -> None
     """Set shader uniform value (matrix 4x4)"""
-    _SetShaderValueMatrix(shader, int(loc_index), mat)
+    _SetShaderValueMatrix(shader, _int(loc_index), mat)
 
 
 def set_shader_value_texture(shader, loc_index, texture):
     # type: (Shader, int, Texture2D) -> None
     """Set shader uniform value for texture (sampler2d)"""
-    _SetShaderValueTexture(shader, int(loc_index), texture)
+    _SetShaderValueTexture(shader, _int(loc_index), texture)
 
 
 def unload_shader(shader):
@@ -8353,94 +9281,113 @@ def unload_shader(shader):
 def get_mouse_ray(mouse_position, camera):
     # type: (Vector2, Camera) -> Ray
     """Get a ray trace from mouse position"""
-    result = _GetMouseRay(_vec2(mouse_position), camera)
-    return result
+    return _GetMouseRay(_vec2(mouse_position), camera)
 
 
 def get_camera_matrix(camera):
     # type: (Camera) -> Matrix
     """Get camera transform matrix (view matrix)"""
-    result = _GetCameraMatrix(camera)
-    return result
+    return _GetCameraMatrix(camera)
 
 
 def get_camera_matrix2d(camera):
     # type: (Camera2D) -> Matrix
     """Get camera 2d transform matrix"""
-    result = _GetCameraMatrix2D(camera)
-    return result
+    return _GetCameraMatrix2D(camera)
 
 
 def get_world_to_screen(position, camera):
     # type: (Vector3, Camera) -> Vector2
     """Get the screen space position for a 3d world space position"""
-    result = _GetWorldToScreen(_vec3(position), camera)
-    return result
+    return _GetWorldToScreen(_vec3(position), camera)
 
 
 def get_screen_to_world2d(position, camera):
     # type: (Vector2, Camera2D) -> Vector2
     """Get the world space position for a 2d camera screen space position"""
-    result = _GetScreenToWorld2D(_vec2(position), camera)
-    return result
+    return _GetScreenToWorld2D(_vec2(position), camera)
 
 
 def get_world_to_screen_ex(position, camera, width, height):
     # type: (Vector3, Camera, int, int) -> Vector2
     """Get size position for a 3d world space position"""
-    result = _GetWorldToScreenEx(_vec3(position), camera, int(width), int(height))
-    return result
+    return _GetWorldToScreenEx(_vec3(position), camera, _int(width), _int(height))
 
 
 def get_world_to_screen2d(position, camera):
     # type: (Vector2, Camera2D) -> Vector2
     """Get the screen space position for a 2d camera world space position"""
-    result = _GetWorldToScreen2D(_vec2(position), camera)
-    return result
+    return _GetWorldToScreen2D(_vec2(position), camera)
 
 
 def set_target_fps(fps):
     # type: (int) -> None
     """Set target FPS (maximum)"""
-    _SetTargetFPS(int(fps))
-
-
-def get_fps():
-    # type: () -> int
-    """Get current FPS"""
-    result = _GetFPS()
-    return result
+    _SetTargetFPS(_int(fps))
 
 
 def get_frame_time():
     # type: () -> float
     """Get time in seconds for last frame drawn (delta time)"""
-    result = _GetFrameTime()
-    return result
+    return _GetFrameTime()
 
 
 def get_time():
     # type: () -> float
     """Get elapsed time in seconds since InitWindow()"""
-    result = _GetTime()
-    return result
+    return _GetTime()
 
 
-def get_random_value(min, max):
-    # type: (int, int) -> int
-    """Get a random value between min and max (both included)"""
-    result = _GetRandomValue(int(min), int(max))
-    return result
+def get_fps():
+    # type: () -> int
+    """Get current FPS"""
+    return _GetFPS()
+
+
+def swap_screen_buffer():
+    # type: () -> None
+    """Swap back buffer with front buffer (screen drawing)"""
+    _SwapScreenBuffer()
+
+
+def poll_input_events():
+    # type: () -> None
+    """Register all input events"""
+    _PollInputEvents()
+
+
+def wait_time(seconds):
+    # type: (float) -> None
+    """Wait for some time (halt program execution)"""
+    _WaitTime(_float(seconds))
 
 
 def set_random_seed(seed):
     # type: (int) -> None
     """Set the seed for the random number generator"""
-    _SetRandomSeed(seed)
+    _SetRandomSeed(_int(seed))
+
+
+def get_random_value(min_, max_):
+    # type: (int, int) -> int
+    """Get a random value between min and max (both included)"""
+    return _GetRandomValue(_int(min_), _int(max_))
+
+
+def load_random_sequence(count, min_, max_):
+    # type: (int, int, int) -> IntPtr
+    """Load random values sequence, no values repeated"""
+    return _LoadRandomSequence(_int(count), _int(min_), _int(max_))
+
+
+def unload_random_sequence(sequence):
+    # type: (IntPtr) -> None
+    """Unload random values sequence"""
+    _UnloadRandomSequence(sequence)
 
 
 def take_screenshot(file_name):
-    # type: (Union[str, CharPtr]) -> None
+    # type: (bytes | str | None) -> None
     """Takes a screenshot of current screen (filename extension defines format)"""
     _TakeScreenshot(_str_in(file_name))
 
@@ -8448,43 +9395,43 @@ def take_screenshot(file_name):
 def set_config_flags(flags):
     # type: (int) -> None
     """Setup init configuration flags (view FLAGS)"""
-    _SetConfigFlags(flags)
+    _SetConfigFlags(_int(flags))
 
 
-def trace_log(log_level, text, args):
-    # type: (int, Union[str, CharPtr], bytes) -> None
+def open_url(url):
+    # type: (bytes | str | None) -> None
+    """Open URL with default system browser (if available)"""
+    _OpenURL(_str_in(url))
+
+
+def trace_log(log_level, text, *args):
+    # type: (int, bytes | str | None, ...) -> None
     """Show trace log messages (LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR...)"""
-    _TraceLog(int(log_level), _str_in(text), args)
+    _TraceLog(_int(log_level), _str_in(text), *args)
 
 
 def set_trace_log_level(log_level):
     # type: (int) -> None
     """Set the current threshold (minimum) log level"""
-    _SetTraceLogLevel(int(log_level))
+    _SetTraceLogLevel(_int(log_level))
 
 
 def mem_alloc(size):
-    # type: (int) -> bytes
+    # type: (int) -> bytes | str | None
     """Internal memory allocator"""
-    _MemAlloc(int(size))
+    return _MemAlloc(_int(size))
 
 
 def mem_realloc(ptr, size):
-    # type: (bytes, int) -> bytes
+    # type: (bytes | str | None, int) -> bytes | str | None
     """Internal memory reallocator"""
-    _MemRealloc(ptr, int(size))
+    return _MemRealloc(ptr, _int(size))
 
 
 def mem_free(ptr):
-    # type: (bytes) -> None
+    # type: (bytes | str | None) -> None
     """Internal memory free"""
     _MemFree(ptr)
-
-
-def open_url(url):
-    # type: (Union[str, CharPtr]) -> None
-    """Open URL with default system browser (if available)"""
-    _OpenURL(_str_in(url))
 
 
 def set_trace_log_callback(callback):
@@ -8517,156 +9464,136 @@ def set_save_file_text_callback(callback):
     _SetSaveFileTextCallback(callback)
 
 
-def load_file_data(file_name, bytes_read):
-    # type: (Union[str, CharPtr], Union[Seq[int], UIntPtr]) -> Union[Seq[int], UCharPtr]
+def load_file_data(file_name, data_size):
+    # type: (bytes | str | None, IntPtr) -> int
     """Load file data as byte array (read)"""
-    result = _ptr_out(_LoadFileData(_str_in(file_name), bytes_read))
-    return result
+    return _LoadFileData(_str_in(file_name), data_size)
 
 
 def unload_file_data(data):
-    # type: (Union[Seq[int], UCharPtr]) -> None
+    # type: (int) -> None
     """Unload file data allocated by LoadFileData()"""
-    _UnloadFileData(_str_in(data))
+    _UnloadFileData(_int(data, (0, 255)))
 
 
-def save_file_data(file_name, data, bytes_to_write):
-    # type: (Union[str, CharPtr], bytes, int) -> bool
+def save_file_data(file_name, data, data_size):
+    # type: (bytes | str | None, bytes | str | None, int) -> bool
     """Save data to file from byte array (write), returns true on success"""
-    result = _SaveFileData(_str_in(file_name), data, bytes_to_write)
-    return result
+    return _SaveFileData(_str_in(file_name), data, _int(data_size))
 
 
-def export_data_as_code(data, size, file_name):
-    # type: (Union[str, CharPtr], int, Union[str, CharPtr]) -> bool
+def export_data_as_code(data, data_size, file_name):
+    # type: (int, int, bytes | str | None) -> bool
     """Export data to code (.h), returns true on success"""
-    result = _ExportDataAsCode(_str_in(data), size, _str_in(file_name))
-    return result
+    return _ExportDataAsCode(_int(data, (0, 255)), _int(data_size), _str_in(file_name))
 
 
 def load_file_text(file_name):
-    # type: (Union[str, CharPtr]) -> Union[str, CharPtr]
+    # type: (bytes | str | None) -> bytes | str | None
     """Load text data from file (read), returns a '\0' terminated string"""
-    result = _ptr_out(_LoadFileText(_str_in(file_name)))
-    return result
+    return _str_out(_LoadFileText(_str_in(file_name)))
 
 
 def unload_file_text(text):
-    # type: (Union[str, CharPtr]) -> None
+    # type: (bytes | str | None) -> None
     """Unload file text data allocated by LoadFileText()"""
     _UnloadFileText(_str_in(text))
 
 
 def save_file_text(file_name, text):
-    # type: (Union[str, CharPtr], Union[str, CharPtr]) -> bool
+    # type: (bytes | str | None, bytes | str | None) -> bool
     """Save text data to file (write), string must be '\0' terminated, returns true on success"""
-    result = _SaveFileText(_str_in(file_name), _str_in(text))
-    return result
+    return _SaveFileText(_str_in(file_name), _str_in(text))
 
 
 def file_exists(file_name):
-    # type: (Union[str, CharPtr]) -> bool
+    # type: (bytes | str | None) -> bool
     """Check if file exists"""
-    result = _FileExists(_str_in(file_name))
-    return result
+    return _FileExists(_str_in(file_name))
 
 
 def directory_exists(dir_path):
-    # type: (Union[str, CharPtr]) -> bool
+    # type: (bytes | str | None) -> bool
     """Check if a directory path exists"""
-    result = _DirectoryExists(_str_in(dir_path))
-    return result
+    return _DirectoryExists(_str_in(dir_path))
 
 
 def is_file_extension(file_name, ext):
-    # type: (Union[str, CharPtr], Union[str, CharPtr]) -> bool
+    # type: (bytes | str | None, bytes | str | None) -> bool
     """Check file extension (including point: .png, .wav)"""
-    result = _IsFileExtension(_str_in(file_name), _str_in(ext))
-    return result
+    return _IsFileExtension(_str_in(file_name), _str_in(ext))
 
 
 def get_file_length(file_name):
-    # type: (Union[str, CharPtr]) -> int
+    # type: (bytes | str | None) -> int
     """Get file length in bytes (NOTE: GetFileSize() conflicts with windows.h)"""
-    result = _GetFileLength(_str_in(file_name))
-    return result
+    return _GetFileLength(_str_in(file_name))
 
 
 def get_file_extension(file_name):
-    # type: (Union[str, CharPtr]) -> Union[str, CharPtr]
+    # type: (bytes | str | None) -> bytes | str | None
     """Get pointer to extension for a filename string (includes dot: '.png')"""
-    result = _ptr_out(_GetFileExtension(_str_in(file_name)))
-    return result
+    return _str_out(_GetFileExtension(_str_in(file_name)))
 
 
 def get_file_name(file_path):
-    # type: (Union[str, CharPtr]) -> Union[str, CharPtr]
+    # type: (bytes | str | None) -> bytes | str | None
     """Get pointer to filename for a path string"""
-    result = _ptr_out(_GetFileName(_str_in(file_path)))
-    return result
+    return _str_out(_GetFileName(_str_in(file_path)))
 
 
 def get_file_name_without_ext(file_path):
-    # type: (Union[str, CharPtr]) -> Union[str, CharPtr]
+    # type: (bytes | str | None) -> bytes | str | None
     """Get filename string without extension (uses static string)"""
-    result = _ptr_out(_GetFileNameWithoutExt(_str_in(file_path)))
-    return result
+    return _str_out(_GetFileNameWithoutExt(_str_in(file_path)))
 
 
 def get_directory_path(file_path):
-    # type: (Union[str, CharPtr]) -> Union[str, CharPtr]
+    # type: (bytes | str | None) -> bytes | str | None
     """Get full path for a given fileName with path (uses static string)"""
-    result = _ptr_out(_GetDirectoryPath(_str_in(file_path)))
-    return result
+    return _str_out(_GetDirectoryPath(_str_in(file_path)))
 
 
 def get_prev_directory_path(dir_path):
-    # type: (Union[str, CharPtr]) -> Union[str, CharPtr]
+    # type: (bytes | str | None) -> bytes | str | None
     """Get previous directory path for a given path (uses static string)"""
-    result = _ptr_out(_GetPrevDirectoryPath(_str_in(dir_path)))
-    return result
+    return _str_out(_GetPrevDirectoryPath(_str_in(dir_path)))
 
 
 def get_working_directory():
-    # type: () -> Union[str, CharPtr]
+    # type: () -> bytes | str | None
     """Get current working directory (uses static string)"""
-    result = _ptr_out(_GetWorkingDirectory())
-    return result
+    return _str_out(_GetWorkingDirectory())
 
 
 def get_application_directory():
-    # type: () -> Union[str, CharPtr]
-    """Get the directory if the running application (uses static string)"""
-    result = _ptr_out(_GetApplicationDirectory())
-    return result
+    # type: () -> bytes | str | None
+    """Get the directory of the running application (uses static string)"""
+    return _str_out(_GetApplicationDirectory())
 
 
-def change_directory(dir):
-    # type: (Union[str, CharPtr]) -> bool
+def change_directory(dir_):
+    # type: (bytes | str | None) -> bool
     """Change working directory, return true on success"""
-    result = _ChangeDirectory(_str_in(dir))
-    return result
+    return _ChangeDirectory(_str_in(dir_))
 
 
 def is_path_file(path):
-    # type: (Union[str, CharPtr]) -> bool
+    # type: (bytes | str | None) -> bool
     """Check if a given path is a file or a directory"""
-    result = _IsPathFile(_str_in(path))
-    return result
+    return _IsPathFile(_str_in(path))
 
 
 def load_directory_files(dir_path):
-    # type: (Union[str, CharPtr]) -> FilePathList
+    # type: (bytes | str | None) -> FilePathList
     """Load directory filepaths"""
-    result = _LoadDirectoryFiles(_str_in(dir_path))
-    return result
+    return _LoadDirectoryFiles(_str_in(dir_path))
 
 
-def load_directory_files_ex(base_path, filter, scan_subdirs):
-    # type: (Union[str, CharPtr], Union[str, CharPtr], bool) -> FilePathList
+def load_directory_files_ex(base_path, filter_, scan_subdirs):
+    # type: (bytes | str | None, bytes | str | None, bool) -> FilePathList
     """Load directory filepaths with extension filtering and recursive directory scan"""
-    result = _LoadDirectoryFilesEx(_str_in(base_path), _str_in(filter), bool(scan_subdirs))
-    return result
+    return _LoadDirectoryFilesEx(_str_in(base_path), _str_in(filter_), _bool(scan_subdirs))
 
 
 def unload_directory_files(files):
@@ -8678,15 +9605,13 @@ def unload_directory_files(files):
 def is_file_dropped():
     # type: () -> bool
     """Check if a file has been dropped into window"""
-    result = _IsFileDropped()
-    return result
+    return _IsFileDropped()
 
 
 def load_dropped_files():
     # type: () -> FilePathList
     """Load dropped filepaths"""
-    result = _LoadDroppedFiles()
-    return result
+    return _LoadDroppedFiles()
 
 
 def unload_dropped_files(files):
@@ -8696,376 +9621,363 @@ def unload_dropped_files(files):
 
 
 def get_file_mod_time(file_name):
-    # type: (Union[str, CharPtr]) -> int
+    # type: (bytes | str | None) -> int
     """Get file modification time (last write time)"""
-    result = _GetFileModTime(_str_in(file_name))
-    return result
+    return _GetFileModTime(_str_in(file_name))
 
 
 def compress_data(data, data_size, comp_data_size):
-    # type: (Union[Seq[int], UCharPtr], int, Union[Seq[int], IntPtr]) -> Union[Seq[int], UCharPtr]
+    # type: (int, int, IntPtr) -> int
     """Compress data (DEFLATE algorithm), memory must be MemFree()"""
-    result = _ptr_out(_CompressData(_str_in(data), int(data_size), comp_data_size))
-    return result
+    return _CompressData(_int(data, (0, 255)), _int(data_size), comp_data_size)
 
 
 def decompress_data(comp_data, comp_data_size, data_size):
-    # type: (Union[Seq[int], UCharPtr], int, Union[Seq[int], IntPtr]) -> Union[Seq[int], UCharPtr]
+    # type: (int, int, IntPtr) -> int
     """Decompress data (DEFLATE algorithm), memory must be MemFree()"""
-    result = _ptr_out(_DecompressData(_str_in(comp_data), int(comp_data_size), data_size))
-    return result
+    return _DecompressData(_int(comp_data, (0, 255)), _int(comp_data_size), data_size)
 
 
 def encode_data_base64(data, data_size, output_size):
-    # type: (Union[Seq[int], UCharPtr], int, Union[Seq[int], IntPtr]) -> Union[str, CharPtr]
+    # type: (int, int, IntPtr) -> bytes | str | None
     """Encode data to Base64 string, memory must be MemFree()"""
-    result = _ptr_out(_EncodeDataBase64(_str_in(data), int(data_size), output_size))
-    return result
+    return _EncodeDataBase64(_int(data, (0, 255)), _int(data_size), output_size)
 
 
 def decode_data_base64(data, output_size):
-    # type: (Union[Seq[int], UCharPtr], Union[Seq[int], IntPtr]) -> Union[Seq[int], UCharPtr]
+    # type: (int, IntPtr) -> int
     """Decode Base64 string data, memory must be MemFree()"""
-    result = _ptr_out(_DecodeDataBase64(_str_in(data), output_size))
-    return result
+    return _DecodeDataBase64(_int(data, (0, 255)), output_size)
+
+
+def load_automation_event_list(file_name):
+    # type: (bytes | str | None) -> AutomationEventList
+    """Load automation events list from file, NULL for empty list, capacity = MAX_AUTOMATION_EVENTS"""
+    return _LoadAutomationEventList(_str_in(file_name))
+
+
+def unload_automation_event_list(list_):
+    # type: (AutomationEventListPtr) -> None
+    """Unload automation events list from file"""
+    _UnloadAutomationEventList(list_)
+
+
+def export_automation_event_list(list_, file_name):
+    # type: (AutomationEventList, bytes | str | None) -> bool
+    """Export automation events list as text file"""
+    return _ExportAutomationEventList(list_, _str_in(file_name))
+
+
+def set_automation_event_list(list_):
+    # type: (AutomationEventListPtr) -> None
+    """Set automation event list to record to"""
+    _SetAutomationEventList(list_)
+
+
+def set_automation_event_base_frame(frame):
+    # type: (int) -> None
+    """Set automation event internal base frame to start recording"""
+    _SetAutomationEventBaseFrame(_int(frame))
+
+
+def start_automation_event_recording():
+    # type: () -> None
+    """Start recording automation events (AutomationEventList must be set)"""
+    _StartAutomationEventRecording()
+
+
+def stop_automation_event_recording():
+    # type: () -> None
+    """Stop recording automation events"""
+    _StopAutomationEventRecording()
+
+
+def play_automation_event(event):
+    # type: (AutomationEvent) -> None
+    """Play a recorded automation event"""
+    _PlayAutomationEvent(event)
 
 
 def is_key_pressed(key):
     # type: (int) -> bool
     """Check if a key has been pressed once"""
-    result = _IsKeyPressed(int(key))
-    return result
+    return _IsKeyPressed(_int(key))
+
+
+def is_key_pressed_repeat(key):
+    # type: (int) -> bool
+    """Check if a key has been pressed again (Only PLATFORM_DESKTOP)"""
+    return _IsKeyPressedRepeat(_int(key))
 
 
 def is_key_down(key):
     # type: (int) -> bool
     """Check if a key is being pressed"""
-    result = _IsKeyDown(int(key))
-    return result
+    return _IsKeyDown(_int(key))
 
 
 def is_key_released(key):
     # type: (int) -> bool
     """Check if a key has been released once"""
-    result = _IsKeyReleased(int(key))
-    return result
+    return _IsKeyReleased(_int(key))
 
 
 def is_key_up(key):
     # type: (int) -> bool
     """Check if a key is NOT being pressed"""
-    result = _IsKeyUp(int(key))
-    return result
-
-
-def set_exit_key(key):
-    # type: (int) -> None
-    """Set a custom key to exit program (default is ESC)"""
-    _SetExitKey(int(key))
+    return _IsKeyUp(_int(key))
 
 
 def get_key_pressed():
     # type: () -> int
     """Get key pressed (keycode), call it multiple times for keys queued, returns 0 when the queue is empty"""
-    result = _GetKeyPressed()
-    return result
+    return _GetKeyPressed()
 
 
 def get_char_pressed():
     # type: () -> int
     """Get char pressed (unicode), call it multiple times for chars queued, returns 0 when the queue is empty"""
-    result = _GetCharPressed()
-    return result
+    return _GetCharPressed()
+
+
+def set_exit_key(key):
+    # type: (int) -> None
+    """Set a custom key to exit program (default is ESC)"""
+    _SetExitKey(_int(key))
 
 
 def is_gamepad_available(gamepad):
     # type: (int) -> bool
     """Check if a gamepad is available"""
-    result = _IsGamepadAvailable(int(gamepad))
-    return result
+    return _IsGamepadAvailable(_int(gamepad))
 
 
 def get_gamepad_name(gamepad):
-    # type: (int) -> Union[str, CharPtr]
+    # type: (int) -> bytes | str | None
     """Get gamepad internal name id"""
-    result = _ptr_out(_GetGamepadName(int(gamepad)))
-    return result
+    return _str_out(_GetGamepadName(_int(gamepad)))
 
 
 def is_gamepad_button_pressed(gamepad, button):
     # type: (int, int) -> bool
     """Check if a gamepad button has been pressed once"""
-    result = _IsGamepadButtonPressed(int(gamepad), int(button))
-    return result
+    return _IsGamepadButtonPressed(_int(gamepad), _int(button))
 
 
 def is_gamepad_button_down(gamepad, button):
     # type: (int, int) -> bool
     """Check if a gamepad button is being pressed"""
-    result = _IsGamepadButtonDown(int(gamepad), int(button))
-    return result
+    return _IsGamepadButtonDown(_int(gamepad), _int(button))
 
 
 def is_gamepad_button_released(gamepad, button):
     # type: (int, int) -> bool
     """Check if a gamepad button has been released once"""
-    result = _IsGamepadButtonReleased(int(gamepad), int(button))
-    return result
+    return _IsGamepadButtonReleased(_int(gamepad), _int(button))
 
 
 def is_gamepad_button_up(gamepad, button):
     # type: (int, int) -> bool
     """Check if a gamepad button is NOT being pressed"""
-    result = _IsGamepadButtonUp(int(gamepad), int(button))
-    return result
+    return _IsGamepadButtonUp(_int(gamepad), _int(button))
 
 
 def get_gamepad_button_pressed():
     # type: () -> int
     """Get the last gamepad button pressed"""
-    result = _GetGamepadButtonPressed()
-    return result
+    return _GetGamepadButtonPressed()
 
 
 def get_gamepad_axis_count(gamepad):
     # type: (int) -> int
     """Get gamepad axis count for a gamepad"""
-    result = _GetGamepadAxisCount(int(gamepad))
-    return result
+    return _GetGamepadAxisCount(_int(gamepad))
 
 
 def get_gamepad_axis_movement(gamepad, axis):
     # type: (int, int) -> float
     """Get axis movement value for a gamepad axis"""
-    result = _GetGamepadAxisMovement(int(gamepad), int(axis))
-    return result
+    return _GetGamepadAxisMovement(_int(gamepad), _int(axis))
 
 
 def set_gamepad_mappings(mappings):
-    # type: (Union[str, CharPtr]) -> int
+    # type: (bytes | str | None) -> int
     """Set internal gamepad mappings (SDL_GameControllerDB)"""
-    result = _SetGamepadMappings(_str_in(mappings))
-    return result
+    return _SetGamepadMappings(_str_in(mappings))
 
 
 def is_mouse_button_pressed(button):
     # type: (int) -> bool
     """Check if a mouse button has been pressed once"""
-    result = _IsMouseButtonPressed(int(button))
-    return result
+    return _IsMouseButtonPressed(_int(button))
 
 
 def is_mouse_button_down(button):
     # type: (int) -> bool
     """Check if a mouse button is being pressed"""
-    result = _IsMouseButtonDown(int(button))
-    return result
+    return _IsMouseButtonDown(_int(button))
 
 
 def is_mouse_button_released(button):
     # type: (int) -> bool
     """Check if a mouse button has been released once"""
-    result = _IsMouseButtonReleased(int(button))
-    return result
+    return _IsMouseButtonReleased(_int(button))
 
 
 def is_mouse_button_up(button):
     # type: (int) -> bool
     """Check if a mouse button is NOT being pressed"""
-    result = _IsMouseButtonUp(int(button))
-    return result
+    return _IsMouseButtonUp(_int(button))
 
 
 def get_mouse_x():
     # type: () -> int
     """Get mouse position X"""
-    result = _GetMouseX()
-    return result
+    return _GetMouseX()
 
 
 def get_mouse_y():
     # type: () -> int
     """Get mouse position Y"""
-    result = _GetMouseY()
-    return result
+    return _GetMouseY()
 
 
 def get_mouse_position():
     # type: () -> Vector2
     """Get mouse position XY"""
-    result = _GetMousePosition()
-    return result
+    return _GetMousePosition()
 
 
 def get_mouse_delta():
     # type: () -> Vector2
     """Get mouse delta between frames"""
-    result = _GetMouseDelta()
-    return result
+    return _GetMouseDelta()
 
 
 def set_mouse_position(x, y):
     # type: (int, int) -> None
     """Set mouse position XY"""
-    _SetMousePosition(int(x), int(y))
+    _SetMousePosition(_int(x), _int(y))
 
 
 def set_mouse_offset(offset_x, offset_y):
     # type: (int, int) -> None
     """Set mouse offset"""
-    _SetMouseOffset(int(offset_x), int(offset_y))
+    _SetMouseOffset(_int(offset_x), _int(offset_y))
 
 
 def set_mouse_scale(scale_x, scale_y):
     # type: (float, float) -> None
     """Set mouse scaling"""
-    _SetMouseScale(float(scale_x), float(scale_y))
+    _SetMouseScale(_float(scale_x), _float(scale_y))
 
 
 def get_mouse_wheel_move():
     # type: () -> float
     """Get mouse wheel movement for X or Y, whichever is larger"""
-    result = _GetMouseWheelMove()
-    return result
+    return _GetMouseWheelMove()
 
 
 def get_mouse_wheel_move_v():
     # type: () -> Vector2
     """Get mouse wheel movement for both X and Y"""
-    result = _GetMouseWheelMoveV()
-    return result
+    return _GetMouseWheelMoveV()
 
 
 def set_mouse_cursor(cursor):
     # type: (int) -> None
     """Set mouse cursor"""
-    _SetMouseCursor(int(cursor))
+    _SetMouseCursor(_int(cursor))
 
 
 def get_touch_x():
     # type: () -> int
     """Get touch position X for touch point 0 (relative to screen size)"""
-    result = _GetTouchX()
-    return result
+    return _GetTouchX()
 
 
 def get_touch_y():
     # type: () -> int
     """Get touch position Y for touch point 0 (relative to screen size)"""
-    result = _GetTouchY()
-    return result
+    return _GetTouchY()
 
 
 def get_touch_position(index):
     # type: (int) -> Vector2
     """Get touch position XY for a touch point index (relative to screen size)"""
-    result = _GetTouchPosition(int(index))
-    return result
+    return _GetTouchPosition(_int(index))
 
 
 def get_touch_point_id(index):
     # type: (int) -> int
     """Get touch point identifier for given index"""
-    result = _GetTouchPointId(int(index))
-    return result
+    return _GetTouchPointId(_int(index))
 
 
 def get_touch_point_count():
     # type: () -> int
     """Get number of touch points"""
-    result = _GetTouchPointCount()
-    return result
+    return _GetTouchPointCount()
 
 
 def set_gestures_enabled(flags):
     # type: (int) -> None
     """Enable a set of gestures using flags"""
-    _SetGesturesEnabled(flags)
+    _SetGesturesEnabled(_int(flags))
 
 
 def is_gesture_detected(gesture):
     # type: (int) -> bool
     """Check if a gesture have been detected"""
-    result = _IsGestureDetected(int(gesture))
-    return result
+    return _IsGestureDetected(_int(gesture))
 
 
 def get_gesture_detected():
     # type: () -> int
     """Get latest detected gesture"""
-    result = _GetGestureDetected()
-    return result
+    return _GetGestureDetected()
 
 
 def get_gesture_hold_duration():
     # type: () -> float
     """Get gesture hold time in milliseconds"""
-    result = _GetGestureHoldDuration()
-    return result
+    return _GetGestureHoldDuration()
 
 
 def get_gesture_drag_vector():
     # type: () -> Vector2
     """Get gesture drag vector"""
-    result = _GetGestureDragVector()
-    return result
+    return _GetGestureDragVector()
 
 
 def get_gesture_drag_angle():
     # type: () -> float
     """Get gesture drag angle"""
-    result = _GetGestureDragAngle()
-    return result
+    return _GetGestureDragAngle()
 
 
 def get_gesture_pinch_vector():
     # type: () -> Vector2
     """Get gesture pinch delta"""
-    result = _GetGesturePinchVector()
-    return result
+    return _GetGesturePinchVector()
 
 
 def get_gesture_pinch_angle():
     # type: () -> float
     """Get gesture pinch angle"""
-    result = _GetGesturePinchAngle()
-    return result
+    return _GetGesturePinchAngle()
 
 
-def set_camera_mode(camera, mode):
-    # type: (Camera, int) -> None
-    """Set camera mode (multiple camera modes available)"""
-    _SetCameraMode(camera, int(mode))
-
-
-def update_camera(camera):
-    # type: (CameraPtr) -> None
+def update_camera(camera, mode):
+    # type: (CameraPtr, int) -> None
     """Update camera position for selected mode"""
-    _UpdateCamera(camera)
+    _UpdateCamera(camera, _int(mode))
 
 
-def set_camera_pan_control(key_pan):
-    # type: (int) -> None
-    """Set camera pan key to combine with mouse movement (free camera)"""
-    _SetCameraPanControl(int(key_pan))
-
-
-def set_camera_alt_control(key_alt):
-    # type: (int) -> None
-    """Set camera alt key to combine with mouse movement (free camera)"""
-    _SetCameraAltControl(int(key_alt))
-
-
-def set_camera_smooth_zoom_control(key_smooth_zoom):
-    # type: (int) -> None
-    """Set camera smooth zoom key to combine with mouse (free camera)"""
-    _SetCameraSmoothZoomControl(int(key_smooth_zoom))
-
-
-def set_camera_move_controls(key_front, key_back, key_right, key_left, key_up, key_down):
-    # type: (int, int, int, int, int, int) -> None
-    """Set camera move controls (1st person and 3rd person cameras)"""
-    _SetCameraMoveControls(int(key_front), int(key_back), int(key_right), int(key_left), int(key_up), int(key_down))
+def update_camera_pro(camera, movement, rotation, zoom):
+    # type: (CameraPtr, Vector3, Vector3, float) -> None
+    """Update camera movement/rotation"""
+    _UpdateCameraPro(camera, _vec3(movement), _vec3(rotation), _float(zoom))
 
 
 def set_shapes_texture(texture, source):
@@ -9077,7 +9989,7 @@ def set_shapes_texture(texture, source):
 def draw_pixel(pos_x, pos_y, color):
     # type: (int, int, Color) -> None
     """Draw a pixel"""
-    _DrawPixel(int(pos_x), int(pos_y), _color(color))
+    _DrawPixel(_int(pos_x), _int(pos_y), _color(color))
 
 
 def draw_pixel_v(position, color):
@@ -9089,109 +10001,103 @@ def draw_pixel_v(position, color):
 def draw_line(start_pos_x, start_pos_y, end_pos_x, end_pos_y, color):
     # type: (int, int, int, int, Color) -> None
     """Draw a line"""
-    _DrawLine(int(start_pos_x), int(start_pos_y), int(end_pos_x), int(end_pos_y), _color(color))
+    _DrawLine(_int(start_pos_x), _int(start_pos_y), _int(end_pos_x), _int(end_pos_y), _color(color))
 
 
 def draw_line_v(start_pos, end_pos, color):
     # type: (Vector2, Vector2, Color) -> None
-    """Draw a line (Vector version)"""
+    """Draw a line (using gl lines)"""
     _DrawLineV(_vec2(start_pos), _vec2(end_pos), _color(color))
 
 
 def draw_line_ex(start_pos, end_pos, thick, color):
     # type: (Vector2, Vector2, float, Color) -> None
-    """Draw a line defining thickness"""
-    _DrawLineEx(_vec2(start_pos), _vec2(end_pos), float(thick), _color(color))
+    """Draw a line (using triangles/quads)"""
+    _DrawLineEx(_vec2(start_pos), _vec2(end_pos), _float(thick), _color(color))
+
+
+def draw_line_strip(points, point_count, color):
+    # type: (Vector2Ptr, int, Color) -> None
+    """Draw lines sequence (using gl lines)"""
+    _DrawLineStrip(points, _int(point_count), _color(color))
 
 
 def draw_line_bezier(start_pos, end_pos, thick, color):
     # type: (Vector2, Vector2, float, Color) -> None
-    """Draw a line using cubic-bezier curves in-out"""
-    _DrawLineBezier(_vec2(start_pos), _vec2(end_pos), float(thick), _color(color))
-
-
-def draw_line_bezier_quad(start_pos, end_pos, control_pos, thick, color):
-    # type: (Vector2, Vector2, Vector2, float, Color) -> None
-    """Draw line using quadratic bezier curves with a control point"""
-    _DrawLineBezierQuad(_vec2(start_pos), _vec2(end_pos), _vec2(control_pos), float(thick), _color(color))
-
-
-def draw_line_bezier_cubic(start_pos, end_pos, start_control_pos, end_control_pos, thick, color):
-    # type: (Vector2, Vector2, Vector2, Vector2, float, Color) -> None
-    """Draw line using cubic bezier curves with 2 control points"""
-    _DrawLineBezierCubic(_vec2(start_pos), _vec2(end_pos), _vec2(start_control_pos), _vec2(end_control_pos), float(thick), _color(color))
-
-
-def draw_line_strip(points, color):
-    # type: (Vector2Ptr, Color) -> None
-    """Draw lines sequence"""
-    _DrawLineStrip(_arr_in(Vector2, points), len(points), _color(color))
+    """Draw line segment cubic-bezier in-out interpolation"""
+    _DrawLineBezier(_vec2(start_pos), _vec2(end_pos), _float(thick), _color(color))
 
 
 def draw_circle(center_x, center_y, radius, color):
     # type: (int, int, float, Color) -> None
     """Draw a color-filled circle"""
-    _DrawCircle(int(center_x), int(center_y), float(radius), _color(color))
+    _DrawCircle(_int(center_x), _int(center_y), _float(radius), _color(color))
 
 
 def draw_circle_sector(center, radius, start_angle, end_angle, segments, color):
     # type: (Vector2, float, float, float, int, Color) -> None
     """Draw a piece of a circle"""
-    _DrawCircleSector(_vec2(center), float(radius), float(start_angle), float(end_angle), int(segments), _color(color))
+    _DrawCircleSector(_vec2(center), _float(radius), _float(start_angle), _float(end_angle), _int(segments), _color(color))
 
 
 def draw_circle_sector_lines(center, radius, start_angle, end_angle, segments, color):
     # type: (Vector2, float, float, float, int, Color) -> None
     """Draw circle sector outline"""
-    _DrawCircleSectorLines(_vec2(center), float(radius), float(start_angle), float(end_angle), int(segments), _color(color))
+    _DrawCircleSectorLines(_vec2(center), _float(radius), _float(start_angle), _float(end_angle), _int(segments), _color(color))
 
 
 def draw_circle_gradient(center_x, center_y, radius, color1, color2):
     # type: (int, int, float, Color, Color) -> None
     """Draw a gradient-filled circle"""
-    _DrawCircleGradient(int(center_x), int(center_y), float(radius), _color(color1), _color(color2))
+    _DrawCircleGradient(_int(center_x), _int(center_y), _float(radius), _color(color1), _color(color2))
 
 
 def draw_circle_v(center, radius, color):
     # type: (Vector2, float, Color) -> None
     """Draw a color-filled circle (Vector version)"""
-    _DrawCircleV(_vec2(center), float(radius), _color(color))
+    _DrawCircleV(_vec2(center), _float(radius), _color(color))
 
 
 def draw_circle_lines(center_x, center_y, radius, color):
     # type: (int, int, float, Color) -> None
     """Draw circle outline"""
-    _DrawCircleLines(int(center_x), int(center_y), float(radius), _color(color))
+    _DrawCircleLines(_int(center_x), _int(center_y), _float(radius), _color(color))
+
+
+def draw_circle_lines_v(center, radius, color):
+    # type: (Vector2, float, Color) -> None
+    """Draw circle outline (Vector version)"""
+    _DrawCircleLinesV(_vec2(center), _float(radius), _color(color))
 
 
 def draw_ellipse(center_x, center_y, radius_h, radius_v, color):
     # type: (int, int, float, float, Color) -> None
     """Draw ellipse"""
-    _DrawEllipse(int(center_x), int(center_y), float(radius_h), float(radius_v), _color(color))
+    _DrawEllipse(_int(center_x), _int(center_y), _float(radius_h), _float(radius_v), _color(color))
 
 
 def draw_ellipse_lines(center_x, center_y, radius_h, radius_v, color):
     # type: (int, int, float, float, Color) -> None
     """Draw ellipse outline"""
-    _DrawEllipseLines(int(center_x), int(center_y), float(radius_h), float(radius_v), _color(color))
+    _DrawEllipseLines(_int(center_x), _int(center_y), _float(radius_h), _float(radius_v), _color(color))
 
 
 def draw_ring(center, inner_radius, outer_radius, start_angle, end_angle, segments, color):
     # type: (Vector2, float, float, float, float, int, Color) -> None
     """Draw ring"""
-    _DrawRing(_vec2(center), float(inner_radius), float(outer_radius), float(start_angle), float(end_angle), int(segments), _color(color))
+    _DrawRing(_vec2(center), _float(inner_radius), _float(outer_radius), _float(start_angle), _float(end_angle), _int(segments), _color(color))
 
 
 def draw_ring_lines(center, inner_radius, outer_radius, start_angle, end_angle, segments, color):
     # type: (Vector2, float, float, float, float, int, Color) -> None
     """Draw ring outline"""
-    _DrawRingLines(_vec2(center), float(inner_radius), float(outer_radius), float(start_angle), float(end_angle), int(segments), _color(color))
+    _DrawRingLines(_vec2(center), _float(inner_radius), _float(outer_radius), _float(start_angle), _float(end_angle), _int(segments), _color(color))
 
 
 def draw_rectangle(pos_x, pos_y, width, height, color):
     # type: (int, int, int, int, Color) -> None
     """Draw a color-filled rectangle"""
-    _DrawRectangle(int(pos_x), int(pos_y), int(width), int(height), _color(color))
+    _DrawRectangle(_int(pos_x), _int(pos_y), _int(width), _int(height), _color(color))
 
 
 def draw_rectangle_v(position, size, color):
@@ -9209,19 +10115,19 @@ def draw_rectangle_rec(rec, color):
 def draw_rectangle_pro(rec, origin, rotation, color):
     # type: (Rectangle, Vector2, float, Color) -> None
     """Draw a color-filled rectangle with pro parameters"""
-    _DrawRectanglePro(_rect(rec), _vec2(origin), float(rotation), _color(color))
+    _DrawRectanglePro(_rect(rec), _vec2(origin), _float(rotation), _color(color))
 
 
 def draw_rectangle_gradient_v(pos_x, pos_y, width, height, color1, color2):
     # type: (int, int, int, int, Color, Color) -> None
     """Draw a vertical-gradient-filled rectangle"""
-    _DrawRectangleGradientV(int(pos_x), int(pos_y), int(width), int(height), _color(color1), _color(color2))
+    _DrawRectangleGradientV(_int(pos_x), _int(pos_y), _int(width), _int(height), _color(color1), _color(color2))
 
 
 def draw_rectangle_gradient_h(pos_x, pos_y, width, height, color1, color2):
     # type: (int, int, int, int, Color, Color) -> None
     """Draw a horizontal-gradient-filled rectangle"""
-    _DrawRectangleGradientH(int(pos_x), int(pos_y), int(width), int(height), _color(color1), _color(color2))
+    _DrawRectangleGradientH(_int(pos_x), _int(pos_y), _int(width), _int(height), _color(color1), _color(color2))
 
 
 def draw_rectangle_gradient_ex(rec, col1, col2, col3, col4):
@@ -9233,25 +10139,25 @@ def draw_rectangle_gradient_ex(rec, col1, col2, col3, col4):
 def draw_rectangle_lines(pos_x, pos_y, width, height, color):
     # type: (int, int, int, int, Color) -> None
     """Draw rectangle outline"""
-    _DrawRectangleLines(int(pos_x), int(pos_y), int(width), int(height), _color(color))
+    _DrawRectangleLines(_int(pos_x), _int(pos_y), _int(width), _int(height), _color(color))
 
 
 def draw_rectangle_lines_ex(rec, line_thick, color):
     # type: (Rectangle, float, Color) -> None
     """Draw rectangle outline with extended parameters"""
-    _DrawRectangleLinesEx(_rect(rec), float(line_thick), _color(color))
+    _DrawRectangleLinesEx(_rect(rec), _float(line_thick), _color(color))
 
 
 def draw_rectangle_rounded(rec, roundness, segments, color):
     # type: (Rectangle, float, int, Color) -> None
     """Draw rectangle with rounded edges"""
-    _DrawRectangleRounded(_rect(rec), float(roundness), int(segments), _color(color))
+    _DrawRectangleRounded(_rect(rec), _float(roundness), _int(segments), _color(color))
 
 
 def draw_rectangle_rounded_lines(rec, roundness, segments, line_thick, color):
     # type: (Rectangle, float, int, float, Color) -> None
     """Draw rectangle with rounded edges outline"""
-    _DrawRectangleRoundedLines(_rect(rec), float(roundness), int(segments), float(line_thick), _color(color))
+    _DrawRectangleRoundedLines(_rect(rec), _float(roundness), _int(segments), _float(line_thick), _color(color))
 
 
 def draw_triangle(v1, v2, v3, color):
@@ -9266,139 +10172,233 @@ def draw_triangle_lines(v1, v2, v3, color):
     _DrawTriangleLines(_vec2(v1), _vec2(v2), _vec2(v3), _color(color))
 
 
-def draw_triangle_fan(points, color):
-    # type: (Vector2Ptr, Color) -> None
+def draw_triangle_fan(points, point_count, color):
+    # type: (Vector2Ptr | Array[Vector2], int, Color) -> None
     """Draw a triangle fan defined by points (first vertex is the center)"""
-    _DrawTriangleFan(_arr_in(Vector2, points), len(points), _color(color))
+    _DrawTriangleFan(points, _int(point_count), _color(color))
 
 
-def draw_triangle_strip(points, color):
-    # type: (Vector2Ptr, Color) -> None
+def draw_triangle_strip(points, point_count, color):
+    # type: (Vector2Ptr | Array[Vector2], int, Color) -> None
     """Draw a triangle strip defined by points"""
-    _DrawTriangleStrip(_arr_in(Vector2, points), len(points), _color(color))
+    point_count = len(points) if point_count <= 0 else point_count
+    _DrawTriangleStrip(points, _int(point_count), _color(color))
 
 
 def draw_poly(center, sides, radius, rotation, color):
     # type: (Vector2, int, float, float, Color) -> None
     """Draw a regular polygon (Vector version)"""
-    _DrawPoly(_vec2(center), int(sides), float(radius), float(rotation), _color(color))
+    _DrawPoly(_vec2(center), _int(sides), _float(radius), _float(rotation), _color(color))
 
 
 def draw_poly_lines(center, sides, radius, rotation, color):
     # type: (Vector2, int, float, float, Color) -> None
     """Draw a polygon outline of n sides"""
-    _DrawPolyLines(_vec2(center), int(sides), float(radius), float(rotation), _color(color))
+    _DrawPolyLines(_vec2(center), _int(sides), _float(radius), _float(rotation), _color(color))
 
 
 def draw_poly_lines_ex(center, sides, radius, rotation, line_thick, color):
     # type: (Vector2, int, float, float, float, Color) -> None
     """Draw a polygon outline of n sides with extended parameters"""
-    _DrawPolyLinesEx(_vec2(center), int(sides), float(radius), float(rotation), float(line_thick), _color(color))
+    _DrawPolyLinesEx(_vec2(center), _int(sides), _float(radius), _float(rotation), _float(line_thick), _color(color))
+
+
+def draw_spline_linear(points, point_count, thick, color):
+    # type: (Vector2Ptr | Array[Vector2], int, float, Color) -> None
+    """Draw spline: Linear, minimum 2 points"""
+    _DrawSplineLinear(points, _int(point_count), _float(thick), _color(color))
+
+
+def draw_spline_basis(points, point_count, thick, color):
+    # type: (Vector2Ptr | Array[Vector2], int, float, Color) -> None
+    """Draw spline: B-Spline, minimum 4 points"""
+    _DrawSplineBasis(points, _int(point_count), _float(thick), _color(color))
+
+
+def draw_spline_catmull_rom(points, point_count, thick, color):
+    # type: (Vector2Ptr | Array[Vector2], int, float, Color) -> None
+    """Draw spline: Catmull-Rom, minimum 4 points"""
+    _DrawSplineCatmullRom(points, _int(point_count), _float(thick), _color(color))
+
+
+def draw_spline_bezier_quadratic(points, point_count, thick, color):
+    # type: (Vector2Ptr | Array[Vector2], int, float, Color) -> None
+    """Draw spline: Quadratic Bezier, minimum 3 points (1 control point): [p1, c2, p3, c4...]"""
+    _DrawSplineBezierQuadratic(points, _int(point_count), _float(thick), _color(color))
+
+
+def draw_spline_bezier_cubic(points, point_count, thick, color):
+    # type: (Vector2Ptr | Array[Vector2], int, float, Color) -> None
+    """Draw spline: Cubic Bezier, minimum 4 points (2 control points): [p1, c2, c3, p4, c5, c6...]"""
+    _DrawSplineBezierCubic(points, _int(point_count), _float(thick), _color(color))
+
+
+def draw_spline_segment_linear(p1, p2, thick, color):
+    # type: (Vector2, Vector2, float, Color) -> None
+    """Draw spline segment: Linear, 2 points"""
+    _DrawSplineSegmentLinear(_vec2(p1), _vec2(p2), _float(thick), _color(color))
+
+
+def draw_spline_segment_basis(p1, p2, p3, p4, thick, color):
+    # type: (Vector2, Vector2, Vector2, Vector2, float, Color) -> None
+    """Draw spline segment: B-Spline, 4 points"""
+    _DrawSplineSegmentBasis(_vec2(p1), _vec2(p2), _vec2(p3), _vec2(p4), _float(thick), _color(color))
+
+
+def draw_spline_segment_catmull_rom(p1, p2, p3, p4, thick, color):
+    # type: (Vector2, Vector2, Vector2, Vector2, float, Color) -> None
+    """Draw spline segment: Catmull-Rom, 4 points"""
+    _DrawSplineSegmentCatmullRom(_vec2(p1), _vec2(p2), _vec2(p3), _vec2(p4), _float(thick), _color(color))
+
+
+def draw_spline_segment_bezier_quadratic(p1, c2, p3, thick, color):
+    # type: (Vector2, Vector2, Vector2, float, Color) -> None
+    """Draw spline segment: Quadratic Bezier, 2 points, 1 control point"""
+    _DrawSplineSegmentBezierQuadratic(_vec2(p1), _vec2(c2), _vec2(p3), _float(thick), _color(color))
+
+
+def draw_spline_segment_bezier_cubic(p1, c2, c3, p4, thick, color):
+    # type: (Vector2, Vector2, Vector2, Vector2, float, Color) -> None
+    """Draw spline segment: Cubic Bezier, 2 points, 2 control points"""
+    _DrawSplineSegmentBezierCubic(_vec2(p1), _vec2(c2), _vec2(c3), _vec2(p4), _float(thick), _color(color))
+
+
+def get_spline_point_linear(start_pos, end_pos, t):
+    # type: (Vector2, Vector2, float) -> Vector2
+    """Get (evaluate) spline point: Linear"""
+    return _GetSplinePointLinear(_vec2(start_pos), _vec2(end_pos), _float(t))
+
+
+def get_spline_point_basis(p1, p2, p3, p4, t):
+    # type: (Vector2, Vector2, Vector2, Vector2, float) -> Vector2
+    """Get (evaluate) spline point: B-Spline"""
+    return _GetSplinePointBasis(_vec2(p1), _vec2(p2), _vec2(p3), _vec2(p4), _float(t))
+
+
+def get_spline_point_catmull_rom(p1, p2, p3, p4, t):
+    # type: (Vector2, Vector2, Vector2, Vector2, float) -> Vector2
+    """Get (evaluate) spline point: Catmull-Rom"""
+    return _GetSplinePointCatmullRom(_vec2(p1), _vec2(p2), _vec2(p3), _vec2(p4), _float(t))
+
+
+def get_spline_point_bezier_quad(p1, c2, p3, t):
+    # type: (Vector2, Vector2, Vector2, float) -> Vector2
+    """Get (evaluate) spline point: Quadratic Bezier"""
+    return _GetSplinePointBezierQuad(_vec2(p1), _vec2(c2), _vec2(p3), _float(t))
+
+
+def get_spline_point_bezier_cubic(p1, c2, c3, p4, t):
+    # type: (Vector2, Vector2, Vector2, Vector2, float) -> Vector2
+    """Get (evaluate) spline point: Cubic Bezier"""
+    return _GetSplinePointBezierCubic(_vec2(p1), _vec2(c2), _vec2(c3), _vec2(p4), _float(t))
 
 
 def check_collision_recs(rec1, rec2):
     # type: (Rectangle, Rectangle) -> bool
     """Check collision between two rectangles"""
-    result = _CheckCollisionRecs(_rect(rec1), _rect(rec2))
-    return result
+    return _CheckCollisionRecs(_rect(rec1), _rect(rec2))
 
 
 def check_collision_circles(center1, radius1, center2, radius2):
     # type: (Vector2, float, Vector2, float) -> bool
     """Check collision between two circles"""
-    result = _CheckCollisionCircles(_vec2(center1), float(radius1), _vec2(center2), float(radius2))
-    return result
+    return _CheckCollisionCircles(_vec2(center1), _float(radius1), _vec2(center2), _float(radius2))
 
 
 def check_collision_circle_rec(center, radius, rec):
     # type: (Vector2, float, Rectangle) -> bool
     """Check collision between circle and rectangle"""
-    result = _CheckCollisionCircleRec(_vec2(center), float(radius), _rect(rec))
-    return result
+    return _CheckCollisionCircleRec(_vec2(center), _float(radius), _rect(rec))
 
 
 def check_collision_point_rec(point, rec):
     # type: (Vector2, Rectangle) -> bool
     """Check if point is inside rectangle"""
-    result = _CheckCollisionPointRec(_vec2(point), _rect(rec))
-    return result
+    return _CheckCollisionPointRec(_vec2(point), _rect(rec))
 
 
 def check_collision_point_circle(point, center, radius):
     # type: (Vector2, Vector2, float) -> bool
     """Check if point is inside circle"""
-    result = _CheckCollisionPointCircle(_vec2(point), _vec2(center), float(radius))
-    return result
+    return _CheckCollisionPointCircle(_vec2(point), _vec2(center), _float(radius))
 
 
 def check_collision_point_triangle(point, p1, p2, p3):
     # type: (Vector2, Vector2, Vector2, Vector2) -> bool
     """Check if point is inside a triangle"""
-    result = _CheckCollisionPointTriangle(_vec2(point), _vec2(p1), _vec2(p2), _vec2(p3))
-    return result
+    return _CheckCollisionPointTriangle(_vec2(point), _vec2(p1), _vec2(p2), _vec2(p3))
+
+
+def check_collision_point_poly(point, points, point_count):
+    # type: (Vector2, Vector2Ptr, int) -> bool
+    """Check if point is within a polygon described by array of vertices"""
+    return _CheckCollisionPointPoly(_vec2(point), points, _int(point_count))
 
 
 def check_collision_lines(start_pos1, end_pos1, start_pos2, end_pos2, collision_point):
     # type: (Vector2, Vector2, Vector2, Vector2, Vector2Ptr) -> bool
     """Check the collision between two lines defined by two points each, returns collision point by reference"""
-    result = _CheckCollisionLines(_vec2(start_pos1), _vec2(end_pos1), _vec2(start_pos2), _vec2(end_pos2), _vec2(collision_point))
-    return result
+    return _CheckCollisionLines(_vec2(start_pos1), _vec2(end_pos1), _vec2(start_pos2), _vec2(end_pos2), collision_point)
 
 
 def check_collision_point_line(point, p1, p2, threshold):
     # type: (Vector2, Vector2, Vector2, int) -> bool
     """Check if point belongs to line created between two points [p1] and [p2] with defined margin in pixels [threshold]"""
-    result = _CheckCollisionPointLine(_vec2(point), _vec2(p1), _vec2(p2), int(threshold))
-    return result
+    return _CheckCollisionPointLine(_vec2(point), _vec2(p1), _vec2(p2), _int(threshold))
 
 
 def get_collision_rec(rec1, rec2):
     # type: (Rectangle, Rectangle) -> Rectangle
     """Get collision rectangle for two rectangles collision"""
-    result = _GetCollisionRec(_rect(rec1), _rect(rec2))
-    return result
+    return _GetCollisionRec(_rect(rec1), _rect(rec2))
 
 
 def load_image(file_name):
-    # type: (Union[str, CharPtr]) -> Image
+    # type: (bytes | str | None) -> Image
     """Load image from file into CPU memory (RAM)"""
-    result = _LoadImage(_str_in(file_name))
-    return result
+    return _LoadImage(_str_in(file_name))
 
 
-def load_image_raw(file_name, width, height, format, header_size):
-    # type: (Union[str, CharPtr], int, int, int, int) -> Image
+def load_image_raw(file_name, width, height, format_, header_size):
+    # type: (bytes | str | None, int, int, int, int) -> Image
     """Load image from RAW file data"""
-    result = _LoadImageRaw(_str_in(file_name), int(width), int(height), int(format), int(header_size))
-    return result
+    return _LoadImageRaw(_str_in(file_name), _int(width), _int(height), _int(format_), _int(header_size))
+
+
+def load_image_svg(file_name_or_string, width, height):
+    # type: (bytes | str | None, int, int) -> Image
+    """Load image from SVG file data or string with specified size"""
+    return _LoadImageSvg(_str_in(file_name_or_string), _int(width), _int(height))
 
 
 def load_image_anim(file_name, frames):
-    # type: (Union[str, CharPtr], Union[Seq[int], IntPtr]) -> Image
+    # type: (bytes | str | None, IntPtr) -> Image
     """Load image sequence from file (frames appended to image.data)"""
-    result = _LoadImageAnim(_str_in(file_name), frames)
-    return result
+    return _LoadImageAnim(_str_in(file_name), frames)
 
 
 def load_image_from_memory(file_type, file_data, data_size):
-    # type: (Union[str, CharPtr], Union[Seq[int], UCharPtr], int) -> Image
+    # type: (bytes | str | None, int, int) -> Image
     """Load image from memory buffer, fileType refers to extension: i.e. '.png'"""
-    result = _LoadImageFromMemory(_str_in(file_type), _str_in(file_data), int(data_size))
-    return result
+    return _LoadImageFromMemory(_str_in(file_type), _int(file_data, (0, 255)), _int(data_size))
 
 
 def load_image_from_texture(texture):
     # type: (Texture2D) -> Image
     """Load image from GPU texture data"""
-    result = _LoadImageFromTexture(texture)
-    return result
+    return _LoadImageFromTexture(texture)
 
 
 def load_image_from_screen():
     # type: () -> Image
     """Load image from screen buffer and (screenshot)"""
-    result = _LoadImageFromScreen()
-    return result
+    return _LoadImageFromScreen()
+
+
+def is_image_ready(image):
+    # type: (Image) -> bool
+    """Check if an image is ready"""
+    return _IsImageReady(image)
 
 
 def unload_image(image):
@@ -9408,100 +10408,105 @@ def unload_image(image):
 
 
 def export_image(image, file_name):
-    # type: (Image, Union[str, CharPtr]) -> bool
+    # type: (Image, bytes | str | None) -> bool
     """Export image data to file, returns true on success"""
-    result = _ExportImage(image, _str_in(file_name))
-    return result
+    return _ExportImage(image, _str_in(file_name))
+
+
+def export_image_to_memory(image, file_type, file_size):
+    # type: (Image, bytes | str | None, IntPtr) -> int
+    """Export image to memory buffer"""
+    return _ExportImageToMemory(image, _str_in(file_type), file_size)
 
 
 def export_image_as_code(image, file_name):
-    # type: (Image, Union[str, CharPtr]) -> bool
+    # type: (Image, bytes | str | None) -> bool
     """Export image as code file defining an array of bytes, returns true on success"""
-    result = _ExportImageAsCode(image, _str_in(file_name))
-    return result
+    return _ExportImageAsCode(image, _str_in(file_name))
 
 
 def gen_image_color(width, height, color):
     # type: (int, int, Color) -> Image
     """Generate image: plain color"""
-    result = _GenImageColor(int(width), int(height), _color(color))
-    return result
+    return _GenImageColor(_int(width), _int(height), _color(color))
 
 
-def gen_image_gradient_v(width, height, top, bottom):
-    # type: (int, int, Color, Color) -> Image
-    """Generate image: vertical gradient"""
-    result = _GenImageGradientV(int(width), int(height), _color(top), _color(bottom))
-    return result
-
-
-def gen_image_gradient_h(width, height, left, right):
-    # type: (int, int, Color, Color) -> Image
-    """Generate image: horizontal gradient"""
-    result = _GenImageGradientH(int(width), int(height), _color(left), _color(right))
-    return result
+def gen_image_gradient_linear(width, height, direction, start, end):
+    # type: (int, int, int, Color, Color) -> Image
+    """Generate image: linear gradient, direction in degrees [0..360], 0=Vertical gradient"""
+    return _GenImageGradientLinear(_int(width), _int(height), _int(direction), _color(start), _color(end))
 
 
 def gen_image_gradient_radial(width, height, density, inner, outer):
     # type: (int, int, float, Color, Color) -> Image
     """Generate image: radial gradient"""
-    result = _GenImageGradientRadial(int(width), int(height), float(density), _color(inner), _color(outer))
-    return result
+    return _GenImageGradientRadial(_int(width), _int(height), _float(density), _color(inner), _color(outer))
+
+
+def gen_image_gradient_square(width, height, density, inner, outer):
+    # type: (int, int, float, Color, Color) -> Image
+    """Generate image: square gradient"""
+    return _GenImageGradientSquare(_int(width), _int(height), _float(density), _color(inner), _color(outer))
 
 
 def gen_image_checked(width, height, checks_x, checks_y, col1, col2):
     # type: (int, int, int, int, Color, Color) -> Image
     """Generate image: checked"""
-    result = _GenImageChecked(int(width), int(height), int(checks_x), int(checks_y), _color(col1), _color(col2))
-    return result
+    return _GenImageChecked(_int(width), _int(height), _int(checks_x), _int(checks_y), _color(col1), _color(col2))
 
 
 def gen_image_white_noise(width, height, factor):
     # type: (int, int, float) -> Image
     """Generate image: white noise"""
-    result = _GenImageWhiteNoise(int(width), int(height), float(factor))
-    return result
+    return _GenImageWhiteNoise(_int(width), _int(height), _float(factor))
+
+
+def gen_image_perlin_noise(width, height, offset_x, offset_y, scale):
+    # type: (int, int, int, int, float) -> Image
+    """Generate image: perlin noise"""
+    return _GenImagePerlinNoise(_int(width), _int(height), _int(offset_x), _int(offset_y), _float(scale))
 
 
 def gen_image_cellular(width, height, tile_size):
     # type: (int, int, int) -> Image
     """Generate image: cellular algorithm, bigger tileSize means bigger cells"""
-    result = _GenImageCellular(int(width), int(height), int(tile_size))
-    return result
+    return _GenImageCellular(_int(width), _int(height), _int(tile_size))
+
+
+def gen_image_text(width, height, text):
+    # type: (int, int, bytes | str | None) -> Image
+    """Generate image: grayscale image from text data"""
+    return _GenImageText(_int(width), _int(height), _str_in(text))
 
 
 def image_copy(image):
     # type: (Image) -> Image
     """Create an image duplicate (useful for transformations)"""
-    result = _ImageCopy(image)
-    return result
+    return _ImageCopy(image)
 
 
 def image_from_image(image, rec):
     # type: (Image, Rectangle) -> Image
     """Create an image from another image piece"""
-    result = _ImageFromImage(image, _rect(rec))
-    return result
+    return _ImageFromImage(image, _rect(rec))
 
 
 def image_text(text, font_size, color):
-    # type: (Union[str, CharPtr], int, Color) -> Image
+    # type: (bytes | str | None, int, Color) -> Image
     """Create an image from text (default font)"""
-    result = _ImageText(_str_in(text), int(font_size), _color(color))
-    return result
+    return _ImageText(_str_in(text), _int(font_size), _color(color))
 
 
 def image_text_ex(font, text, font_size, spacing, tint):
-    # type: (Font, Union[str, CharPtr], float, float, Color) -> Image
+    # type: (Font, bytes | str | None, float, float, Color) -> Image
     """Create an image from text (custom sprite font)"""
-    result = _ImageTextEx(font, _str_in(text), float(font_size), float(spacing), _color(tint))
-    return result
+    return _ImageTextEx(font, _str_in(text), _float(font_size), _float(spacing), _color(tint))
 
 
 def image_format(image, new_format):
     # type: (ImagePtr, int) -> None
     """Convert image data to desired format"""
-    _ImageFormat(image, int(new_format))
+    _ImageFormat(image, _int(new_format))
 
 
 def image_to_pot(image, fill):
@@ -9519,13 +10524,13 @@ def image_crop(image, crop):
 def image_alpha_crop(image, threshold):
     # type: (ImagePtr, float) -> None
     """Crop image depending on alpha value"""
-    _ImageAlphaCrop(image, float(threshold))
+    _ImageAlphaCrop(image, _float(threshold))
 
 
 def image_alpha_clear(image, color, threshold):
     # type: (ImagePtr, Color, float) -> None
     """Clear alpha channel to desired color"""
-    _ImageAlphaClear(image, _color(color), float(threshold))
+    _ImageAlphaClear(image, _color(color), _float(threshold))
 
 
 def image_alpha_mask(image, alpha_mask):
@@ -9540,22 +10545,28 @@ def image_alpha_premultiply(image):
     _ImageAlphaPremultiply(image)
 
 
+def image_blur_gaussian(image, blur_size):
+    # type: (ImagePtr, int) -> None
+    """Apply Gaussian blur using a box blur approximation"""
+    _ImageBlurGaussian(image, _int(blur_size))
+
+
 def image_resize(image, new_width, new_height):
     # type: (ImagePtr, int, int) -> None
     """Resize image (Bicubic scaling algorithm)"""
-    _ImageResize(image, int(new_width), int(new_height))
+    _ImageResize(image, _int(new_width), _int(new_height))
 
 
 def image_resize_nn(image, new_width, new_height):
     # type: (ImagePtr, int, int) -> None
     """Resize image (Nearest-Neighbor scaling algorithm)"""
-    _ImageResizeNN(image, int(new_width), int(new_height))
+    _ImageResizeNN(image, _int(new_width), _int(new_height))
 
 
 def image_resize_canvas(image, new_width, new_height, offset_x, offset_y, fill):
     # type: (ImagePtr, int, int, int, int, Color) -> None
     """Resize canvas and fill with color"""
-    _ImageResizeCanvas(image, int(new_width), int(new_height), int(offset_x), int(offset_y), _color(fill))
+    _ImageResizeCanvas(image, _int(new_width), _int(new_height), _int(offset_x), _int(offset_y), _color(fill))
 
 
 def image_mipmaps(image):
@@ -9567,7 +10578,7 @@ def image_mipmaps(image):
 def image_dither(image, r_bpp, g_bpp, b_bpp, a_bpp):
     # type: (ImagePtr, int, int, int, int) -> None
     """Dither image data to 16bpp or lower (Floyd-Steinberg dithering)"""
-    _ImageDither(image, int(r_bpp), int(g_bpp), int(b_bpp), int(a_bpp))
+    _ImageDither(image, _int(r_bpp), _int(g_bpp), _int(b_bpp), _int(a_bpp))
 
 
 def image_flip_vertical(image):
@@ -9580,6 +10591,12 @@ def image_flip_horizontal(image):
     # type: (ImagePtr) -> None
     """Flip image horizontally"""
     _ImageFlipHorizontal(image)
+
+
+def image_rotate(image, degrees):
+    # type: (ImagePtr, int) -> None
+    """Rotate image by input angle in degrees (-359 to 359)"""
+    _ImageRotate(image, _int(degrees))
 
 
 def image_rotate_cw(image):
@@ -9615,13 +10632,13 @@ def image_color_grayscale(image):
 def image_color_contrast(image, contrast):
     # type: (ImagePtr, float) -> None
     """Modify image color: contrast (-100 to 100)"""
-    _ImageColorContrast(image, float(contrast))
+    _ImageColorContrast(image, _float(contrast))
 
 
 def image_color_brightness(image, brightness):
     # type: (ImagePtr, int) -> None
     """Modify image color: brightness (-255 to 255)"""
-    _ImageColorBrightness(image, int(brightness))
+    _ImageColorBrightness(image, _int(brightness))
 
 
 def image_color_replace(image, color, replace):
@@ -9633,42 +10650,42 @@ def image_color_replace(image, color, replace):
 def load_image_colors(image):
     # type: (Image) -> ColorPtr
     """Load color data from image as a Color array (RGBA - 32bit)"""
-    result = _ptr_out(_LoadImageColors(image))
-    return result
+    return _LoadImageColors(image)
 
 
-def load_image_palette(image, max_palette_size):
-    # type: (Image, int) -> ColorPtr
+def load_image_palette(image, max_palette_size, color_count):
+    # type: (Image, int, int) -> Array[Color]
     """Load colors palette from image as a Color array (RGBA - 32bit)"""
-    color_count = Int(0)
-    result = _ptr_out(_LoadImagePalette(image, int(max_palette_size), byref(color_count)), color_count.value)
+    color_count = Int(color_count)
+    result = _LoadImagePalette(image, _int(max_palette_size), byref(color_count))
+    result = cast(result, POINTER(Color * color_count.value))[0]
+    _clear_in_out()
+    _push_in_out(color_count.value)
     return result
 
 
 def unload_image_colors(colors):
     # type: (ColorPtr) -> None
     """Unload color data loaded with LoadImageColors()"""
-    _UnloadImageColors(_color(colors))
+    _UnloadImageColors(colors)
 
 
 def unload_image_palette(colors):
     # type: (ColorPtr) -> None
     """Unload colors palette loaded with LoadImagePalette()"""
-    _UnloadImagePalette(_color(colors))
+    _UnloadImagePalette(colors)
 
 
 def get_image_alpha_border(image, threshold):
     # type: (Image, float) -> Rectangle
     """Get image alpha border rectangle"""
-    result = _GetImageAlphaBorder(image, float(threshold))
-    return result
+    return _GetImageAlphaBorder(image, _float(threshold))
 
 
 def get_image_color(image, x, y):
     # type: (Image, int, int) -> Color
     """Get image pixel color at (x, y) position"""
-    result = _GetImageColor(image, int(x), int(y))
-    return result
+    return _GetImageColor(image, _int(x), _int(y))
 
 
 def image_clear_background(dst, color):
@@ -9680,7 +10697,7 @@ def image_clear_background(dst, color):
 def image_draw_pixel(dst, pos_x, pos_y, color):
     # type: (ImagePtr, int, int, Color) -> None
     """Draw pixel within an image"""
-    _ImageDrawPixel(dst, int(pos_x), int(pos_y), _color(color))
+    _ImageDrawPixel(dst, _int(pos_x), _int(pos_y), _color(color))
 
 
 def image_draw_pixel_v(dst, position, color):
@@ -9692,7 +10709,7 @@ def image_draw_pixel_v(dst, position, color):
 def image_draw_line(dst, start_pos_x, start_pos_y, end_pos_x, end_pos_y, color):
     # type: (ImagePtr, int, int, int, int, Color) -> None
     """Draw line within an image"""
-    _ImageDrawLine(dst, int(start_pos_x), int(start_pos_y), int(end_pos_x), int(end_pos_y), _color(color))
+    _ImageDrawLine(dst, _int(start_pos_x), _int(start_pos_y), _int(end_pos_x), _int(end_pos_y), _color(color))
 
 
 def image_draw_line_v(dst, start, end, color):
@@ -9703,20 +10720,32 @@ def image_draw_line_v(dst, start, end, color):
 
 def image_draw_circle(dst, center_x, center_y, radius, color):
     # type: (ImagePtr, int, int, int, Color) -> None
-    """Draw circle within an image"""
-    _ImageDrawCircle(dst, int(center_x), int(center_y), int(radius), _color(color))
+    """Draw a filled circle within an image"""
+    _ImageDrawCircle(dst, _int(center_x), _int(center_y), _int(radius), _color(color))
 
 
 def image_draw_circle_v(dst, center, radius, color):
     # type: (ImagePtr, Vector2, int, Color) -> None
-    """Draw circle within an image (Vector version)"""
-    _ImageDrawCircleV(dst, _vec2(center), int(radius), _color(color))
+    """Draw a filled circle within an image (Vector version)"""
+    _ImageDrawCircleV(dst, _vec2(center), _int(radius), _color(color))
+
+
+def image_draw_circle_lines(dst, center_x, center_y, radius, color):
+    # type: (ImagePtr, int, int, int, Color) -> None
+    """Draw circle outline within an image"""
+    _ImageDrawCircleLines(dst, _int(center_x), _int(center_y), _int(radius), _color(color))
+
+
+def image_draw_circle_lines_v(dst, center, radius, color):
+    # type: (ImagePtr, Vector2, int, Color) -> None
+    """Draw circle outline within an image (Vector version)"""
+    _ImageDrawCircleLinesV(dst, _vec2(center), _int(radius), _color(color))
 
 
 def image_draw_rectangle(dst, pos_x, pos_y, width, height, color):
     # type: (ImagePtr, int, int, int, int, Color) -> None
     """Draw rectangle within an image"""
-    _ImageDrawRectangle(dst, int(pos_x), int(pos_y), int(width), int(height), _color(color))
+    _ImageDrawRectangle(dst, _int(pos_x), _int(pos_y), _int(width), _int(height), _color(color))
 
 
 def image_draw_rectangle_v(dst, position, size, color):
@@ -9734,7 +10763,7 @@ def image_draw_rectangle_rec(dst, rec, color):
 def image_draw_rectangle_lines(dst, rec, thick, color):
     # type: (ImagePtr, Rectangle, int, Color) -> None
     """Draw rectangle lines within an image"""
-    _ImageDrawRectangleLines(dst, _rect(rec), int(thick), _color(color))
+    _ImageDrawRectangleLines(dst, _rect(rec), _int(thick), _color(color))
 
 
 def image_draw(dst, src, src_rec, dst_rec, tint):
@@ -9744,49 +10773,57 @@ def image_draw(dst, src, src_rec, dst_rec, tint):
 
 
 def image_draw_text(dst, text, pos_x, pos_y, font_size, color):
-    # type: (ImagePtr, Union[str, CharPtr], int, int, int, Color) -> None
+    # type: (ImagePtr, bytes | str | None, int, int, int, Color) -> None
     """Draw text (using default font) within an image (destination)"""
-    _ImageDrawText(dst, _str_in(text), int(pos_x), int(pos_y), int(font_size), _color(color))
+    _ImageDrawText(dst, _str_in(text), _int(pos_x), _int(pos_y), _int(font_size), _color(color))
 
 
 def image_draw_text_ex(dst, font, text, position, font_size, spacing, tint):
-    # type: (ImagePtr, Font, Union[str, CharPtr], Vector2, float, float, Color) -> None
+    # type: (ImagePtr, Font, bytes | str | None, Vector2, float, float, Color) -> None
     """Draw text (custom sprite font) within an image (destination)"""
-    _ImageDrawTextEx(dst, font, _str_in(text), _vec2(position), float(font_size), float(spacing), _color(tint))
+    _ImageDrawTextEx(dst, font, _str_in(text), _vec2(position), _float(font_size), _float(spacing), _color(tint))
 
 
 def load_texture(file_name):
-    # type: (Union[str, CharPtr]) -> Texture2D
+    # type: (bytes | str | None) -> Texture2D
     """Load texture from file into GPU memory (VRAM)"""
-    result = _LoadTexture(_str_in(file_name))
-    return result
+    return _LoadTexture(_str_in(file_name))
 
 
 def load_texture_from_image(image):
     # type: (Image) -> Texture2D
     """Load texture from image data"""
-    result = _LoadTextureFromImage(image)
-    return result
+    return _LoadTextureFromImage(image)
 
 
 def load_texture_cubemap(image, layout):
     # type: (Image, int) -> TextureCubemap
     """Load cubemap from image, multiple image cubemap layouts supported"""
-    result = _LoadTextureCubemap(image, int(layout))
-    return result
+    return _LoadTextureCubemap(image, _int(layout))
 
 
 def load_render_texture(width, height):
     # type: (int, int) -> RenderTexture2D
     """Load texture for rendering (framebuffer)"""
-    result = _LoadRenderTexture(int(width), int(height))
-    return result
+    return _LoadRenderTexture(_int(width), _int(height))
+
+
+def is_texture_ready(texture):
+    # type: (Texture2D) -> bool
+    """Check if a texture is ready"""
+    return _IsTextureReady(texture)
 
 
 def unload_texture(texture):
     # type: (Texture2D) -> None
     """Unload texture from GPU memory (VRAM)"""
     _UnloadTexture(texture)
+
+
+def is_render_texture_ready(target):
+    # type: (RenderTexture2D) -> bool
+    """Check if a render texture is ready"""
+    return _IsRenderTextureReady(target)
 
 
 def unload_render_texture(target):
@@ -9796,13 +10833,13 @@ def unload_render_texture(target):
 
 
 def update_texture(texture, pixels):
-    # type: (Texture2D, bytes) -> None
+    # type: (Texture2D, bytes | str | None) -> None
     """Update GPU texture with new data"""
     _UpdateTexture(texture, pixels)
 
 
 def update_texture_rec(texture, rec, pixels):
-    # type: (Texture2D, Rectangle, bytes) -> None
+    # type: (Texture2D, Rectangle, bytes | str | None) -> None
     """Update GPU texture rectangle with new data"""
     _UpdateTextureRec(texture, _rect(rec), pixels)
 
@@ -9813,22 +10850,22 @@ def gen_texture_mipmaps(texture):
     _GenTextureMipmaps(texture)
 
 
-def set_texture_filter(texture, filter):
+def set_texture_filter(texture, filter_):
     # type: (Texture2D, int) -> None
     """Set texture scaling filter mode"""
-    _SetTextureFilter(texture, int(filter))
+    _SetTextureFilter(texture, _int(filter_))
 
 
 def set_texture_wrap(texture, wrap):
     # type: (Texture2D, int) -> None
     """Set texture wrapping mode"""
-    _SetTextureWrap(texture, int(wrap))
+    _SetTextureWrap(texture, _int(wrap))
 
 
 def draw_texture(texture, pos_x, pos_y, tint):
     # type: (Texture2D, int, int, Color) -> None
     """Draw a Texture2D"""
-    _DrawTexture(texture, int(pos_x), int(pos_y), _color(tint))
+    _DrawTexture(texture, _int(pos_x), _int(pos_y), _color(tint))
 
 
 def draw_texture_v(texture, position, tint):
@@ -9840,7 +10877,7 @@ def draw_texture_v(texture, position, tint):
 def draw_texture_ex(texture, position, rotation, scale, tint):
     # type: (Texture2D, Vector2, float, float, Color) -> None
     """Draw a Texture2D with extended parameters"""
-    _DrawTextureEx(texture, _vec2(position), float(rotation), float(scale), _color(tint))
+    _DrawTextureEx(texture, _vec2(position), _float(rotation), _float(scale), _color(tint))
 
 
 def draw_texture_rec(texture, source, position, tint):
@@ -9849,172 +10886,169 @@ def draw_texture_rec(texture, source, position, tint):
     _DrawTextureRec(texture, _rect(source), _vec2(position), _color(tint))
 
 
-def draw_texture_quad(texture, tiling, offset, quad, tint):
-    # type: (Texture2D, Vector2, Vector2, Rectangle, Color) -> None
-    """Draw texture quad with tiling and offset parameters"""
-    _DrawTextureQuad(texture, _vec2(tiling), _vec2(offset), _rect(quad), _color(tint))
-
-
-def draw_texture_tiled(texture, source, dest, origin, rotation, scale, tint):
-    # type: (Texture2D, Rectangle, Rectangle, Vector2, float, float, Color) -> None
-    """Draw part of a texture (defined by a rectangle) with rotation and scale tiled into dest."""
-    _DrawTextureTiled(texture, _rect(source), _rect(dest), _vec2(origin), float(rotation), float(scale), _color(tint))
-
-
 def draw_texture_pro(texture, source, dest, origin, rotation, tint):
     # type: (Texture2D, Rectangle, Rectangle, Vector2, float, Color) -> None
     """Draw a part of a texture defined by a rectangle with 'pro' parameters"""
-    _DrawTexturePro(texture, _rect(source), _rect(dest), _vec2(origin), float(rotation), _color(tint))
+    _DrawTexturePro(texture, _rect(source), _rect(dest), _vec2(origin), _float(rotation), _color(tint))
 
 
 def draw_texture_npatch(texture, n_patch_info, dest, origin, rotation, tint):
     # type: (Texture2D, NPatchInfo, Rectangle, Vector2, float, Color) -> None
     """Draws a texture (or part of it) that stretches or shrinks nicely"""
-    _DrawTextureNPatch(texture, n_patch_info, _rect(dest), _vec2(origin), float(rotation), _color(tint))
-
-
-def draw_texture_poly(texture, center, points, texcoords, tint):
-    # type: (Texture2D, Vector2, Vector2Ptr, Vector2Ptr, Color) -> None
-    """Draw a textured polygon"""
-    _DrawTexturePoly(texture, _vec2(center), _arr_in(Vector2, points), _vec2(texcoords), len(points), _color(tint))
+    _DrawTextureNPatch(texture, n_patch_info, _rect(dest), _vec2(origin), _float(rotation), _color(tint))
 
 
 def fade(color, alpha):
     # type: (Color, float) -> Color
     """Get color with alpha applied, alpha goes from 0.0f to 1.0f"""
-    result = _Fade(_color(color), float(alpha))
-    return result
+    return _Fade(_color(color), _float(alpha))
 
 
 def color_to_int(color):
     # type: (Color) -> int
     """Get hexadecimal value for a Color"""
-    result = _ColorToInt(_color(color))
-    return result
+    return _ColorToInt(_color(color))
 
 
 def color_normalize(color):
     # type: (Color) -> Vector4
     """Get Color normalized as float [0..1]"""
-    result = _ColorNormalize(_color(color))
-    return result
+    return _ColorNormalize(_color(color))
 
 
 def color_from_normalized(normalized):
     # type: (Vector4) -> Color
     """Get Color from normalized values [0..1]"""
-    result = _ColorFromNormalized(_vec4(normalized))
-    return result
+    return _ColorFromNormalized(_vec4(normalized))
 
 
 def color_to_hsv(color):
     # type: (Color) -> Vector3
     """Get HSV values for a Color, hue [0..360], saturation/value [0..1]"""
-    result = _ColorToHSV(_color(color))
-    return result
+    return _ColorToHSV(_color(color))
 
 
 def color_from_hsv(hue, saturation, value):
     # type: (float, float, float) -> Color
     """Get a Color from HSV values, hue [0..360], saturation/value [0..1]"""
-    result = _ColorFromHSV(float(hue), float(saturation), float(value))
-    return result
+    return _ColorFromHSV(_float(hue), _float(saturation), _float(value))
+
+
+def color_tint(color, tint):
+    # type: (Color, Color) -> Color
+    """Get color multiplied with another color"""
+    return _ColorTint(_color(color), _color(tint))
+
+
+def color_brightness(color, factor):
+    # type: (Color, float) -> Color
+    """Get color with brightness correction, brightness factor goes from -1.0f to 1.0f"""
+    return _ColorBrightness(_color(color), _float(factor))
+
+
+def color_contrast(color, contrast):
+    # type: (Color, float) -> Color
+    """Get color with contrast correction, contrast values between -1.0f and 1.0f"""
+    return _ColorContrast(_color(color), _float(contrast))
 
 
 def color_alpha(color, alpha):
     # type: (Color, float) -> Color
     """Get color with alpha applied, alpha goes from 0.0f to 1.0f"""
-    result = _ColorAlpha(_color(color), float(alpha))
-    return result
+    return _ColorAlpha(_color(color), _float(alpha))
 
 
 def color_alpha_blend(dst, src, tint):
     # type: (Color, Color, Color) -> Color
     """Get src alpha-blended into dst color with tint"""
-    result = _ColorAlphaBlend(_color(dst), _color(src), _color(tint))
-    return result
+    return _ColorAlphaBlend(_color(dst), _color(src), _color(tint))
 
 
 def get_color(hex_value):
     # type: (int) -> Color
     """Get Color structure from hexadecimal value"""
-    result = _GetColor(hex_value)
-    return result
+    return _GetColor(_int(hex_value))
 
 
-def get_pixel_color(src_ptr, format):
-    # type: (bytes, int) -> Color
+def get_pixel_color(src_ptr, format_):
+    # type: (bytes | str | None, int) -> Color
     """Get Color from a source pixel pointer of certain format"""
-    result = _GetPixelColor(src_ptr, int(format))
-    return result
+    return _GetPixelColor(src_ptr, _int(format_))
 
 
-def set_pixel_color(dst_ptr, color, format):
-    # type: (bytes, Color, int) -> None
+def set_pixel_color(dst_ptr, color, format_):
+    # type: (bytes | str | None, Color, int) -> None
     """Set color formatted into destination pixel pointer"""
-    _SetPixelColor(dst_ptr, _color(color), int(format))
+    _SetPixelColor(dst_ptr, _color(color), _int(format_))
 
 
-def get_pixel_data_size(width, height, format):
+def get_pixel_data_size(width, height, format_):
     # type: (int, int, int) -> int
     """Get pixel data size in bytes for certain format"""
-    result = _GetPixelDataSize(int(width), int(height), int(format))
-    return result
+    return _GetPixelDataSize(_int(width), _int(height), _int(format_))
 
 
 def get_font_default():
     # type: () -> Font
     """Get the default Font"""
-    result = _GetFontDefault()
-    return result
+    return _GetFontDefault()
 
 
 def load_font(file_name):
-    # type: (Union[str, CharPtr]) -> Font
+    # type: (bytes | str | None) -> Font
     """Load font from file into GPU memory (VRAM)"""
-    result = _LoadFont(_str_in(file_name))
-    return result
+    return _LoadFont(_str_in(file_name))
 
 
-def load_font_ex(file_name, font_size, font_chars, glyph_count):
-    # type: (Union[str, CharPtr], int, Union[Seq[int], IntPtr], int) -> Font
-    """Load font from file with extended parameters, use NULL for fontChars and 0 for glyphCount to load the default character set"""
-    result = _LoadFontEx(_str_in(file_name), int(font_size), font_chars, int(glyph_count))
+def load_font_ex(file_name, font_size, codepoints, codepoint_count):
+    # type: (bytes | str | None, int, list[int] | str, int) -> Font
+    """Load font from file with extended parameters, use NULL for codepoints and 0 for codepointCount to load the default character setFont"""
+    codepoints = int_array(codepoints)
+    result = _LoadFontEx(_str_in(file_name), _int(font_size), byref(codepoints), _int(codepoint_count))
+    result = result.contents[:codepoints]
     return result
 
 
 def load_font_from_image(image, key, first_char):
     # type: (Image, Color, int) -> Font
     """Load font from Image (XNA style)"""
-    result = _LoadFontFromImage(image, _color(key), int(first_char))
-    return result
+    return _LoadFontFromImage(image, _color(key), _int(first_char))
 
 
-def load_font_from_memory(file_type, file_data, data_size, font_size, font_chars, glyph_count):
-    # type: (Union[str, CharPtr], Union[Seq[int], UCharPtr], int, int, Union[Seq[int], IntPtr], int) -> Font
+def load_font_from_memory(file_type, file_data, data_size, font_size, codepoints, codepoint_count):
+    # type: (bytes | str | None, int, int, int, list[int] | str, int) -> Font
     """Load font from memory buffer, fileType refers to extension: i.e. '.ttf'"""
-    result = _LoadFontFromMemory(_str_in(file_type), _str_in(file_data), int(data_size), int(font_size), font_chars, int(glyph_count))
-    return result
+    codepoints = int_array(codepoints)
+    return _LoadFontFromMemory(_str_in(file_type), _int(file_data, (0, 255)), _int(data_size), _int(font_size), codepoints, _int(codepoint_count))
 
 
-def load_font_data(file_data, data_size, font_size, font_chars, glyph_count, type):
-    # type: (Union[Seq[int], UCharPtr], int, int, Union[Seq[int], IntPtr], int, int) -> GlyphInfoPtr
+def is_font_ready(font):
+    # type: (Font) -> bool
+    """Check if a font is ready"""
+    return _IsFontReady(font)
+
+
+def load_font_data(file_data, data_size, font_size, codepoints, codepoint_count, type_):
+    # type: (int, int, int, list[int] | str, int, int) -> Array[GlyphInfo]
     """Load font data for further use"""
-    result = _ptr_out(_LoadFontData(_str_in(file_data), int(data_size), int(font_size), font_chars, int(glyph_count), int(type)))
+    codepoints = int_array(codepoints)
+    result = _LoadFontData(_int(file_data, (0, 255)), _int(data_size), _int(font_size), byref(codepoints), _int(codepoint_count), _int(type_))
+    result = cast(result, POINTER(GlyphInfo * codepoints.value))[0]
+    _clear_in_out()
+    _push_in_out(codepoints.value)
     return result
 
 
-def gen_image_font_atlas(chars, recs, glyph_count, font_size, padding, pack_method):
-    # type: (GlyphInfoPtr, RectanglePtr, int, int, int, int) -> Image
+def gen_image_font_atlas(glyphs, glyph_recs, glyph_count, font_size, padding, pack_method):
+    # type: (GlyphInfoPtr, RectanglePtrPtr, int, int, int, int) -> Image
     """Generate image font atlas using chars info"""
-    result = _GenImageFontAtlas(chars, recs, int(glyph_count), int(font_size), int(padding), int(pack_method))
-    return result
+    return _GenImageFontAtlas(glyphs, glyph_recs, _int(glyph_count), _int(font_size), _int(padding), _int(pack_method))
 
 
-def unload_font_data(chars, glyph_count):
+def unload_font_data(glyphs, glyph_count):
     # type: (GlyphInfoPtr, int) -> None
     """Unload font chars info data (RAM)"""
-    _UnloadFontData(chars, int(glyph_count))
+    _UnloadFontData(glyphs, _int(glyph_count))
 
 
 def unload_font(font):
@@ -10024,226 +11058,225 @@ def unload_font(font):
 
 
 def export_font_as_code(font, file_name):
-    # type: (Font, Union[str, CharPtr]) -> bool
+    # type: (Font, bytes | str | None) -> bool
     """Export font as code file, returns true on success"""
-    result = _ExportFontAsCode(font, _str_in(file_name))
-    return result
+    return _ExportFontAsCode(font, _str_in(file_name))
 
 
 def draw_fps(pos_x, pos_y):
     # type: (int, int) -> None
     """Draw current FPS"""
-    _DrawFPS(int(pos_x), int(pos_y))
+    _DrawFPS(_int(pos_x), _int(pos_y))
 
 
 def draw_text(text, pos_x, pos_y, font_size, color):
-    # type: (Union[str, CharPtr], int, int, int, Color) -> None
+    # type: (bytes | str | None, int, int, int, Color) -> None
     """Draw text (using default font)"""
-    _DrawText(_str_in(text), int(pos_x), int(pos_y), int(font_size), _color(color))
+    _DrawText(_str_in(text), _int(pos_x), _int(pos_y), _int(font_size), _color(color))
 
 
 def draw_text_ex(font, text, position, font_size, spacing, tint):
-    # type: (Font, Union[str, CharPtr], Vector2, float, float, Color) -> None
+    # type: (Font, bytes | str | None, Vector2, float, float, Color) -> None
     """Draw text using font and additional parameters"""
-    _DrawTextEx(font, _str_in(text), _vec2(position), float(font_size), float(spacing), _color(tint))
+    _DrawTextEx(font, _str_in(text), _vec2(position), _float(font_size), _float(spacing), _color(tint))
 
 
 def draw_text_pro(font, text, position, origin, rotation, font_size, spacing, tint):
-    # type: (Font, Union[str, CharPtr], Vector2, Vector2, float, float, float, Color) -> None
+    # type: (Font, bytes | str | None, Vector2, Vector2, float, float, float, Color) -> None
     """Draw text using Font and pro parameters (rotation)"""
-    _DrawTextPro(font, _str_in(text), _vec2(position), _vec2(origin), float(rotation), float(font_size), float(spacing), _color(tint))
+    _DrawTextPro(font, _str_in(text), _vec2(position), _vec2(origin), _float(rotation), _float(font_size), _float(spacing), _color(tint))
 
 
 def draw_text_codepoint(font, codepoint, position, font_size, tint):
     # type: (Font, int, Vector2, float, Color) -> None
     """Draw one character (codepoint)"""
-    _DrawTextCodepoint(font, int(codepoint), _vec2(position), float(font_size), _color(tint))
+    _DrawTextCodepoint(font, _int(codepoint), _vec2(position), _float(font_size), _color(tint))
 
 
-def draw_text_codepoints(font, codepoints, position, font_size, spacing, tint):
-    # type: (Font, Union[Seq[int], IntPtr], Vector2, float, float, Color) -> None
+def draw_text_codepoints(font, codepoints, codepoint_count, position, font_size, spacing, tint):
+    # type: (Font, IntPtr, int, Vector2, float, float, Color) -> None
     """Draw multiple character (codepoint)"""
-    _DrawTextCodepoints(font, _str_in(codepoints), len(codepoints), _vec2(position), float(font_size), float(spacing), _color(tint))
+    _DrawTextCodepoints(font, codepoints, _int(codepoint_count), _vec2(position), _float(font_size), _float(spacing), _color(tint))
+
+
+def set_text_line_spacing(spacing):
+    # type: (int) -> None
+    """Set vertical line spacing when drawing with line-breaks"""
+    _SetTextLineSpacing(_int(spacing))
 
 
 def measure_text(text, font_size):
-    # type: (Union[str, CharPtr], int) -> int
+    # type: (bytes | str | None, int) -> int
     """Measure string width for default font"""
-    result = _MeasureText(_str_in(text), int(font_size))
-    return result
+    return _MeasureText(_str_in(text), _int(font_size))
 
 
 def measure_text_ex(font, text, font_size, spacing):
-    # type: (Font, Union[str, CharPtr], float, float) -> Vector2
+    # type: (Font, bytes | str | None, float, float) -> Vector2
     """Measure string size for Font"""
-    result = _MeasureTextEx(font, _str_in(text), float(font_size), float(spacing))
-    return result
+    return _MeasureTextEx(font, _str_in(text), _float(font_size), _float(spacing))
 
 
 def get_glyph_index(font, codepoint):
     # type: (Font, int) -> int
     """Get glyph index position in font for a codepoint (unicode character), fallback to '?' if not found"""
-    result = _GetGlyphIndex(font, int(codepoint))
-    return result
+    return _GetGlyphIndex(font, _int(codepoint))
 
 
 def get_glyph_info(font, codepoint):
     # type: (Font, int) -> GlyphInfo
     """Get glyph font info data for a codepoint (unicode character), fallback to '?' if not found"""
-    result = _GetGlyphInfo(font, int(codepoint))
-    return result
+    return _GetGlyphInfo(font, _int(codepoint))
 
 
 def get_glyph_atlas_rec(font, codepoint):
     # type: (Font, int) -> Rectangle
     """Get glyph rectangle in font atlas for a codepoint (unicode character), fallback to '?' if not found"""
-    result = _GetGlyphAtlasRec(font, int(codepoint))
-    return result
+    return _GetGlyphAtlasRec(font, _int(codepoint))
+
+
+def load_utf8(codepoints, length):
+    # type: (IntPtr, int) -> bytes | str | None
+    """Load UTF-8 text encoded from codepoints array"""
+    return _LoadUTF8(codepoints, _int(length))
+
+
+def unload_utf8(text):
+    # type: (bytes | str | None) -> None
+    """Unload UTF-8 text encoded from codepoints array"""
+    _UnloadUTF8(_str_in(text))
 
 
 def load_codepoints(text, count):
-    # type: (Union[str, CharPtr], Union[Seq[int], IntPtr]) -> Union[Seq[int], IntPtr]
+    # type: (bytes | str | None, IntPtr) -> IntPtr
     """Load all codepoints from a UTF-8 text string, codepoints count returned by parameter"""
-    result = _ptr_out(_LoadCodepoints(_str_in(text), count))
-    return result
+    return _LoadCodepoints(_str_in(text), count)
 
 
 def unload_codepoints(codepoints):
-    # type: (Union[Seq[int], IntPtr]) -> None
+    # type: (IntPtr) -> None
     """Unload codepoints data from memory"""
     _UnloadCodepoints(codepoints)
 
 
 def get_codepoint_count(text):
-    # type: (Union[str, CharPtr]) -> int
+    # type: (bytes | str | None) -> int
     """Get total number of codepoints in a UTF-8 encoded string"""
-    result = _GetCodepointCount(_str_in(text))
-    return result
+    return _GetCodepointCount(_str_in(text))
 
 
-def get_codepoint(text, bytes_processed):
-    # type: (Union[str, CharPtr], Union[Seq[int], IntPtr]) -> int
+def get_codepoint(text, codepoint_size):
+    # type: (bytes | str | None, IntPtr) -> int
     """Get next codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure"""
-    result = _GetCodepoint(_str_in(text), bytes_processed)
-    return result
+    return _GetCodepoint(_str_in(text), codepoint_size)
 
 
-def codepoint_to_utf8(codepoint, byte_size):
-    # type: (int, Union[Seq[int], IntPtr]) -> Union[str, CharPtr]
+def get_codepoint_next(text, codepoint_size):
+    # type: (bytes | str | None, IntPtr) -> int
+    """Get next codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure"""
+    return _GetCodepointNext(_str_in(text), codepoint_size)
+
+
+def get_codepoint_previous(text, codepoint_size):
+    # type: (bytes | str | None, IntPtr) -> int
+    """Get previous codepoint in a UTF-8 encoded string, 0x3f('?') is returned on failure"""
+    return _GetCodepointPrevious(_str_in(text), codepoint_size)
+
+
+def codepoint_to_utf8(codepoint, utf8_size):
+    # type: (int, IntPtr) -> bytes | str | None
     """Encode one codepoint into UTF-8 byte array (array length returned as parameter)"""
-    result = _ptr_out(_CodepointToUTF8(int(codepoint), byte_size))
-    return result
-
-
-def text_codepoints_to_utf8(codepoints, length):
-    # type: (Union[Seq[int], IntPtr], int) -> Union[str, CharPtr]
-    """Encode text as codepoints array into UTF-8 text string (WARNING: memory must be freed!)"""
-    result = _ptr_out(_TextCodepointsToUTF8(codepoints, int(length)))
-    return result
+    return _CodepointToUTF8(_int(codepoint), utf8_size)
 
 
 def text_copy(dst, src):
-    # type: (Union[str, CharPtr], Union[str, CharPtr]) -> int
+    # type: (bytes | str | None, bytes | str | None) -> int
     """Copy one string to another, returns bytes copied"""
-    result = _TextCopy(_str_in(dst), _str_in(src))
-    return result
+    return _TextCopy(_str_in(dst), _str_in(src))
 
 
 def text_is_equal(text1, text2):
-    # type: (Union[str, CharPtr], Union[str, CharPtr]) -> bool
+    # type: (bytes | str | None, bytes | str | None) -> bool
     """Check if two text string are equal"""
-    result = _TextIsEqual(_str_in(text1), _str_in(text2))
-    return result
+    return _TextIsEqual(_str_in(text1), _str_in(text2))
 
 
 def text_length(text):
-    # type: (Union[str, CharPtr]) -> int
+    # type: (bytes | str | None) -> int
     """Get text length, checks for '\0' ending"""
-    result = _TextLength(_str_in(text))
-    return result
+    return _TextLength(_str_in(text))
 
 
-def text_format(text, args):
-    # type: (Union[str, CharPtr], bytes) -> Union[str, CharPtr]
+def text_format(text, *args):
+    # type: (bytes | str | None, ...) -> bytes | str | None
     """Text formatting with variables (sprintf() style)"""
-    result = _ptr_out(_TextFormat(_str_in(text), args))
-    return result
+    return _str_out(_TextFormat(_str_in(text), *args))
 
 
 def text_subtext(text, position, length):
-    # type: (Union[str, CharPtr], int, int) -> Union[str, CharPtr]
+    # type: (bytes | str | None, int, int) -> bytes | str | None
     """Get a piece of a text string"""
-    result = _ptr_out(_TextSubtext(_str_in(text), int(position), int(length)))
-    return result
+    return _str_out(_TextSubtext(_str_in(text), _int(position), _int(length)))
 
 
 def text_replace(text, replace, by):
-    # type: (Union[str, CharPtr], Union[str, CharPtr], Union[str, CharPtr]) -> Union[str, CharPtr]
+    # type: (bytes | str | None, bytes | str | None, bytes | str | None) -> bytes | str | None
     """Replace text string (WARNING: memory must be freed!)"""
-    result = _ptr_out(_TextReplace(_str_in(text), _str_in(replace), _str_in(by)))
-    return result
+    return _str_out(_TextReplace(_str_in(text), _str_in(replace), _str_in(by)))
 
 
 def text_insert(text, insert, position):
-    # type: (Union[str, CharPtr], Union[str, CharPtr], int) -> Union[str, CharPtr]
+    # type: (bytes | str | None, bytes | str | None, int) -> bytes | str | None
     """Insert text in a position (WARNING: memory must be freed!)"""
-    result = _ptr_out(_TextInsert(_str_in(text), _str_in(insert), int(position)))
-    return result
+    return _str_out(_TextInsert(_str_in(text), _str_in(insert), _int(position)))
 
 
 def text_join(text_list, count, delimiter):
-    # type: (Seq[Union[str, CharPtr]], int, Union[str, CharPtr]) -> Union[str, CharPtr]
+    # type: (CharPtrPtr | list[CharPtr | str] | None, int, bytes | str | None) -> bytes | str | None
     """Join text strings with delimiter"""
-    result = _ptr_out(_TextJoin(str_in2(text_list), int(count), _str_in(delimiter)))
-    return result
+    return _str_out(_TextJoin(text_list, _int(count), _str_in(delimiter)))
 
 
 def text_split(text, delimiter, count):
-    # type: (Union[str, CharPtr], int, Union[Seq[int], IntPtr]) -> Seq[Union[str, CharPtr]]
+    # type: (bytes | str | None, int | str, IntPtr) -> CharPtrPtr | list[CharPtr | str] | None
     """Split text into multiple strings"""
-    result = _ptr_out(_TextSplit(_str_in(text), int(delimiter), count))
-    return result
+    return _TextSplit(_str_in(text), _int(delimiter, (-128, 127)), count)
 
 
 def text_append(text, append, position):
-    # type: (Union[str, CharPtr], Union[str, CharPtr], Union[Seq[int], IntPtr]) -> None
+    # type: (bytes | str | None, bytes | str | None, IntPtr) -> None
     """Append text at specific position and move cursor!"""
     _TextAppend(_str_in(text), _str_in(append), position)
 
 
 def text_find_index(text, find):
-    # type: (Union[str, CharPtr], Union[str, CharPtr]) -> int
+    # type: (bytes | str | None, bytes | str | None) -> int
     """Find first text occurrence within a string"""
-    result = _TextFindIndex(_str_in(text), _str_in(find))
-    return result
+    return _TextFindIndex(_str_in(text), _str_in(find))
 
 
 def text_to_upper(text):
-    # type: (Union[str, CharPtr]) -> Union[str, CharPtr]
+    # type: (bytes | str | None) -> bytes | str | None
     """Get upper case version of provided string"""
-    result = _ptr_out(_TextToUpper(_str_in(text)))
-    return result
+    return _str_out(_TextToUpper(_str_in(text)))
 
 
 def text_to_lower(text):
-    # type: (Union[str, CharPtr]) -> Union[str, CharPtr]
+    # type: (bytes | str | None) -> bytes | str | None
     """Get lower case version of provided string"""
-    result = _ptr_out(_TextToLower(_str_in(text)))
-    return result
+    return _str_out(_TextToLower(_str_in(text)))
 
 
 def text_to_pascal(text):
-    # type: (Union[str, CharPtr]) -> Union[str, CharPtr]
+    # type: (bytes | str | None) -> bytes | str | None
     """Get Pascal case notation version of provided string"""
-    result = _ptr_out(_TextToPascal(_str_in(text)))
-    return result
+    return _str_out(_TextToPascal(_str_in(text)))
 
 
 def text_to_integer(text):
-    # type: (Union[str, CharPtr]) -> int
+    # type: (bytes | str | None) -> int
     """Get integer value from text (negative values not supported)"""
-    result = _TextToInteger(_str_in(text))
-    return result
+    return _TextToInteger(_str_in(text))
 
 
 def draw_line3d(start_pos, end_pos, color):
@@ -10261,7 +11294,7 @@ def draw_point3d(position, color):
 def draw_circle3d(center, radius, rotation_axis, rotation_angle, color):
     # type: (Vector3, float, Vector3, float, Color) -> None
     """Draw a circle in 3D world space"""
-    _DrawCircle3D(_vec3(center), float(radius), _vec3(rotation_axis), float(rotation_angle), _color(color))
+    _DrawCircle3D(_vec3(center), _float(radius), _vec3(rotation_axis), _float(rotation_angle), _color(color))
 
 
 def draw_triangle3d(v1, v2, v3, color):
@@ -10270,16 +11303,16 @@ def draw_triangle3d(v1, v2, v3, color):
     _DrawTriangle3D(_vec3(v1), _vec3(v2), _vec3(v3), _color(color))
 
 
-def draw_triangle_strip3d(points, color):
-    # type: (Vector3Ptr, Color) -> None
+def draw_triangle_strip3d(points, point_count, color):
+    # type: (Vector3Ptr | Array[Vector3], int, Color) -> None
     """Draw a triangle strip defined by points"""
-    _DrawTriangleStrip3D(_arr_in(Vector3, points), len(points), _color(color))
+    _DrawTriangleStrip3D(points, len(points) if point_count <= 0 else point_count, _color(color))
 
 
 def draw_cube(position, width, height, length, color):
     # type: (Vector3, float, float, float, Color) -> None
     """Draw cube"""
-    _DrawCube(_vec3(position), float(width), float(height), float(length), _color(color))
+    _DrawCube(_vec3(position), _float(width), _float(height), _float(length), _color(color))
 
 
 def draw_cube_v(position, size, color):
@@ -10291,7 +11324,7 @@ def draw_cube_v(position, size, color):
 def draw_cube_wires(position, width, height, length, color):
     # type: (Vector3, float, float, float, Color) -> None
     """Draw cube wires"""
-    _DrawCubeWires(_vec3(position), float(width), float(height), float(length), _color(color))
+    _DrawCubeWires(_vec3(position), _float(width), _float(height), _float(length), _color(color))
 
 
 def draw_cube_wires_v(position, size, color):
@@ -10300,58 +11333,58 @@ def draw_cube_wires_v(position, size, color):
     _DrawCubeWiresV(_vec3(position), _vec3(size), _color(color))
 
 
-def draw_cube_texture(texture, position, width, height, length, color):
-    # type: (Texture2D, Vector3, float, float, float, Color) -> None
-    """Draw cube textured"""
-    _DrawCubeTexture(texture, _vec3(position), float(width), float(height), float(length), _color(color))
-
-
-def draw_cube_texture_rec(texture, source, position, width, height, length, color):
-    # type: (Texture2D, Rectangle, Vector3, float, float, float, Color) -> None
-    """Draw cube with a region of a texture"""
-    _DrawCubeTextureRec(texture, _rect(source), _vec3(position), float(width), float(height), float(length), _color(color))
-
-
 def draw_sphere(center_pos, radius, color):
     # type: (Vector3, float, Color) -> None
     """Draw sphere"""
-    _DrawSphere(_vec3(center_pos), float(radius), _color(color))
+    _DrawSphere(_vec3(center_pos), _float(radius), _color(color))
 
 
 def draw_sphere_ex(center_pos, radius, rings, slices, color):
     # type: (Vector3, float, int, int, Color) -> None
     """Draw sphere with extended parameters"""
-    _DrawSphereEx(_vec3(center_pos), float(radius), int(rings), int(slices), _color(color))
+    _DrawSphereEx(_vec3(center_pos), _float(radius), _int(rings), _int(slices), _color(color))
 
 
 def draw_sphere_wires(center_pos, radius, rings, slices, color):
     # type: (Vector3, float, int, int, Color) -> None
     """Draw sphere wires"""
-    _DrawSphereWires(_vec3(center_pos), float(radius), int(rings), int(slices), _color(color))
+    _DrawSphereWires(_vec3(center_pos), _float(radius), _int(rings), _int(slices), _color(color))
 
 
 def draw_cylinder(position, radius_top, radius_bottom, height, slices, color):
     # type: (Vector3, float, float, float, int, Color) -> None
     """Draw a cylinder/cone"""
-    _DrawCylinder(_vec3(position), float(radius_top), float(radius_bottom), float(height), int(slices), _color(color))
+    _DrawCylinder(_vec3(position), _float(radius_top), _float(radius_bottom), _float(height), _int(slices), _color(color))
 
 
 def draw_cylinder_ex(start_pos, end_pos, start_radius, end_radius, sides, color):
     # type: (Vector3, Vector3, float, float, int, Color) -> None
     """Draw a cylinder with base at startPos and top at endPos"""
-    _DrawCylinderEx(_vec3(start_pos), _vec3(end_pos), float(start_radius), float(end_radius), int(sides), _color(color))
+    _DrawCylinderEx(_vec3(start_pos), _vec3(end_pos), _float(start_radius), _float(end_radius), _int(sides), _color(color))
 
 
 def draw_cylinder_wires(position, radius_top, radius_bottom, height, slices, color):
     # type: (Vector3, float, float, float, int, Color) -> None
     """Draw a cylinder/cone wires"""
-    _DrawCylinderWires(_vec3(position), float(radius_top), float(radius_bottom), float(height), int(slices), _color(color))
+    _DrawCylinderWires(_vec3(position), _float(radius_top), _float(radius_bottom), _float(height), _int(slices), _color(color))
 
 
 def draw_cylinder_wires_ex(start_pos, end_pos, start_radius, end_radius, sides, color):
     # type: (Vector3, Vector3, float, float, int, Color) -> None
     """Draw a cylinder wires with base at startPos and top at endPos"""
-    _DrawCylinderWiresEx(_vec3(start_pos), _vec3(end_pos), float(start_radius), float(end_radius), int(sides), _color(color))
+    _DrawCylinderWiresEx(_vec3(start_pos), _vec3(end_pos), _float(start_radius), _float(end_radius), _int(sides), _color(color))
+
+
+def draw_capsule(start_pos, end_pos, radius, slices, rings, color):
+    # type: (Vector3, Vector3, float, int, int, Color) -> None
+    """Draw a capsule with the center of its sphere caps at startPos and endPos"""
+    _DrawCapsule(_vec3(start_pos), _vec3(end_pos), _float(radius), _int(slices), _int(rings), _color(color))
+
+
+def draw_capsule_wires(start_pos, end_pos, radius, slices, rings, color):
+    # type: (Vector3, Vector3, float, int, int, Color) -> None
+    """Draw capsule wireframe with the center of its sphere caps at startPos and endPos"""
+    _DrawCapsuleWires(_vec3(start_pos), _vec3(end_pos), _float(radius), _int(slices), _int(rings), _color(color))
 
 
 def draw_plane(center_pos, size, color):
@@ -10369,21 +11402,25 @@ def draw_ray(ray, color):
 def draw_grid(slices, spacing):
     # type: (int, float) -> None
     """Draw a grid (centered at (0, 0, 0))"""
-    _DrawGrid(int(slices), float(spacing))
+    _DrawGrid(_int(slices), _float(spacing))
 
 
 def load_model(file_name):
-    # type: (Union[str, CharPtr]) -> Model
+    # type: (bytes | str | None) -> Model
     """Load model from files (meshes and materials)"""
-    result = _LoadModel(_str_in(file_name))
-    return result
+    return _LoadModel(_str_in(file_name))
 
 
 def load_model_from_mesh(mesh):
     # type: (Mesh) -> Model
     """Load model from generated mesh (default material)"""
-    result = _LoadModelFromMesh(mesh)
-    return result
+    return _LoadModelFromMesh(mesh)
+
+
+def is_model_ready(model):
+    # type: (Model) -> bool
+    """Check if a model is ready"""
+    return _IsModelReady(model)
 
 
 def unload_model(model):
@@ -10392,41 +11429,34 @@ def unload_model(model):
     _UnloadModel(model)
 
 
-def unload_model_keep_meshes(model):
-    # type: (Model) -> None
-    """Unload model (but not meshes) from memory (RAM and/or VRAM)"""
-    _UnloadModelKeepMeshes(model)
-
-
 def get_model_bounding_box(model):
     # type: (Model) -> BoundingBox
     """Compute model bounding box limits (considers all meshes)"""
-    result = _GetModelBoundingBox(model)
-    return result
+    return _GetModelBoundingBox(model)
 
 
 def draw_model(model, position, scale, tint):
     # type: (Model, Vector3, float, Color) -> None
     """Draw a model (with texture if set)"""
-    _DrawModel(model, _vec3(position), float(scale), _color(tint))
+    _DrawModel(model, _vec3(position), _float(scale), _color(tint))
 
 
 def draw_model_ex(model, position, rotation_axis, rotation_angle, scale, tint):
     # type: (Model, Vector3, Vector3, float, Vector3, Color) -> None
     """Draw a model with extended parameters"""
-    _DrawModelEx(model, _vec3(position), _vec3(rotation_axis), float(rotation_angle), _vec3(scale), _color(tint))
+    _DrawModelEx(model, _vec3(position), _vec3(rotation_axis), _float(rotation_angle), _vec3(scale), _color(tint))
 
 
 def draw_model_wires(model, position, scale, tint):
     # type: (Model, Vector3, float, Color) -> None
     """Draw a model wires (with texture if set)"""
-    _DrawModelWires(model, _vec3(position), float(scale), _color(tint))
+    _DrawModelWires(model, _vec3(position), _float(scale), _color(tint))
 
 
 def draw_model_wires_ex(model, position, rotation_axis, rotation_angle, scale, tint):
     # type: (Model, Vector3, Vector3, float, Vector3, Color) -> None
     """Draw a model wires (with texture if set) with extended parameters"""
-    _DrawModelWiresEx(model, _vec3(position), _vec3(rotation_axis), float(rotation_angle), _vec3(scale), _color(tint))
+    _DrawModelWiresEx(model, _vec3(position), _vec3(rotation_axis), _float(rotation_angle), _vec3(scale), _color(tint))
 
 
 def draw_bounding_box(box, color):
@@ -10438,7 +11468,7 @@ def draw_bounding_box(box, color):
 def draw_billboard(camera, texture, position, size, tint):
     # type: (Camera, Texture2D, Vector3, float, Color) -> None
     """Draw a billboard texture"""
-    _DrawBillboard(camera, texture, _vec3(position), float(size), _color(tint))
+    _DrawBillboard(camera, texture, _vec3(position), _float(size), _color(tint))
 
 
 def draw_billboard_rec(camera, texture, source, position, size, tint):
@@ -10450,19 +11480,19 @@ def draw_billboard_rec(camera, texture, source, position, size, tint):
 def draw_billboard_pro(camera, texture, source, position, up, size, origin, rotation, tint):
     # type: (Camera, Texture2D, Rectangle, Vector3, Vector3, Vector2, Vector2, float, Color) -> None
     """Draw a billboard texture defined by source and rotation"""
-    _DrawBillboardPro(camera, texture, _rect(source), _vec3(position), _vec3(up), _vec2(size), _vec2(origin), float(rotation), _color(tint))
+    _DrawBillboardPro(camera, texture, _rect(source), _vec3(position), _vec3(up), _vec2(size), _vec2(origin), _float(rotation), _color(tint))
 
 
 def upload_mesh(mesh, dynamic):
     # type: (MeshPtr, bool) -> None
     """Upload mesh vertex data in GPU and provide VAO/VBO ids"""
-    _UploadMesh(mesh, bool(dynamic))
+    _UploadMesh(mesh, _bool(dynamic))
 
 
 def update_mesh_buffer(mesh, index, data, data_size, offset):
-    # type: (Mesh, int, bytes, int, int) -> None
+    # type: (Mesh, int, bytes | str | None, int, int) -> None
     """Update mesh vertex data in GPU for a specific buffer index"""
-    _UpdateMeshBuffer(mesh, int(index), data, int(data_size), int(offset))
+    _UpdateMeshBuffer(mesh, _int(index), data, _int(data_size), _int(offset))
 
 
 def unload_mesh(mesh):
@@ -10480,21 +11510,19 @@ def draw_mesh(mesh, material, transform):
 def draw_mesh_instanced(mesh, material, transforms, instances):
     # type: (Mesh, Material, MatrixPtr, int) -> None
     """Draw multiple mesh instances with material and different transforms"""
-    _DrawMeshInstanced(mesh, material, transforms, int(instances))
+    _DrawMeshInstanced(mesh, material, transforms, _int(instances))
 
 
 def export_mesh(mesh, file_name):
-    # type: (Mesh, Union[str, CharPtr]) -> bool
+    # type: (Mesh, bytes | str | None) -> bool
     """Export mesh data to file, returns true on success"""
-    result = _ExportMesh(mesh, _str_in(file_name))
-    return result
+    return _ExportMesh(mesh, _str_in(file_name))
 
 
 def get_mesh_bounding_box(mesh):
     # type: (Mesh) -> BoundingBox
     """Compute mesh bounding box limits"""
-    result = _GetMeshBoundingBox(mesh)
-    return result
+    return _GetMeshBoundingBox(mesh)
 
 
 def gen_mesh_tangents(mesh):
@@ -10506,93 +11534,90 @@ def gen_mesh_tangents(mesh):
 def gen_mesh_poly(sides, radius):
     # type: (int, float) -> Mesh
     """Generate polygonal mesh"""
-    result = _GenMeshPoly(int(sides), float(radius))
-    return result
+    return _GenMeshPoly(_int(sides), _float(radius))
 
 
 def gen_mesh_plane(width, length, res_x, res_z):
     # type: (float, float, int, int) -> Mesh
     """Generate plane mesh (with subdivisions)"""
-    result = _GenMeshPlane(float(width), float(length), int(res_x), int(res_z))
-    return result
+    return _GenMeshPlane(_float(width), _float(length), _int(res_x), _int(res_z))
 
 
 def gen_mesh_cube(width, height, length):
     # type: (float, float, float) -> Mesh
     """Generate cuboid mesh"""
-    result = _GenMeshCube(float(width), float(height), float(length))
-    return result
+    return _GenMeshCube(_float(width), _float(height), _float(length))
 
 
 def gen_mesh_sphere(radius, rings, slices):
     # type: (float, int, int) -> Mesh
     """Generate sphere mesh (standard sphere)"""
-    result = _GenMeshSphere(float(radius), int(rings), int(slices))
-    return result
+    return _GenMeshSphere(_float(radius), _int(rings), _int(slices))
 
 
 def gen_mesh_hemi_sphere(radius, rings, slices):
     # type: (float, int, int) -> Mesh
     """Generate half-sphere mesh (no bottom cap)"""
-    result = _GenMeshHemiSphere(float(radius), int(rings), int(slices))
-    return result
+    return _GenMeshHemiSphere(_float(radius), _int(rings), _int(slices))
 
 
 def gen_mesh_cylinder(radius, height, slices):
     # type: (float, float, int) -> Mesh
     """Generate cylinder mesh"""
-    result = _GenMeshCylinder(float(radius), float(height), int(slices))
-    return result
+    return _GenMeshCylinder(_float(radius), _float(height), _int(slices))
 
 
 def gen_mesh_cone(radius, height, slices):
     # type: (float, float, int) -> Mesh
     """Generate cone/pyramid mesh"""
-    result = _GenMeshCone(float(radius), float(height), int(slices))
-    return result
+    return _GenMeshCone(_float(radius), _float(height), _int(slices))
 
 
 def gen_mesh_torus(radius, size, rad_seg, sides):
     # type: (float, float, int, int) -> Mesh
     """Generate torus mesh"""
-    result = _GenMeshTorus(float(radius), float(size), int(rad_seg), int(sides))
-    return result
+    return _GenMeshTorus(_float(radius), _float(size), _int(rad_seg), _int(sides))
 
 
 def gen_mesh_knot(radius, size, rad_seg, sides):
     # type: (float, float, int, int) -> Mesh
     """Generate trefoil knot mesh"""
-    result = _GenMeshKnot(float(radius), float(size), int(rad_seg), int(sides))
-    return result
+    return _GenMeshKnot(_float(radius), _float(size), _int(rad_seg), _int(sides))
 
 
 def gen_mesh_heightmap(heightmap, size):
     # type: (Image, Vector3) -> Mesh
     """Generate heightmap mesh from image data"""
-    result = _GenMeshHeightmap(heightmap, _vec3(size))
-    return result
+    return _GenMeshHeightmap(heightmap, _vec3(size))
 
 
 def gen_mesh_cubicmap(cubicmap, cube_size):
     # type: (Image, Vector3) -> Mesh
     """Generate cubes-based map mesh from image data"""
-    result = _GenMeshCubicmap(cubicmap, _vec3(cube_size))
-    return result
+    return _GenMeshCubicmap(cubicmap, _vec3(cube_size))
 
 
-def load_materials(file_name):
-    # type: (Union[str, CharPtr]) -> MaterialPtr
+def load_materials(file_name, material_count):
+    # type: (bytes | str | None, int) -> Array[Material]
     """Load materials from model file"""
-    material_count = Int(0)
-    result = _ptr_out(_LoadMaterials(_str_in(file_name), byref(material_count)), material_count.value)
+    material_count = Int(material_count)
+    result = _LoadMaterials(_str_in(file_name), byref(material_count))
+    result = cast(result, POINTER(Material * material_count.value))[0]
+    _clear_in_out()
+    _push_in_out(material_count.value)
     return result
 
 
 def load_material_default():
     # type: () -> Material
     """Load default material (Supports: DIFFUSE, SPECULAR, NORMAL maps)"""
-    result = _LoadMaterialDefault()
-    return result
+    return _LoadMaterialDefault()
+
+
+def is_material_ready(material):
+    # type: (Material) -> bool
+    """Check if a material is ready"""
+    return _IsMaterialReady(material)
 
 
 def unload_material(material):
@@ -10604,27 +11629,30 @@ def unload_material(material):
 def set_material_texture(material, map_type, texture):
     # type: (MaterialPtr, int, Texture2D) -> None
     """Set texture for a material map type (MATERIAL_MAP_DIFFUSE, MATERIAL_MAP_SPECULAR...)"""
-    _SetMaterialTexture(material, int(map_type), texture)
+    _SetMaterialTexture(material, _int(map_type), texture)
 
 
 def set_model_mesh_material(model, mesh_id, material_id):
     # type: (ModelPtr, int, int) -> None
     """Set material for a mesh"""
-    _SetModelMeshMaterial(model, int(mesh_id), int(material_id))
+    _SetModelMeshMaterial(model, _int(mesh_id), _int(material_id))
 
 
-def load_model_animations(file_name):
-    # type: (Union[str, CharPtr]) -> ModelAnimationPtr
+def load_model_animations(file_name, anim_count):
+    # type: (bytes | str | None, int) -> Array[ModelAnimation]
     """Load model animations from file"""
-    anim_count = UInt(0)
-    result = _ptr_out(_LoadModelAnimations(_str_in(file_name), byref(anim_count)), anim_count.value)
+    anim_count = Int(anim_count)
+    result = _LoadModelAnimations(_str_in(file_name), byref(anim_count))
+    result = cast(result, POINTER(ModelAnimation * anim_count.value))[0]
+    _clear_in_out()
+    _push_in_out(anim_count.value)
     return result
 
 
 def update_model_animation(model, anim, frame):
     # type: (Model, ModelAnimation, int) -> None
     """Update model animation pose"""
-    _UpdateModelAnimation(model, anim, int(frame))
+    _UpdateModelAnimation(model, anim, _int(frame))
 
 
 def unload_model_animation(anim):
@@ -10633,73 +11661,64 @@ def unload_model_animation(anim):
     _UnloadModelAnimation(anim)
 
 
-def unload_model_animations(animations, count):
+def unload_model_animations(animations, anim_count):
     # type: (ModelAnimationPtr, int) -> None
     """Unload animation array data"""
-    _UnloadModelAnimations(animations, count)
+    _UnloadModelAnimations(animations, _int(anim_count))
 
 
 def is_model_animation_valid(model, anim):
     # type: (Model, ModelAnimation) -> bool
     """Check model animation skeleton match"""
-    result = _IsModelAnimationValid(model, anim)
-    return result
+    return _IsModelAnimationValid(model, anim)
 
 
 def check_collision_spheres(center1, radius1, center2, radius2):
     # type: (Vector3, float, Vector3, float) -> bool
     """Check collision between two spheres"""
-    result = _CheckCollisionSpheres(_vec3(center1), float(radius1), _vec3(center2), float(radius2))
-    return result
+    return _CheckCollisionSpheres(_vec3(center1), _float(radius1), _vec3(center2), _float(radius2))
 
 
 def check_collision_boxes(box1, box2):
     # type: (BoundingBox, BoundingBox) -> bool
     """Check collision between two bounding boxes"""
-    result = _CheckCollisionBoxes(box1, box2)
-    return result
+    return _CheckCollisionBoxes(box1, box2)
 
 
 def check_collision_box_sphere(box, center, radius):
     # type: (BoundingBox, Vector3, float) -> bool
     """Check collision between box and sphere"""
-    result = _CheckCollisionBoxSphere(box, _vec3(center), float(radius))
-    return result
+    return _CheckCollisionBoxSphere(box, _vec3(center), _float(radius))
 
 
 def get_ray_collision_sphere(ray, center, radius):
     # type: (Ray, Vector3, float) -> RayCollision
     """Get collision info between ray and sphere"""
-    result = _GetRayCollisionSphere(ray, _vec3(center), float(radius))
-    return result
+    return _GetRayCollisionSphere(ray, _vec3(center), _float(radius))
 
 
 def get_ray_collision_box(ray, box):
     # type: (Ray, BoundingBox) -> RayCollision
     """Get collision info between ray and box"""
-    result = _GetRayCollisionBox(ray, box)
-    return result
+    return _GetRayCollisionBox(ray, box)
 
 
 def get_ray_collision_mesh(ray, mesh, transform):
     # type: (Ray, Mesh, Matrix) -> RayCollision
     """Get collision info between ray and mesh"""
-    result = _GetRayCollisionMesh(ray, mesh, transform)
-    return result
+    return _GetRayCollisionMesh(ray, mesh, transform)
 
 
 def get_ray_collision_triangle(ray, p1, p2, p3):
     # type: (Ray, Vector3, Vector3, Vector3) -> RayCollision
     """Get collision info between ray and triangle"""
-    result = _GetRayCollisionTriangle(ray, _vec3(p1), _vec3(p2), _vec3(p3))
-    return result
+    return _GetRayCollisionTriangle(ray, _vec3(p1), _vec3(p2), _vec3(p3))
 
 
 def get_ray_collision_quad(ray, p1, p2, p3, p4):
     # type: (Ray, Vector3, Vector3, Vector3, Vector3) -> RayCollision
     """Get collision info between ray and quad"""
-    result = _GetRayCollisionQuad(ray, _vec3(p1), _vec3(p2), _vec3(p3), _vec3(p4))
-    return result
+    return _GetRayCollisionQuad(ray, _vec3(p1), _vec3(p2), _vec3(p3), _vec3(p4))
 
 
 def init_audio_device():
@@ -10717,48 +11736,67 @@ def close_audio_device():
 def is_audio_device_ready():
     # type: () -> bool
     """Check if audio device has been initialized successfully"""
-    result = _IsAudioDeviceReady()
-    return result
+    return _IsAudioDeviceReady()
 
 
 def set_master_volume(volume):
     # type: (float) -> None
     """Set master volume (listener)"""
-    _SetMasterVolume(float(volume))
+    _SetMasterVolume(_float(volume))
+
+
+def get_master_volume():
+    # type: () -> float
+    """Get master volume (listener)"""
+    return _GetMasterVolume()
 
 
 def load_wave(file_name):
-    # type: (Union[str, CharPtr]) -> Wave
+    # type: (bytes | str | None) -> Wave
     """Load wave data from file"""
-    result = _LoadWave(_str_in(file_name))
-    return result
+    return _LoadWave(_str_in(file_name))
 
 
 def load_wave_from_memory(file_type, file_data, data_size):
-    # type: (Union[str, CharPtr], Union[Seq[int], UCharPtr], int) -> Wave
+    # type: (bytes | str | None, int, int) -> Wave
     """Load wave from memory buffer, fileType refers to extension: i.e. '.wav'"""
-    result = _LoadWaveFromMemory(_str_in(file_type), _str_in(file_data), int(data_size))
-    return result
+    return _LoadWaveFromMemory(_str_in(file_type), _int(file_data, (0, 255)), _int(data_size))
+
+
+def is_wave_ready(wave):
+    # type: (Wave) -> bool
+    """Checks if wave data is ready"""
+    return _IsWaveReady(wave)
 
 
 def load_sound(file_name):
-    # type: (Union[str, CharPtr]) -> Sound
+    # type: (bytes | str | None) -> Sound
     """Load sound from file"""
-    result = _LoadSound(_str_in(file_name))
-    return result
+    return _LoadSound(_str_in(file_name))
 
 
 def load_sound_from_wave(wave):
     # type: (Wave) -> Sound
     """Load sound from wave data"""
-    result = _LoadSoundFromWave(wave)
-    return result
+    return _LoadSoundFromWave(wave)
+
+
+def load_sound_alias(source):
+    # type: (Sound) -> Sound
+    """Create a new sound that shares the same sample data as the source sound, does not own the sound data"""
+    return _LoadSoundAlias(source)
+
+
+def is_sound_ready(sound):
+    # type: (Sound) -> bool
+    """Checks if a sound is ready"""
+    return _IsSoundReady(sound)
 
 
 def update_sound(sound, data, sample_count):
-    # type: (Sound, bytes, int) -> None
+    # type: (Sound, bytes | str | None, int) -> None
     """Update sound buffer with new data"""
-    _UpdateSound(sound, data, int(sample_count))
+    _UpdateSound(sound, data, _int(sample_count))
 
 
 def unload_wave(wave):
@@ -10773,18 +11811,22 @@ def unload_sound(sound):
     _UnloadSound(sound)
 
 
+def unload_sound_alias(alias):
+    # type: (Sound) -> None
+    """Unload a sound alias (does not deallocate sample data)"""
+    _UnloadSoundAlias(alias)
+
+
 def export_wave(wave, file_name):
-    # type: (Wave, Union[str, CharPtr]) -> bool
+    # type: (Wave, bytes | str | None) -> bool
     """Export wave data to file, returns true on success"""
-    result = _ExportWave(wave, _str_in(file_name))
-    return result
+    return _ExportWave(wave, _str_in(file_name))
 
 
 def export_wave_as_code(wave, file_name):
-    # type: (Wave, Union[str, CharPtr]) -> bool
+    # type: (Wave, bytes | str | None) -> bool
     """Export wave sample data to code (.h), returns true on success"""
-    result = _ExportWaveAsCode(wave, _str_in(file_name))
-    return result
+    return _ExportWaveAsCode(wave, _str_in(file_name))
 
 
 def play_sound(sound):
@@ -10811,94 +11853,76 @@ def resume_sound(sound):
     _ResumeSound(sound)
 
 
-def play_sound_multi(sound):
-    # type: (Sound) -> None
-    """Play a sound (using multichannel buffer pool)"""
-    _PlaySoundMulti(sound)
-
-
-def stop_sound_multi():
-    # type: () -> None
-    """Stop any sound playing (using multichannel buffer pool)"""
-    _StopSoundMulti()
-
-
-def get_sounds_playing():
-    # type: () -> int
-    """Get number of sounds playing in the multichannel"""
-    result = _GetSoundsPlaying()
-    return result
-
-
 def is_sound_playing(sound):
     # type: (Sound) -> bool
     """Check if a sound is currently playing"""
-    result = _IsSoundPlaying(sound)
-    return result
+    return _IsSoundPlaying(sound)
 
 
 def set_sound_volume(sound, volume):
     # type: (Sound, float) -> None
     """Set volume for a sound (1.0 is max level)"""
-    _SetSoundVolume(sound, float(volume))
+    _SetSoundVolume(sound, _float(volume))
 
 
 def set_sound_pitch(sound, pitch):
     # type: (Sound, float) -> None
     """Set pitch for a sound (1.0 is base level)"""
-    _SetSoundPitch(sound, float(pitch))
+    _SetSoundPitch(sound, _float(pitch))
 
 
 def set_sound_pan(sound, pan):
     # type: (Sound, float) -> None
     """Set pan for a sound (0.5 is center)"""
-    _SetSoundPan(sound, float(pan))
+    _SetSoundPan(sound, _float(pan))
 
 
 def wave_copy(wave):
     # type: (Wave) -> Wave
     """Copy a wave to a new wave"""
-    result = _WaveCopy(wave)
-    return result
+    return _WaveCopy(wave)
 
 
 def wave_crop(wave, init_sample, final_sample):
     # type: (WavePtr, int, int) -> None
     """Crop a wave to defined samples range"""
-    _WaveCrop(wave, int(init_sample), int(final_sample))
+    _WaveCrop(wave, _int(init_sample), _int(final_sample))
 
 
 def wave_format(wave, sample_rate, sample_size, channels):
     # type: (WavePtr, int, int, int) -> None
     """Convert wave data to desired format"""
-    _WaveFormat(wave, int(sample_rate), int(sample_size), int(channels))
+    _WaveFormat(wave, _int(sample_rate), _int(sample_size), _int(channels))
 
 
 def load_wave_samples(wave):
-    # type: (Wave) -> Union[Seq[float], FloatPtr]
+    # type: (Wave) -> FloatPtr
     """Load samples data from wave as a 32bit float data array"""
-    result = _ptr_out(_LoadWaveSamples(wave))
-    return result
+    return _LoadWaveSamples(wave)
 
 
 def unload_wave_samples(samples):
-    # type: (Union[Seq[float], FloatPtr]) -> None
+    # type: (FloatPtr) -> None
     """Unload samples data loaded with LoadWaveSamples()"""
     _UnloadWaveSamples(samples)
 
 
 def load_music_stream(file_name):
-    # type: (Union[str, CharPtr]) -> Music
+    # type: (bytes | str | None) -> Music
     """Load music stream from file"""
-    result = _LoadMusicStream(_str_in(file_name))
-    return result
+    return _LoadMusicStream(_str_in(file_name))
 
 
 def load_music_stream_from_memory(file_type, data, data_size):
-    # type: (Union[str, CharPtr], Union[Seq[int], UCharPtr], int) -> Music
+    # type: (bytes | str | None, int, int) -> Music
     """Load music stream from data"""
-    result = _LoadMusicStreamFromMemory(_str_in(file_type), _str_in(data), int(data_size))
-    return result
+    return _LoadMusicStreamFromMemory(_str_in(file_type), _int(data, (0, 255)), _int(data_size))
+
+
+def is_music_ready(music):
+    # type: (Music) -> bool
+    """Checks if a music stream is ready"""
+    return _IsMusicReady(music)
 
 
 def unload_music_stream(music):
@@ -10916,8 +11940,7 @@ def play_music_stream(music):
 def is_music_stream_playing(music):
     # type: (Music) -> bool
     """Check if music is playing"""
-    result = _IsMusicStreamPlaying(music)
-    return result
+    return _IsMusicStreamPlaying(music)
 
 
 def update_music_stream(music):
@@ -10947,46 +11970,49 @@ def resume_music_stream(music):
 def seek_music_stream(music, position):
     # type: (Music, float) -> None
     """Seek music to a position (in seconds)"""
-    _SeekMusicStream(music, float(position))
+    _SeekMusicStream(music, _float(position))
 
 
 def set_music_volume(music, volume):
     # type: (Music, float) -> None
     """Set volume for music (1.0 is max level)"""
-    _SetMusicVolume(music, float(volume))
+    _SetMusicVolume(music, _float(volume))
 
 
 def set_music_pitch(music, pitch):
     # type: (Music, float) -> None
     """Set pitch for a music (1.0 is base level)"""
-    _SetMusicPitch(music, float(pitch))
+    _SetMusicPitch(music, _float(pitch))
 
 
 def set_music_pan(music, pan):
     # type: (Music, float) -> None
     """Set pan for a music (0.5 is center)"""
-    _SetMusicPan(music, float(pan))
+    _SetMusicPan(music, _float(pan))
 
 
 def get_music_time_length(music):
     # type: (Music) -> float
     """Get music time length (in seconds)"""
-    result = _GetMusicTimeLength(music)
-    return result
+    return _GetMusicTimeLength(music)
 
 
 def get_music_time_played(music):
     # type: (Music) -> float
     """Get current music time played (in seconds)"""
-    result = _GetMusicTimePlayed(music)
-    return result
+    return _GetMusicTimePlayed(music)
 
 
 def load_audio_stream(sample_rate, sample_size, channels):
     # type: (int, int, int) -> AudioStream
     """Load audio stream (to stream raw audio pcm data)"""
-    result = _LoadAudioStream(sample_rate, sample_size, channels)
-    return result
+    return _LoadAudioStream(_int(sample_rate), _int(sample_size), _int(channels))
+
+
+def is_audio_stream_ready(stream):
+    # type: (AudioStream) -> bool
+    """Checks if an audio stream is ready"""
+    return _IsAudioStreamReady(stream)
 
 
 def unload_audio_stream(stream):
@@ -10996,16 +12022,15 @@ def unload_audio_stream(stream):
 
 
 def update_audio_stream(stream, data, frame_count):
-    # type: (AudioStream, bytes, int) -> None
+    # type: (AudioStream, bytes | str | None, int) -> None
     """Update audio stream buffers with data"""
-    _UpdateAudioStream(stream, data, int(frame_count))
+    _UpdateAudioStream(stream, data, _int(frame_count))
 
 
 def is_audio_stream_processed(stream):
     # type: (AudioStream) -> bool
     """Check if any audio stream buffers requires refill"""
-    result = _IsAudioStreamProcessed(stream)
-    return result
+    return _IsAudioStreamProcessed(stream)
 
 
 def play_audio_stream(stream):
@@ -11029,8 +12054,7 @@ def resume_audio_stream(stream):
 def is_audio_stream_playing(stream):
     # type: (AudioStream) -> bool
     """Check if audio stream is playing"""
-    result = _IsAudioStreamPlaying(stream)
-    return result
+    return _IsAudioStreamPlaying(stream)
 
 
 def stop_audio_stream(stream):
@@ -11042,25 +12066,25 @@ def stop_audio_stream(stream):
 def set_audio_stream_volume(stream, volume):
     # type: (AudioStream, float) -> None
     """Set volume for audio stream (1.0 is max level)"""
-    _SetAudioStreamVolume(stream, float(volume))
+    _SetAudioStreamVolume(stream, _float(volume))
 
 
 def set_audio_stream_pitch(stream, pitch):
     # type: (AudioStream, float) -> None
     """Set pitch for audio stream (1.0 is base level)"""
-    _SetAudioStreamPitch(stream, float(pitch))
+    _SetAudioStreamPitch(stream, _float(pitch))
 
 
 def set_audio_stream_pan(stream, pan):
     # type: (AudioStream, float) -> None
     """Set pan for audio stream (0.5 is centered)"""
-    _SetAudioStreamPan(stream, float(pan))
+    _SetAudioStreamPan(stream, _float(pan))
 
 
 def set_audio_stream_buffer_size_default(size):
     # type: (int) -> None
     """Default size for new audio streams"""
-    _SetAudioStreamBufferSizeDefault(int(size))
+    _SetAudioStreamBufferSizeDefault(_int(size))
 
 
 def set_audio_stream_callback(stream, callback):
@@ -11071,789 +12095,608 @@ def set_audio_stream_callback(stream, callback):
 
 def attach_audio_stream_processor(stream, processor):
     # type: (AudioStream, AudioCallback) -> None
-    """"""
+    """Attach audio stream processor to stream, receives the samples as <float>s"""
     _AttachAudioStreamProcessor(stream, processor)
 
 
 def detach_audio_stream_processor(stream, processor):
     # type: (AudioStream, AudioCallback) -> None
-    """"""
+    """Detach audio stream processor from stream"""
     _DetachAudioStreamProcessor(stream, processor)
 
 
+def attach_audio_mixed_processor(processor):
+    # type: (AudioCallback) -> None
+    """Attach audio stream processor to the entire audio pipeline, receives the samples as <float>s"""
+    _AttachAudioMixedProcessor(processor)
+
+
+def detach_audio_mixed_processor(processor):
+    # type: (AudioCallback) -> None
+    """Detach audio stream processor from the entire audio pipeline"""
+    _DetachAudioMixedProcessor(processor)
+
+
+# rlapi::raymath
+# ------------------------------------------------------------------------------
+
 def clamp(value, min_, max_):
     # type: (float, float, float) -> float
-    """Clamp float value"""
-    result = _Clamp(float(value), float(min_), float(max_))
-    return result
+    return _Clamp(_float(value), _float(min_), _float(max_))
 
 
 def lerp(start, end, amount):
     # type: (float, float, float) -> float
-    """Calculate linear interpolation between two floats"""
-    result = _Lerp(float(start), float(end), float(amount))
-    return result
+    return _Lerp(_float(start), _float(end), _float(amount))
 
 
 def normalize(value, start, end):
     # type: (float, float, float) -> float
-    """Calculate linear interpolation between two floats"""
-    result = _Normalize(float(value), float(start), float(end))
-    return result
+    return _Normalize(_float(value), _float(start), _float(end))
 
 
 def remap(value, input_start, input_end, output_start, output_end):
     # type: (float, float, float, float, float) -> float
-    """Remap input value within input range to output range"""
-    result = _Remap(float(value), float(input_start), float(input_end), float(output_start), float(output_end))
-    return result
+    return _Remap(_float(value), _float(input_start), _float(input_end), _float(output_start), _float(output_end))
 
 
 def wrap(value, min_, max_):
     # type: (float, float, float) -> float
-    """Wrap input value from min to max"""
-    result = _Wrap(float(value), float(min_), float(max_))
-    return result
+    return _Wrap(_float(value), _float(min_), _float(max_))
 
 
 def float_equals(x, y):
     # type: (float, float) -> int
-    """Check whether two given floats are almost equal"""
-    result = _FloatEquals(float(x), float(y))
-    return result
+    return _FloatEquals(_float(x), _float(y))
 
 
-def vector2zero():
+def vector2_zero():
     # type: () -> Vector2
-    """Vector with components value 0.0f"""
-    result = _Vector2Zero()
-    return result
+    return _Vector2Zero()
 
 
-def vector2one():
+def vector2_one():
     # type: () -> Vector2
-    """Vector with components value 1.0f"""
-    result = _Vector2One()
-    return result
+    return _Vector2One()
 
 
-def vector2add(v1, v2):
+def vector2_add(v1, v2):
     # type: (Vector2, Vector2) -> Vector2
-    """Add two vectors (v1 + v2)"""
-    result = _Vector2Add(_vec2(v1), _vec2(v2))
-    return result
+    return _Vector2Add(v1, v2)
 
 
-def vector2add_value(v, add):
+def vector2_add_value(v, add):
     # type: (Vector2, float) -> Vector2
-    """Add vector and float value"""
-    result = _Vector2AddValue(_vec2(v), float(add))
-    return result
+    return _Vector2AddValue(v, _float(add))
 
 
-def vector2subtract(v1, v2):
+def vector2_subtract(v1, v2):
     # type: (Vector2, Vector2) -> Vector2
-    """Subtract two vectors (v1 - v2)"""
-    result = _Vector2Subtract(_vec2(v1), _vec2(v2))
-    return result
+    return _Vector2Subtract(v1, v2)
 
 
-def vector2subtract_value(v, sub):
+def vector2_subtract_value(v, sub):
     # type: (Vector2, float) -> Vector2
-    """Subtract vector by float value"""
-    result = _Vector2SubtractValue(_vec2(v), float(sub))
-    return result
+    return _Vector2SubtractValue(v, _float(sub))
 
 
-def vector2length(v):
+def vector2_length(v):
     # type: (Vector2) -> float
-    """Calculate vector length"""
-    result = _Vector2Length(_vec2(v))
-    return result
+    return _Vector2Length(v)
 
 
-def vector2length_sqr(v):
+def vector2_length_sqr(v):
     # type: (Vector2) -> float
-    """Calculate vector square length"""
-    result = _Vector2LengthSqr(_vec2(v))
-    return result
+    return _Vector2LengthSqr(v)
 
 
-def vector2dot_product(v1, v2):
+def vector2_dot_product(v1, v2):
     # type: (Vector2, Vector2) -> float
-    """Calculate two vectors dot product"""
-    result = _Vector2DotProduct(_vec2(v1), _vec2(v2))
-    return result
+    return _Vector2DotProduct(v1, v2)
 
 
-def vector2distance(v1, v2):
+def vector2_distance(v1, v2):
     # type: (Vector2, Vector2) -> float
-    """Calculate distance between two vectors"""
-    result = _Vector2Distance(_vec2(v1), _vec2(v2))
-    return result
+    return _Vector2Distance(v1, v2)
 
 
-def vector2distance_sqr(v1, v2):
+def vector2_distance_sqr(v1, v2):
     # type: (Vector2, Vector2) -> float
-    """Calculate square distance between two vectors"""
-    result = _Vector2DistanceSqr(_vec2(v1), _vec2(v2))
-    return result
+    return _Vector2DistanceSqr(v1, v2)
 
 
-def vector2angle(v1, v2):
+def vector2_angle(v1, v2):
     # type: (Vector2, Vector2) -> float
-    """Calculate angle from two vectors"""
-    result = _Vector2Angle(_vec2(v1), _vec2(v2))
-    return result
+    return _Vector2Angle(v1, v2)
 
 
-def vector2scale(v, scale):
+def vector2_line_angle(start, end):
+    # type: (Vector2, Vector2) -> float
+    return _Vector2LineAngle(start, end)
+
+
+def vector2_scale(v, scale):
     # type: (Vector2, float) -> Vector2
-    """Scale vector (multiply by value)"""
-    result = _Vector2Scale(_vec2(v), float(scale))
-    return result
+    return _Vector2Scale(v, _float(scale))
 
 
-def vector2multiply(v1, v2):
+def vector2_multiply(v1, v2):
     # type: (Vector2, Vector2) -> Vector2
-    """Multiply vector by vector"""
-    result = _Vector2Multiply(_vec2(v1), _vec2(v2))
-    return result
+    return _Vector2Multiply(v1, v2)
 
 
-def vector2negate(v):
+def vector2_negate(v):
     # type: (Vector2) -> Vector2
-    """Negate vector"""
-    result = _Vector2Negate(_vec2(v))
-    return result
+    return _Vector2Negate(v)
 
 
-def vector2divide(v1, v2):
+def vector2_divide(v1, v2):
     # type: (Vector2, Vector2) -> Vector2
-    """Divide vector by vector"""
-    result = _Vector2Divide(_vec2(v1), _vec2(v2))
-    return result
+    return _Vector2Divide(v1, v2)
 
 
-def vector2normalize(v):
+def vector2_normalize(v):
     # type: (Vector2) -> Vector2
-    """Normalize provided vector"""
-    result = _Vector2Normalize(_vec2(v))
-    return result
+    return _Vector2Normalize(v)
 
 
-def vector2transform(v, mat):
+def vector2_transform(v, mat):
     # type: (Vector2, Matrix) -> Vector2
-    """Transforms a Vector2 by a given Matrix"""
-    result = _Vector2Transform(_vec2(v), mat)
-    return result
+    return _Vector2Transform(v, mat)
 
 
-def vector2lerp(v1, v2, amount):
+def vector2_lerp(v1, v2, amount):
     # type: (Vector2, Vector2, float) -> Vector2
-    """Calculate linear interpolation between two vectors"""
-    result = _Vector2Lerp(_vec2(v1), _vec2(v2), float(amount))
-    return result
+    return _Vector2Lerp(v1, v2, _float(amount))
 
 
-def vector2reflect(v1, normal):
+def vector2_reflect(v, normal):
     # type: (Vector2, Vector2) -> Vector2
-    """Calculate reflected vector to normal"""
-    result = _Vector2Reflect(_vec2(v1), _vec2(normal))
-    return result
+    return _Vector2Reflect(v, normal)
 
 
-def vector2rotate(v1, angle):
+def vector2_rotate(v, angle):
     # type: (Vector2, float) -> Vector2
-    """Rotate vector by angle"""
-    result = _Vector2Rotate(_vec2(v1), float(angle))
-    return result
+    return _Vector2Rotate(v, _float(angle))
 
 
-def vector2move_towards(v1, target, max_distance):
+def vector2_move_towards(v, target, max_distance):
     # type: (Vector2, Vector2, float) -> Vector2
-    """Move Vector towards target"""
-    result = _Vector2MoveTowards(_vec2(v1), _vec2(target), float(max_distance))
-    return result
+    return _Vector2MoveTowards(v, target, _float(max_distance))
 
 
-def vector2invert(v):
+def vector2_invert(v):
     # type: (Vector2) -> Vector2
-    """Invert the given vector"""
-    result = _Vector2Invert(_vec2(v))
-    return result
+    return _Vector2Invert(v)
 
 
-def vector2clamp(v, min_, max_):
+def vector2_clamp(v, min_, max_):
     # type: (Vector2, Vector2, Vector2) -> Vector2
-    """Clamp the components of the vector between min and max values specified by the given vectors"""
-    result = _Vector2Clamp(_vec2(v), _vec2(min_), _vec2(max_))
-    return result
+    return _Vector2Clamp(v, min_, max_)
 
 
-def vector2clamp_value(v, min_, max_):
+def vector2_clamp_value(v, min_, max_):
     # type: (Vector2, float, float) -> Vector2
-    """Clamp the magnitude of the vector between two min and max values"""
-    result = _Vector2ClampValue(_vec2(v), float(min_), float(max_))
-    return result
+    return _Vector2ClampValue(v, _float(min_), _float(max_))
 
 
-def vector2equals(p, q):
+def vector2_equals(p, q):
     # type: (Vector2, Vector2) -> int
-    """Check whether two given vectors are almost equal"""
-    result = _Vector2Equals(_vec2(p), _vec2(q))
-    return result
+    return _Vector2Equals(p, q)
 
 
-def vector3zero():
+def vector3_zero():
     # type: () -> Vector3
-    """Vector with components value 0.0f"""
-    result = _Vector3Zero()
-    return result
+    return _Vector3Zero()
 
 
-def vector3one():
+def vector3_one():
     # type: () -> Vector3
-    """Vector with components value 1.0f"""
-    result = _Vector3One()
-    return result
+    return _Vector3One()
 
 
-def vector3add(v1, v2):
+def vector3_add(v1, v2):
     # type: (Vector3, Vector3) -> Vector3
-    """Add two vectors"""
-    result = _Vector3Add(_vec3(v1), _vec3(v2))
-    return result
+    return _Vector3Add(v1, v2)
 
 
-def vector3add_value(v, add):
+def vector3_add_value(v, add):
     # type: (Vector3, float) -> Vector3
-    """Add vector and float value"""
-    result = _Vector3AddValue(_vec3(v), float(add))
-    return result
+    return _Vector3AddValue(v, _float(add))
 
 
-def vector3subtract(v1, v2):
+def vector3_subtract(v1, v2):
     # type: (Vector3, Vector3) -> Vector3
-    """Subtract two vectors"""
-    result = _Vector3Subtract(_vec3(v1), _vec3(v2))
-    return result
+    return _Vector3Subtract(v1, v2)
 
 
-def vector3subtract_value(v, sub):
+def vector3_subtract_value(v, sub):
     # type: (Vector3, float) -> Vector3
-    """Subtract vector and float value"""
-    result = _Vector3SubtractValue(_vec3(v), float(sub))
-    return result
+    return _Vector3SubtractValue(v, _float(sub))
 
 
-def vector3scale(v, scalar):
+def vector3_scale(v, scalar):
     # type: (Vector3, float) -> Vector3
-    """Multiply vector by scalar"""
-    result = _Vector3Scale(_vec3(v), float(scalar))
-    return result
+    return _Vector3Scale(v, _float(scalar))
 
 
-def vector3multiply(v1, v2):
+def vector3_multiply(v1, v2):
     # type: (Vector3, Vector3) -> Vector3
-    """Multiply vector by vector"""
-    result = _Vector3Multiply(_vec3(v1), _vec3(v2))
-    return result
+    return _Vector3Multiply(v1, v2)
 
 
-def vector3cross_product(v1, v2):
-    # type: (Vector3, Vector3) -> float
-    """Calculate two vectors cross product"""
-    result = _Vector3CrossProduct(_vec3(v1), _vec3(v2))
-    return result
+def vector3_cross_product(v1, v2):
+    # type: (Vector3, Vector3) -> Vector3
+    return _Vector3CrossProduct(v1, v2)
 
 
-def vector3perpendicular(v1):
+def vector3_perpendicular(v):
     # type: (Vector3) -> Vector3
-    """Calculate one vector perpendicular vector"""
-    result = _Vector3Perpendicular(_vec3(v1))
-    return result
+    return _Vector3Perpendicular(v)
 
 
-def vector3length(v1):
+def vector3_length(v):
     # type: (Vector3) -> float
-    """Calculate vector length"""
-    result = _Vector3Length(_vec3(v1))
-    return result
+    return _Vector3Length(v)
 
 
-def vector3length_sqr(v1):
+def vector3_length_sqr(v):
     # type: (Vector3) -> float
-    """Calculate vector square length"""
-    result = _Vector3LengthSqr(_vec3(v1))
-    return result
+    return _Vector3LengthSqr(v)
 
 
-def vector3dot_product(v1, v2):
+def vector3_dot_product(v1, v2):
     # type: (Vector3, Vector3) -> float
-    """Calculate two vectors dot product"""
-    result = _Vector3DotProduct(_vec3(v1), _vec3(v2))
-    return result
+    return _Vector3DotProduct(v1, v2)
 
 
-def vector3distance(v1, v2):
+def vector3_distance(v1, v2):
     # type: (Vector3, Vector3) -> float
-    """Calculate distance between two vectors"""
-    result = _Vector3Distance(_vec3(v1), _vec3(v2))
-    return result
+    return _Vector3Distance(v1, v2)
 
 
-def vector3distance_sqr(v1, v2):
+def vector3_distance_sqr(v1, v2):
     # type: (Vector3, Vector3) -> float
-    """Calculate square distance between two vectors"""
-    result = _Vector3DistanceSqr(_vec3(v1), _vec3(v2))
-    return result
+    return _Vector3DistanceSqr(v1, v2)
 
 
-def vector3angle(v1, v2):
+def vector3_angle(v1, v2):
     # type: (Vector3, Vector3) -> float
-    """Calculate angle between two vectors"""
-    result = _Vector3Angle(_vec3(v1), _vec3(v2))
-    return result
+    return _Vector3Angle(v1, v2)
 
 
-def vector3negate(v):
+def vector3_negate(v):
     # type: (Vector3) -> Vector3
-    """Negate provided vector (invert direction)"""
-    result = _Vector3Negate(_vec3(v))
-    return result
+    return _Vector3Negate(v)
 
 
-def vector3divide(v1, v2):
-    # type: (Vector3, Vector3) -> float
-    """Divide vector by vector"""
-    result = _Vector3Divide(_vec3(v1), _vec3(v2))
-    return result
+def vector3_divide(v1, v2):
+    # type: (Vector3, Vector3) -> Vector3
+    return _Vector3Divide(v1, v2)
 
 
-def vector3normalize(v):
+def vector3_normalize(v):
     # type: (Vector3) -> Vector3
-    """Normalize provided vector"""
-    result = _Vector3Normalize(_vec3(v))
-    return result
+    return _Vector3Normalize(v)
 
 
-def vector3ortho_normalize(v1, v2):
-    # type: (Vector3Ptr, Vector3Ptr) -> Vector3
-    """Makes vectors normalized and orthogonal to each other"""
-    result = _Vector3OrthoNormalize(_vec3(v1), _vec3(v2))
-    return result
+def vector3_project(v1, v2):
+    # type: (Vector3, Vector3) -> Vector3
+    return _Vector3Project(v1, v2)
 
 
-def vector3transform(v, mat):
+def vector3_reject(v1, v2):
+    # type: (Vector3, Vector3) -> Vector3
+    return _Vector3Reject(v1, v2)
+
+
+def vector3_ortho_normalize(v1, v2):
+    # type: (Vector3Ptr, Vector3Ptr) -> None
+    _Vector3OrthoNormalize(v1, v2)
+
+
+def vector3_transform(v, mat):
     # type: (Vector3, Matrix) -> Vector3
-    """Transforms a Vector3 by a given Matrix"""
-    result = _Vector3Transform(_vec3(v), mat)
-    return result
+    return _Vector3Transform(v, mat)
 
 
-def vector3rotate_by_quaternion(v, q):
+def vector3_rotate_by_quaternion(v, q):
     # type: (Vector3, Quaternion) -> Vector3
-    """Transform a vector by quaternion rotation"""
-    result = _Vector3RotateByQuaternion(_vec3(v), q)
-    return result
+    return _Vector3RotateByQuaternion(v, q)
 
 
-def vector3rotate_by_axis_angle(v, axis, angle):
+def vector3_rotate_by_axis_angle(v, axis, angle):
     # type: (Vector3, Vector3, float) -> Vector3
-    """Rotates a vector around an axis"""
-    result = _Vector3RotateByAxisAngle(_vec3(v), _vec3(axis), float(angle))
-    return result
+    return _Vector3RotateByAxisAngle(v, axis, _float(angle))
 
 
-def vector3lerp(v1, v2, amount):
+def vector3_lerp(v1, v2, amount):
     # type: (Vector3, Vector3, float) -> Vector3
-    """Calculate linear interpolation between two vectors"""
-    result = _Vector3Lerp(_vec3(v1), _vec3(v2), float(amount))
-    return result
+    return _Vector3Lerp(v1, v2, _float(amount))
 
 
-def vector3reflect(v, normal):
+def vector3_reflect(v, normal):
     # type: (Vector3, Vector3) -> Vector3
-    """Calculate reflected vector to normal"""
-    result = _Vector3Reflect(_vec3(v), _vec3(normal))
-    return result
+    return _Vector3Reflect(v, normal)
 
 
-def vector3min(v1, v2):
+def vector3_min(v1, v2):
     # type: (Vector3, Vector3) -> Vector3
-    """Get min value for each pair of components"""
-    result = _Vector3Min(_vec3(v1), _vec3(v2))
-    return result
+    return _Vector3Min(v1, v2)
 
 
-def vector3max(v1, v2):
+def vector3_max(v1, v2):
     # type: (Vector3, Vector3) -> Vector3
-    """Get max value for each pair of components"""
-    result = _Vector3Max(_vec3(v1), _vec3(v2))
-    return result
+    return _Vector3Max(v1, v2)
 
 
-def vector3barycenter(p, a, b, c):
+def vector3_barycenter(p, a, b, c):
     # type: (Vector3, Vector3, Vector3, Vector3) -> Vector3
-    """Compute barycenter coordinates (u, v, w) for point p with respect to triangle (a, b, c). Assumes P is on the plane of the triangle"""
-    result = _Vector3Barycenter(_vec3(p), _vec3(a), _vec3(b), _vec3(c))
-    return result
+    return _Vector3Barycenter(p, a, b, c)
 
 
-def vector3unproject(source, projection, view):
+def vector3_unproject(source, projection, view):
     # type: (Vector3, Matrix, Matrix) -> Vector3
-    """Projects a Vector3 from screen space into object space"""
-    result = _Vector3Unproject(_vec3(source), projection, view)
-    return result
+    return _Vector3Unproject(source, projection, view)
 
 
-def vector3to_float_v(v):
-    # type: (Vector3) -> Seq[float]
-    """Get Vector3 as float array"""
-    result = _Vector3ToFloatV(_vec3(v))
-    return result
+def vector3_to_float_v(v):
+    # type: (Vector3) -> float3
+    return _Vector3ToFloatV(v)
 
 
-def vector3invert(v):
+def vector3_invert(v):
     # type: (Vector3) -> Vector3
-    """Invert the given vector"""
-    result = _Vector3Invert(_vec3(v))
-    return result
+    return _Vector3Invert(v)
 
 
-def vector3clamp(v, min_, max_):
+def vector3_clamp(v, min_, max_):
     # type: (Vector3, Vector3, Vector3) -> Vector3
-    """Clamp the components of the vector between min and max values specified by the given vectors"""
-    result = _Vector3Clamp(_vec3(v), _vec3(min_), _vec3(max_))
-    return result
+    return _Vector3Clamp(v, min_, max_)
 
 
-def vector3clamp_value(v, min_, max_):
+def vector3_clamp_value(v, min_, max_):
     # type: (Vector3, float, float) -> Vector3
-    """Clamp the magnitude of the vector between two values"""
-    result = _Vector3ClampValue(_vec3(v), float(min_), float(max_))
-    return result
+    return _Vector3ClampValue(v, _float(min_), _float(max_))
 
 
-def vector3equals(v, min_, max_):
-    # type: (Vector3, float, float) -> int
-    """Check whether two given vectors are almost equal"""
-    result = _Vector3Equals(_vec3(v), float(min_), float(max_))
-    return result
+def vector3_equals(p, q):
+    # type: (Vector3, Vector3) -> int
+    return _Vector3Equals(p, q)
 
 
-def vector3refract(v, n, r):
-    # type: (Vector3, Vector3, float) -> int
-    """Compute the direction of a refracted ray where v specifies the normalized direction of the incoming ray, n specifies the normalized normal vector of the interface of two optical media, and r specifies the ratio of the refractive index of the medium from where the ray comes to the refractive index of the medium on the other side of the surface"""
-    result = _Vector3Refract(_vec3(v), _vec3(n), float(r))
-    return result
+def vector3_refract(v, n, r):
+    # type: (Vector3, Vector3, float) -> Vector3
+    return _Vector3Refract(v, n, _float(r))
 
 
 def matrix_determinant(mat):
     # type: (Matrix) -> float
-    """Compute matrix determinant"""
-    result = _MatrixDeterminant(mat)
-    return result
+    return _MatrixDeterminant(mat)
 
 
 def matrix_trace(mat):
     # type: (Matrix) -> float
-    """Get the trace of the matrix (sum of the values along the diagonal)"""
-    result = _MatrixTrace(mat)
-    return result
+    return _MatrixTrace(mat)
 
 
 def matrix_transpose(mat):
     # type: (Matrix) -> Matrix
-    """Get the trace of the matrix (sum of the values along the diagonal)"""
-    result = _MatrixTranspose(mat)
-    return result
+    return _MatrixTranspose(mat)
 
 
 def matrix_invert(mat):
     # type: (Matrix) -> Matrix
-    """Invert provided matrix"""
-    result = _MatrixInvert(mat)
-    return result
+    return _MatrixInvert(mat)
 
 
 def matrix_identity():
     # type: () -> Matrix
-    """Get identity matrix"""
-    result = _MatrixIdentity()
-    return result
+    return _MatrixIdentity()
 
 
 def matrix_add(left, right):
     # type: (Matrix, Matrix) -> Matrix
-    """Add two matrices"""
-    result = _MatrixAdd(left, right)
-    return result
+    return _MatrixAdd(left, right)
 
 
 def matrix_subtract(left, right):
     # type: (Matrix, Matrix) -> Matrix
-    """Subtract two matrices (left - right)"""
-    result = _MatrixSubtract(left, right)
-    return result
+    return _MatrixSubtract(left, right)
 
 
 def matrix_multiply(left, right):
     # type: (Matrix, Matrix) -> Matrix
-    """Get two matrix multiplication. When multiplying matrices... the order matters!"""
-    result = _MatrixMultiply(left, right)
-    return result
+    return _MatrixMultiply(left, right)
 
 
 def matrix_translate(x, y, z):
     # type: (float, float, float) -> Matrix
-    """Get translation matrix"""
-    result = _MatrixTranslate(float(x), float(y), float(z))
-    return result
+    return _MatrixTranslate(_float(x), _float(y), _float(z))
 
 
 def matrix_rotate(axis, angle):
     # type: (Vector3, float) -> Matrix
-    """Create rotation matrix from axis and angle. Angle should be provided in radians"""
-    result = _MatrixRotate(_vec3(axis), float(angle))
-    return result
+    return _MatrixRotate(axis, _float(angle))
 
 
 def matrix_rotate_x(angle):
     # type: (float) -> Matrix
-    """Get x-rotation matrix. Angle must be provided in radians"""
-    result = _MatrixRotateX(float(angle))
-    return result
+    return _MatrixRotateX(_float(angle))
 
 
 def matrix_rotate_y(angle):
     # type: (float) -> Matrix
-    """Get y-rotation matrix. Angle must be provided in radians"""
-    result = _MatrixRotateY(float(angle))
-    return result
+    return _MatrixRotateY(_float(angle))
 
 
 def matrix_rotate_z(angle):
     # type: (float) -> Matrix
-    """Get z-rotation matrix. Angle must be provided in radians"""
-    result = _MatrixRotateZ(float(angle))
-    return result
+    return _MatrixRotateZ(_float(angle))
 
 
 def matrix_rotate_xyz(angle):
     # type: (Vector3) -> Matrix
-    """Get xyz-rotation matrix. Angle must be provided in radians"""
-    result = _MatrixRotateXYZ(_vec3(angle))
-    return result
+    return _MatrixRotateXYZ(angle)
 
 
 def matrix_rotate_zyx(angle):
     # type: (Vector3) -> Matrix
-    """Get zyx-rotation matrix. Angle must be provided in radians"""
-    result = _MatrixRotateZYX(_vec3(angle))
-    return result
+    return _MatrixRotateZYX(angle)
 
 
 def matrix_scale(x, y, z):
     # type: (float, float, float) -> Matrix
-    """Get scaling matrix"""
-    result = _MatrixScale(float(x), float(y), float(z))
-    return result
+    return _MatrixScale(_float(x), _float(y), _float(z))
 
 
 def matrix_frustum(left, right, bottom, top, near, far):
     # type: (float, float, float, float, float, float) -> Matrix
-    """Get perspective projection matrix"""
-    result = _MatrixFrustum(float(left), float(right), float(bottom), float(top), float(near), float(far))
-    return result
+    return _MatrixFrustum(_float(left), _float(right), _float(bottom), _float(top), _float(near), _float(far))
 
 
-def matrix_perspective(fovy, aspect, near, far):
+def matrix_perspective(fov_y, aspect, near_plane, far_plane):
     # type: (float, float, float, float) -> Matrix
-    """Get perspective projection matrix. Fovy angle must be provided in radians"""
-    result = _MatrixPerspective(float(fovy), float(aspect), float(near), float(far))
-    return result
+    return _MatrixPerspective(_float(fov_y), _float(aspect), _float(near_plane), _float(far_plane))
 
 
-def matrix_ortho(left, right, bottom, top, near, far):
+def matrix_ortho(left, right, bottom, top, near_plane, far_plane):
     # type: (float, float, float, float, float, float) -> Matrix
-    """Get orthographic projection matrix"""
-    result = _MatrixOrtho(float(left), float(right), float(bottom), float(top), float(near), float(far))
-    return result
+    return _MatrixOrtho(_float(left), _float(right), _float(bottom), _float(top), _float(near_plane), _float(far_plane))
 
 
 def matrix_look_at(eye, target, up):
     # type: (Vector3, Vector3, Vector3) -> Matrix
-    """Get camera look-at matrix (view matrix)"""
-    result = _MatrixLookAt(_vec3(eye), _vec3(target), _vec3(up))
-    return result
+    return _MatrixLookAt(eye, target, up)
 
 
 def matrix_to_float_v(mat):
-    # type: (Matrix) -> Seq[float]
-    """Get float array of matrix data"""
-    result = _MatrixToFloatV(mat)
-    return result
+    # type: (Matrix) -> float16
+    return _MatrixToFloatV(mat)
 
 
 def quaternion_add(q1, q2):
     # type: (Quaternion, Quaternion) -> Quaternion
-    """Add two quaternions"""
-    result = _QuaternionAdd(q1, q2)
-    return result
+    return _QuaternionAdd(q1, q2)
 
 
 def quaternion_add_value(q, add):
     # type: (Quaternion, float) -> Quaternion
-    """Add quaternion and float value"""
-    result = _QuaternionAddValue(q, float(add))
-    return result
+    return _QuaternionAddValue(q, _float(add))
 
 
 def quaternion_subtract(q1, q2):
     # type: (Quaternion, Quaternion) -> Quaternion
-    """Subtract two quaternions"""
-    result = _QuaternionSubtract(q1, q2)
-    return result
+    return _QuaternionSubtract(q1, q2)
 
 
 def quaternion_subtract_value(q, sub):
     # type: (Quaternion, float) -> Quaternion
-    """Subtract quaternion and float value"""
-    result = _QuaternionSubtractValue(q, float(sub))
-    return result
+    return _QuaternionSubtractValue(q, _float(sub))
 
 
 def quaternion_identity():
     # type: () -> Quaternion
-    """Get identity quaternion"""
-    result = _QuaternionIdentity()
-    return result
+    return _QuaternionIdentity()
 
 
 def quaternion_length(q):
-    # type: (Quaternion) -> Quaternion
-    """Computes the length of a quaternion"""
-    result = _QuaternionLength(q)
-    return result
+    # type: (Quaternion) -> float
+    return _QuaternionLength(q)
 
 
 def quaternion_normalize(q):
     # type: (Quaternion) -> Quaternion
-    """Normalize provided quaternion"""
-    result = _QuaternionNormalize(q)
-    return result
+    return _QuaternionNormalize(q)
 
 
 def quaternion_invert(q):
     # type: (Quaternion) -> Quaternion
-    """Invert provided quaternion"""
-    result = _QuaternionInvert(q)
-    return result
+    return _QuaternionInvert(q)
 
 
 def quaternion_multiply(q1, q2):
     # type: (Quaternion, Quaternion) -> Quaternion
-    """Calculate two quaternion multiplication"""
-    result = _QuaternionMultiply(q1, q2)
-    return result
+    return _QuaternionMultiply(q1, q2)
 
 
-def quaternion_scale(q1, mul):
+def quaternion_scale(q, mul):
     # type: (Quaternion, float) -> Quaternion
-    """Scale quaternion by float value"""
-    result = _QuaternionScale(q1, float(mul))
-    return result
+    return _QuaternionScale(q, _float(mul))
 
 
 def quaternion_divide(q1, q2):
     # type: (Quaternion, Quaternion) -> Quaternion
-    """Divide two quaternions"""
-    result = _QuaternionDivide(q1, q2)
-    return result
+    return _QuaternionDivide(q1, q2)
+
+
+def quaternion_lerp(q1, q2, amount):
+    # type: (Quaternion, Quaternion, float) -> Quaternion
+    return _QuaternionLerp(q1, q2, _float(amount))
 
 
 def quaternion_nlerp(q1, q2, amount):
     # type: (Quaternion, Quaternion, float) -> Quaternion
-    """Calculate slerp-optimized interpolation between two quaternions"""
-    result = _QuaternionNlerp(q1, q2, float(amount))
-    return result
+    return _QuaternionNlerp(q1, q2, _float(amount))
 
 
 def quaternion_slerp(q1, q2, amount):
     # type: (Quaternion, Quaternion, float) -> Quaternion
-    """Calculates spherical linear interpolation between two quaternions"""
-    result = _QuaternionSlerp(q1, q2, float(amount))
-    return result
+    return _QuaternionSlerp(q1, q2, _float(amount))
 
 
-def quaternion_from_vector3to_vector3(from_, to):
+def quaternion_from_vector3_to_vector3(from_, to):
     # type: (Vector3, Vector3) -> Quaternion
-    """Calculate quaternion based on the rotation from one vector to another"""
-    result = _QuaternionFromVector3ToVector3(_vec3(from_), _vec3(to))
-    return result
-
-
-def quaternion_to_matrix(q):
-    # type: (Quaternion) -> Matrix
-    """Get a quaternion for a given rotation matrix"""
-    result = _QuaternionToMatrix(q)
-    return result
+    return _QuaternionFromVector3ToVector3(from_, to)
 
 
 def quaternion_from_matrix(mat):
     # type: (Matrix) -> Quaternion
-    """Get a quaternion for a given rotation matrix"""
-    result = _QuaternionFromMatrix(mat)
-    return result
+    return _QuaternionFromMatrix(mat)
 
 
-def quaternion_from_axis_angle(mat, angle):
+def quaternion_to_matrix(q):
+    # type: (Quaternion) -> Matrix
+    return _QuaternionToMatrix(q)
+
+
+def quaternion_from_axis_angle(axis, angle):
     # type: (Vector3, float) -> Quaternion
-    """Get rotation quaternion for an angle and axis. Angle must be provided in radians"""
-    result = _QuaternionFromAxisAngle(_vec3(mat), float(angle))
-    return result
+    return _QuaternionFromAxisAngle(axis, _float(angle))
 
 
 def quaternion_to_axis_angle(q, out_axis, out_angle):
-    # type: (Quaternion, Vector3Ptr, Union[Seq[float], FloatPtr]) -> None
-    """Get the rotation angle and axis for a given quaternion"""
-    _QuaternionToAxisAngle(q, _vec3(out_axis), out_angle)
+    # type: (Quaternion, Vector3Ptr, FloatPtr) -> None
+    _QuaternionToAxisAngle(q, out_axis, out_angle)
 
 
 def quaternion_from_euler(pitch, yaw, roll):
     # type: (float, float, float) -> Quaternion
-    """Get the quaternion equivalent to Euler angles. Rotation order is ZYX"""
-    result = _QuaternionFromEuler(float(pitch), float(yaw), float(roll))
-    return result
+    return _QuaternionFromEuler(_float(pitch), _float(yaw), _float(roll))
 
 
 def quaternion_to_euler(q):
     # type: (Quaternion) -> Vector3
-    """Get the quaternion equivalent to Euler angles. Rotation order is ZYX"""
-    result = _QuaternionToEuler(q)
-    return result
+    return _QuaternionToEuler(q)
 
 
 def quaternion_transform(q, mat):
     # type: (Quaternion, Matrix) -> Quaternion
-    """Transform a quaternion given a transformation matrix"""
-    result = _QuaternionTransform(q, mat)
-    return result
+    return _QuaternionTransform(q, mat)
 
 
 def quaternion_equals(p, q):
     # type: (Quaternion, Quaternion) -> int
-    """Check whether two given quaternions are almost equal"""
-    result = _QuaternionEquals(p, q)
-    return result
+    return _QuaternionEquals(p, q)
 
+
+# rlapi::rlgl
+# ------------------------------------------------------------------------------
 
 def rl_matrix_mode(mode):
     # type: (int) -> None
     """Choose the current matrix to be transformed"""
-    _rlMatrixMode(int(mode))
+    _rlMatrixMode(_int(mode))
 
 
 def rl_push_matrix():
@@ -11864,7 +12707,7 @@ def rl_push_matrix():
 
 def rl_pop_matrix():
     # type: () -> None
-    """Pop lattest inserted matrix from stack"""
+    """Pop latest inserted matrix from stack"""
     _rlPopMatrix()
 
 
@@ -11877,49 +12720,47 @@ def rl_load_identity():
 def rl_translatef(x, y, z):
     # type: (float, float, float) -> None
     """Multiply the current matrix by a translation matrix"""
-    _rlTranslatef(float(x), float(y), float(z))
+    _rlTranslatef(_float(x), _float(y), _float(z))
 
 
 def rl_rotatef(angle, x, y, z):
     # type: (float, float, float, float) -> None
     """Multiply the current matrix by a rotation matrix"""
-    _rlRotatef(float(angle), float(x), float(y), float(z))
+    _rlRotatef(_float(angle), _float(x), _float(y), _float(z))
 
 
 def rl_scalef(x, y, z):
     # type: (float, float, float) -> None
     """Multiply the current matrix by a scaling matrix"""
-    _rlScalef(float(x), float(y), float(z))
+    _rlScalef(_float(x), _float(y), _float(z))
 
 
 def rl_mult_matrixf(matf):
-    # type: (Union[Seq[float], FloatPtr]) -> None
+    # type: (FloatPtr) -> None
     """Multiply the current matrix by another matrix"""
     _rlMultMatrixf(matf)
 
 
 def rl_frustum(left, right, bottom, top, znear, zfar):
     # type: (float, float, float, float, float, float) -> None
-    """"""
-    _rlFrustum(float(left), float(right), float(bottom), float(top), float(znear), float(zfar))
+    _rlFrustum(_float(left), _float(right), _float(bottom), _float(top), _float(znear), _float(zfar))
 
 
 def rl_ortho(left, right, bottom, top, znear, zfar):
     # type: (float, float, float, float, float, float) -> None
-    """"""
-    _rlOrtho(float(left), float(right), float(bottom), float(top), float(znear), float(zfar))
+    _rlOrtho(_float(left), _float(right), _float(bottom), _float(top), _float(znear), _float(zfar))
 
 
 def rl_viewport(x, y, width, height):
     # type: (int, int, int, int) -> None
     """Set the viewport area"""
-    _rlViewport(int(x), int(y), int(width), int(height))
+    _rlViewport(_int(x), _int(y), _int(width), _int(height))
 
 
 def rl_begin(mode):
     # type: (int) -> None
     """Initialize drawing mode (how to organize vertex)"""
-    _rlBegin(int(mode))
+    _rlBegin(_int(mode))
 
 
 def rl_end():
@@ -11928,59 +12769,58 @@ def rl_end():
     _rlEnd()
 
 
-def rl_vertex2i(x, y):
+def rl_vertex_2ii(x, y):
     # type: (int, int) -> None
     """Define one vertex (position) - 2 int"""
-    _rlVertex2i(int(x), int(y))
+    _rlVertex2i(_int(x), _int(y))
 
 
-def rl_vertex2f(x, y):
+def rl_vertex_2ff(x, y):
     # type: (float, float) -> None
     """Define one vertex (position) - 2 float"""
-    _rlVertex2f(float(x), float(y))
+    _rlVertex2f(_float(x), _float(y))
 
 
-def rl_vertex3f(x, y, z):
+def rl_vertex_3ff(x, y, z):
     # type: (float, float, float) -> None
     """Define one vertex (position) - 3 float"""
-    _rlVertex3f(float(x), float(y), float(z))
+    _rlVertex3f(_float(x), _float(y), _float(z))
 
 
-def rl_tex_coord2f(x, y):
+def rl_tex_coord_2ff(x, y):
     # type: (float, float) -> None
     """Define one vertex (texture coordinate) - 2 float"""
-    _rlTexCoord2f(float(x), float(y))
+    _rlTexCoord2f(_float(x), _float(y))
 
 
-def rl_normal3f(x, y, z):
+def rl_normal_3ff(x, y, z):
     # type: (float, float, float) -> None
     """Define one vertex (normal) - 3 float"""
-    _rlNormal3f(float(x), float(y), float(z))
+    _rlNormal3f(_float(x), _float(y), _float(z))
 
 
-def rl_color4ub(r, g, b, a):
+def rl_color_4_uub(r, g, b, a):
     # type: (int, int, int, int) -> None
     """Define one vertex (color) - 4 byte"""
-    _rlColor4ub(r, g, b, a)
+    _rlColor4ub(_int(r, (0, 255)), _int(g, (0, 255)), _int(b, (0, 255)), _int(a, (0, 255)))
 
 
-def rl_color3f(x, y, z):
+def rl_color_3ff(x, y, z):
     # type: (float, float, float) -> None
     """Define one vertex (color) - 3 float"""
-    _rlColor3f(float(x), float(y), float(z))
+    _rlColor3f(_float(x), _float(y), _float(z))
 
 
-def rl_color4f(x, y, z, w):
+def rl_color_4ff(x, y, z, w):
     # type: (float, float, float, float) -> None
     """Define one vertex (color) - 4 float"""
-    _rlColor4f(float(x), float(y), float(z), float(w))
+    _rlColor4f(_float(x), _float(y), _float(z), _float(w))
 
 
 def rl_enable_vertex_array(vao_id):
     # type: (int) -> bool
     """Enable vertex array (VAO, if supported)"""
-    result = _rlEnableVertexArray(vao_id)
-    return result
+    return _rlEnableVertexArray(_int(vao_id))
 
 
 def rl_disable_vertex_array():
@@ -11989,10 +12829,10 @@ def rl_disable_vertex_array():
     _rlDisableVertexArray()
 
 
-def rl_enable_vertex_buffer(id):
+def rl_enable_vertex_buffer(id_):
     # type: (int) -> None
     """Enable vertex buffer (VBO)"""
-    _rlEnableVertexBuffer(id)
+    _rlEnableVertexBuffer(_int(id_))
 
 
 def rl_disable_vertex_buffer():
@@ -12001,10 +12841,10 @@ def rl_disable_vertex_buffer():
     _rlDisableVertexBuffer()
 
 
-def rl_enable_vertex_buffer_element(id):
+def rl_enable_vertex_buffer_element(id_):
     # type: (int) -> None
     """Enable vertex buffer element (VBO element)"""
-    _rlEnableVertexBufferElement(id)
+    _rlEnableVertexBufferElement(_int(id_))
 
 
 def rl_disable_vertex_buffer_element():
@@ -12016,25 +12856,25 @@ def rl_disable_vertex_buffer_element():
 def rl_enable_vertex_attribute(index):
     # type: (int) -> None
     """Enable vertex attribute index"""
-    _rlEnableVertexAttribute(index)
+    _rlEnableVertexAttribute(_int(index))
 
 
 def rl_disable_vertex_attribute(index):
     # type: (int) -> None
     """Disable vertex attribute index"""
-    _rlDisableVertexAttribute(index)
+    _rlDisableVertexAttribute(_int(index))
 
 
 def rl_active_texture_slot(slot):
     # type: (int) -> None
     """Select and active a texture slot"""
-    _rlActiveTextureSlot(int(slot))
+    _rlActiveTextureSlot(_int(slot))
 
 
-def rl_enable_texture(id):
+def rl_enable_texture(id_):
     # type: (int) -> None
     """Enable texture"""
-    _rlEnableTexture(id)
+    _rlEnableTexture(_int(id_))
 
 
 def rl_disable_texture():
@@ -12043,10 +12883,10 @@ def rl_disable_texture():
     _rlDisableTexture()
 
 
-def rl_enable_texture_cubemap(id):
+def rl_enable_texture_cubemap(id_):
     # type: (int) -> None
     """Enable texture cubemap"""
-    _rlEnableTextureCubemap(id)
+    _rlEnableTextureCubemap(_int(id_))
 
 
 def rl_disable_texture_cubemap():
@@ -12055,16 +12895,22 @@ def rl_disable_texture_cubemap():
     _rlDisableTextureCubemap()
 
 
-def rl_texture_parameters(id, param, value):
+def rl_texture_parameters(id_, param, value):
     # type: (int, int, int) -> None
     """Set texture parameters (filter, wrap)"""
-    _rlTextureParameters(id, int(param), int(value))
+    _rlTextureParameters(_int(id_), _int(param), _int(value))
 
 
-def rl_enable_shader(id):
+def rl_cubemap_parameters(id_, param, value):
+    # type: (int, int, int) -> None
+    """Set cubemap parameters (filter, wrap)"""
+    _rlCubemapParameters(_int(id_), _int(param), _int(value))
+
+
+def rl_enable_shader(id_):
     # type: (int) -> None
     """Enable shader program"""
-    _rlEnableShader(id)
+    _rlEnableShader(_int(id_))
 
 
 def rl_disable_shader():
@@ -12073,10 +12919,10 @@ def rl_disable_shader():
     _rlDisableShader()
 
 
-def rl_enable_framebuffer(id):
+def rl_enable_framebuffer(id_):
     # type: (int) -> None
     """Enable render texture (fbo)"""
-    _rlEnableFramebuffer(id)
+    _rlEnableFramebuffer(_int(id_))
 
 
 def rl_disable_framebuffer():
@@ -12088,7 +12934,13 @@ def rl_disable_framebuffer():
 def rl_active_draw_buffers(count):
     # type: (int) -> None
     """Activate multiple draw color buffers"""
-    _rlActiveDrawBuffers(int(count))
+    _rlActiveDrawBuffers(_int(count))
+
+
+def rl_blit_framebuffer(src_x, src_y, src_width, src_height, dst_x, dst_y, dst_width, dst_height, buffer_mask):
+    # type: (int, int, int, int, int, int, int, int, int) -> None
+    """Blit active framebuffer to main framebuffer"""
+    _rlBlitFramebuffer(_int(src_x), _int(src_y), _int(src_width), _int(src_height), _int(dst_x), _int(dst_y), _int(dst_width), _int(dst_height), _int(buffer_mask))
 
 
 def rl_enable_color_blend():
@@ -12139,6 +12991,12 @@ def rl_disable_backface_culling():
     _rlDisableBackfaceCulling()
 
 
+def rl_set_cull_face(mode):
+    # type: (int) -> None
+    """Set face culling mode"""
+    _rlSetCullFace(_int(mode))
+
+
 def rl_enable_scissor_test():
     # type: () -> None
     """Enable scissor test"""
@@ -12154,7 +13012,7 @@ def rl_disable_scissor_test():
 def rl_scissor(x, y, width, height):
     # type: (int, int, int, int) -> None
     """Scissor test"""
-    _rlScissor(int(x), int(y), int(width), int(height))
+    _rlScissor(_int(x), _int(y), _int(width), _int(height))
 
 
 def rl_enable_wire_mode():
@@ -12163,23 +13021,28 @@ def rl_enable_wire_mode():
     _rlEnableWireMode()
 
 
+def rl_enable_point_mode():
+    # type: () -> None
+    """Enable point mode"""
+    _rlEnablePointMode()
+
+
 def rl_disable_wire_mode():
     # type: () -> None
-    """Disable wire mode"""
+    """Disable wire mode ( and point ) maybe rename"""
     _rlDisableWireMode()
 
 
 def rl_set_line_width(width):
     # type: (float) -> None
     """Set the line drawing width"""
-    _rlSetLineWidth(float(width))
+    _rlSetLineWidth(_float(width))
 
 
 def rl_get_line_width():
     # type: () -> float
     """Get the line drawing width"""
-    result = _rlGetLineWidth()
-    return result
+    return _rlGetLineWidth()
 
 
 def rl_enable_smooth_lines():
@@ -12209,14 +13072,13 @@ def rl_disable_stereo_render():
 def rl_is_stereo_render_enabled():
     # type: () -> bool
     """Check if stereo render is enabled"""
-    result = _rlIsStereoRenderEnabled()
-    return result
+    return _rlIsStereoRenderEnabled()
 
 
 def rl_clear_color(r, g, b, a):
     # type: (int, int, int, int) -> None
     """Clear color buffer with color"""
-    _rlClearColor(r, g, b, a)
+    _rlClearColor(_int(r, (0, 255)), _int(g, (0, 255)), _int(b, (0, 255)), _int(a, (0, 255)))
 
 
 def rl_clear_screen_buffers():
@@ -12234,29 +13096,35 @@ def rl_check_errors():
 def rl_set_blend_mode(mode):
     # type: (int) -> None
     """Set blending mode"""
-    _rlSetBlendMode(int(mode))
+    _rlSetBlendMode(_int(mode))
 
 
 def rl_set_blend_factors(gl_src_factor, gl_dst_factor, gl_equation):
     # type: (int, int, int) -> None
     """Set blending mode factor and equation (using OpenGL factors)"""
-    _rlSetBlendFactors(int(gl_src_factor), int(gl_dst_factor), int(gl_equation))
+    _rlSetBlendFactors(_int(gl_src_factor), _int(gl_dst_factor), _int(gl_equation))
+
+
+def rl_set_blend_factors_separate(gl_src_rgb, gl_dst_rgb, gl_src_alpha, gl_dst_alpha, gl_eq_rgb, gl_eq_alpha):
+    # type: (int, int, int, int, int, int) -> None
+    """Set blending mode factors and equations separately (using OpenGL factors)"""
+    _rlSetBlendFactorsSeparate(_int(gl_src_rgb), _int(gl_dst_rgb), _int(gl_src_alpha), _int(gl_dst_alpha), _int(gl_eq_rgb), _int(gl_eq_alpha))
 
 
 def rlgl_init(width, height):
     # type: (int, int) -> None
     """Initialize rlgl (buffers, shaders, textures, states)"""
-    _rlglInit(int(width), int(height))
+    _rlglInit(_int(width), _int(height))
 
 
 def rlgl_close():
     # type: () -> None
-    """De-inititialize rlgl (buffers, shaders, textures)"""
+    """De-initialize rlgl (buffers, shaders, textures)"""
     _rlglClose()
 
 
 def rl_load_extensions(loader):
-    # type: (bytes) -> None
+    # type: (bytes | str | None) -> None
     """Load OpenGL extensions (loader function required)"""
     _rlLoadExtensions(loader)
 
@@ -12264,62 +13132,55 @@ def rl_load_extensions(loader):
 def rl_get_version():
     # type: () -> int
     """Get current OpenGL version"""
-    result = _rlGetVersion()
-    return result
+    return _rlGetVersion()
 
 
 def rl_set_framebuffer_width(width):
     # type: (int) -> None
     """Set current framebuffer width"""
-    _rlSetFramebufferWidth(int(width))
+    _rlSetFramebufferWidth(_int(width))
 
 
 def rl_get_framebuffer_width():
     # type: () -> int
     """Get default framebuffer width"""
-    result = _rlGetFramebufferWidth()
-    return result
+    return _rlGetFramebufferWidth()
 
 
 def rl_set_framebuffer_height(height):
     # type: (int) -> None
     """Set current framebuffer height"""
-    _rlSetFramebufferHeight(int(height))
+    _rlSetFramebufferHeight(_int(height))
 
 
 def rl_get_framebuffer_height():
     # type: () -> int
     """Get default framebuffer height"""
-    result = _rlGetFramebufferHeight()
-    return result
+    return _rlGetFramebufferHeight()
 
 
 def rl_get_texture_id_default():
     # type: () -> int
     """Get default texture id"""
-    result = _rlGetTextureIdDefault()
-    return result
+    return _rlGetTextureIdDefault()
 
 
 def rl_get_shader_id_default():
     # type: () -> int
     """Get default shader id"""
-    result = _rlGetShaderIdDefault()
-    return result
+    return _rlGetShaderIdDefault()
 
 
 def rl_get_shader_locs_default():
-    # type: () -> Union[Seq[int], IntPtr]
+    # type: () -> IntPtr
     """Get default shader locations"""
-    result = _ptr_out(_rlGetShaderLocsDefault())
-    return result
+    return _rlGetShaderLocsDefault()
 
 
 def rl_load_render_batch(num_buffers, buffer_elements):
     # type: (int, int) -> rlRenderBatch
     """Load a render batch system"""
-    result = _rlLoadRenderBatch(int(num_buffers), int(buffer_elements))
-    return result
+    return _rlLoadRenderBatch(_int(num_buffers), _int(buffer_elements))
 
 
 def rl_unload_render_batch(batch):
@@ -12349,355 +13210,323 @@ def rl_draw_render_batch_active():
 def rl_check_render_batch_limit(v_count):
     # type: (int) -> bool
     """Check internal buffer overflow for a given number of vertex"""
-    result = _rlCheckRenderBatchLimit(int(v_count))
-    return result
+    return _rlCheckRenderBatchLimit(_int(v_count))
 
 
-def rl_set_texture(id):
+def rl_set_texture(id_):
     # type: (int) -> None
     """Set current texture for render batch and check buffers limits"""
-    _rlSetTexture(id)
+    _rlSetTexture(_int(id_))
 
 
 def rl_load_vertex_array():
     # type: () -> int
     """Load vertex array (vao) if supported"""
-    result = _rlLoadVertexArray()
-    return result
+    return _rlLoadVertexArray()
 
 
 def rl_load_vertex_buffer(buffer, size, dynamic):
-    # type: (bytes, int, bool) -> int
+    # type: (bytes | str | None, int, bool) -> int
     """Load a vertex buffer attribute"""
-    result = _rlLoadVertexBuffer(buffer, int(size), bool(dynamic))
-    return result
+    return _rlLoadVertexBuffer(buffer, _int(size), _bool(dynamic))
 
 
 def rl_load_vertex_buffer_element(buffer, size, dynamic):
-    # type: (bytes, int, bool) -> int
+    # type: (bytes | str | None, int, bool) -> int
     """Load a new attributes element buffer"""
-    result = _rlLoadVertexBufferElement(buffer, int(size), bool(dynamic))
-    return result
+    return _rlLoadVertexBufferElement(buffer, _int(size), _bool(dynamic))
 
 
 def rl_update_vertex_buffer(buffer_id, data, data_size, offset):
-    # type: (int, bytes, int, int) -> None
+    # type: (int, bytes | str | None, int, int) -> None
     """Update GPU buffer with new data"""
-    _rlUpdateVertexBuffer(buffer_id, data, int(data_size), int(offset))
+    _rlUpdateVertexBuffer(_int(buffer_id), data, _int(data_size), _int(offset))
 
 
-def rl_update_vertex_buffer_elements(id, data, data_size, offset):
-    # type: (int, bytes, int, int) -> None
+def rl_update_vertex_buffer_elements(id_, data, data_size, offset):
+    # type: (int, bytes | str | None, int, int) -> None
     """Update vertex buffer elements with new data"""
-    _rlUpdateVertexBufferElements(id, data, int(data_size), int(offset))
+    _rlUpdateVertexBufferElements(_int(id_), data, _int(data_size), _int(offset))
 
 
 def rl_unload_vertex_array(vao_id):
     # type: (int) -> None
-    """"""
-    _rlUnloadVertexArray(vao_id)
+    _rlUnloadVertexArray(_int(vao_id))
 
 
 def rl_unload_vertex_buffer(vbo_id):
     # type: (int) -> None
-    """"""
-    _rlUnloadVertexBuffer(vbo_id)
+    _rlUnloadVertexBuffer(_int(vbo_id))
 
 
-def rl_set_vertex_attribute(index, comp_size, type, normalized, stride, pointer):
-    # type: (int, int, int, bool, int, bytes) -> None
-    """"""
-    _rlSetVertexAttribute(index, int(comp_size), int(type), bool(normalized), int(stride), pointer)
+def rl_set_vertex_attribute(index, comp_size, type_, normalized, stride, pointer):
+    # type: (int, int, int, bool, int, bytes | str | None) -> None
+    _rlSetVertexAttribute(_int(index), _int(comp_size), _int(type_), _bool(normalized), _int(stride), pointer)
 
 
 def rl_set_vertex_attribute_divisor(index, divisor):
     # type: (int, int) -> None
-    """"""
-    _rlSetVertexAttributeDivisor(index, int(divisor))
+    _rlSetVertexAttributeDivisor(_int(index), _int(divisor))
 
 
 def rl_set_vertex_attribute_default(loc_index, value, attrib_type, count):
-    # type: (int, bytes, int, int) -> None
+    # type: (int, bytes | str | None, int, int) -> None
     """Set vertex attribute default value"""
-    _rlSetVertexAttributeDefault(int(loc_index), value, int(attrib_type), int(count))
+    _rlSetVertexAttributeDefault(_int(loc_index), value, _int(attrib_type), _int(count))
 
 
 def rl_draw_vertex_array(offset, count):
     # type: (int, int) -> None
-    """"""
-    _rlDrawVertexArray(int(offset), int(count))
+    _rlDrawVertexArray(_int(offset), _int(count))
 
 
 def rl_draw_vertex_array_elements(offset, count, buffer):
-    # type: (int, int, bytes) -> None
-    """"""
-    _rlDrawVertexArrayElements(int(offset), int(count), buffer)
+    # type: (int, int, bytes | str | None) -> None
+    _rlDrawVertexArrayElements(_int(offset), _int(count), buffer)
 
 
 def rl_draw_vertex_array_instanced(offset, count, instances):
     # type: (int, int, int) -> None
-    """"""
-    _rlDrawVertexArrayInstanced(int(offset), int(count), int(instances))
+    _rlDrawVertexArrayInstanced(_int(offset), _int(count), _int(instances))
 
 
 def rl_draw_vertex_array_elements_instanced(offset, count, buffer, instances):
-    # type: (int, int, bytes, int) -> None
-    """"""
-    _rlDrawVertexArrayElementsInstanced(int(offset), int(count), buffer, int(instances))
+    # type: (int, int, bytes | str | None, int) -> None
+    _rlDrawVertexArrayElementsInstanced(_int(offset), _int(count), buffer, _int(instances))
 
 
-def rl_load_texture(data, width, height, format, mipmap_count):
-    # type: (bytes, int, int, int, int) -> int
+def rl_load_texture(data, width, height, format_, mipmap_count):
+    # type: (bytes | str | None, int, int, int, int) -> int
     """Load texture in GPU"""
-    result = _rlLoadTexture(data, int(width), int(height), int(format), int(mipmap_count))
-    return result
+    return _rlLoadTexture(data, _int(width), _int(height), _int(format_), _int(mipmap_count))
 
 
 def rl_load_texture_depth(width, height, use_render_buffer):
     # type: (int, int, bool) -> int
     """Load depth texture/renderbuffer (to be attached to fbo)"""
-    result = _rlLoadTextureDepth(int(width), int(height), bool(use_render_buffer))
-    return result
+    return _rlLoadTextureDepth(_int(width), _int(height), _bool(use_render_buffer))
 
 
-def rl_load_texture_cubemap(data, size, format):
-    # type: (bytes, int, int) -> int
+def rl_load_texture_cubemap(data, size, format_):
+    # type: (bytes | str | None, int, int) -> int
     """Load texture cubemap"""
-    result = _rlLoadTextureCubemap(data, int(size), int(format))
-    return result
+    return _rlLoadTextureCubemap(data, _int(size), _int(format_))
 
 
-def rl_update_texture(id, offset_x, offset_y, width, height, format, data):
-    # type: (int, int, int, int, int, int, bytes) -> None
+def rl_update_texture(id_, offset_x, offset_y, width, height, format_, data):
+    # type: (int, int, int, int, int, int, bytes | str | None) -> None
     """Update GPU texture with new data"""
-    _rlUpdateTexture(id, int(offset_x), int(offset_y), int(width), int(height), int(format), data)
+    _rlUpdateTexture(_int(id_), _int(offset_x), _int(offset_y), _int(width), _int(height), _int(format_), data)
 
 
-def rl_get_gl_texture_formats(format, gl_internal_format, gl_format, gl_type):
-    # type: (int, Union[Seq[int], UIntPtr], Union[Seq[int], UIntPtr], Union[Seq[int], UIntPtr]) -> None
+def rl_get_gl_texture_formats(format_, gl_internal_format, gl_format, gl_type):
+    # type: (int, UIntPtr, UIntPtr, UIntPtr) -> None
     """Get OpenGL internal formats"""
-    _rlGetGlTextureFormats(int(format), gl_internal_format, gl_format, gl_type)
+    _rlGetGlTextureFormats(_int(format_), gl_internal_format, gl_format, gl_type)
 
 
-def rl_get_pixel_format_name(format):
-    # type: (int) -> Union[str, CharPtr]
+def rl_get_pixel_format_name(format_):
+    # type: (int) -> bytes | str | None
     """Get name string for pixel format"""
-    result = _ptr_out(_rlGetPixelFormatName(format))
-    return result
+    return _rlGetPixelFormatName(_int(format_))
 
 
-def rl_unload_texture(id):
+def rl_unload_texture(id_):
     # type: (int) -> None
     """Unload texture from GPU memory"""
-    _rlUnloadTexture(id)
+    _rlUnloadTexture(_int(id_))
 
 
-def rl_gen_texture_mipmaps(id, width, height, format, mipmaps):
-    # type: (int, int, int, int, Union[Seq[int], IntPtr]) -> None
+def rl_gen_texture_mipmaps(id_, width, height, format_, mipmaps):
+    # type: (int, int, int, int, IntPtr) -> None
     """Generate mipmap data for selected texture"""
-    _rlGenTextureMipmaps(id, int(width), int(height), int(format), mipmaps)
+    _rlGenTextureMipmaps(_int(id_), _int(width), _int(height), _int(format_), mipmaps)
 
 
-def rl_read_texture_pixels(id, width, height, format):
-    # type: (int, int, int, int) -> bytes
+def rl_read_texture_pixels(id_, width, height, format_):
+    # type: (int, int, int, int) -> bytes | str | None
     """Read texture pixel data"""
-    _rlReadTexturePixels(id, int(width), int(height), int(format))
+    return _rlReadTexturePixels(_int(id_), _int(width), _int(height), _int(format_))
 
 
 def rl_read_screen_pixels(width, height):
-    # type: (int, int) -> Union[Seq[int], UCharPtr]
+    # type: (int, int) -> int
     """Read screen pixel data (color buffer)"""
-    result = _ptr_out(_rlReadScreenPixels(int(width), int(height)))
-    return result
+    return _rlReadScreenPixels(_int(width), _int(height))
 
 
 def rl_load_framebuffer(width, height):
     # type: (int, int) -> int
     """Load an empty framebuffer"""
-    result = _rlLoadFramebuffer(int(width), int(height))
-    return result
+    return _rlLoadFramebuffer(_int(width), _int(height))
 
 
 def rl_framebuffer_attach(fbo_id, tex_id, attach_type, tex_type, mip_level):
     # type: (int, int, int, int, int) -> None
     """Attach texture/renderbuffer to a framebuffer"""
-    _rlFramebufferAttach(fbo_id, tex_id, int(attach_type), int(tex_type), int(mip_level))
+    _rlFramebufferAttach(_int(fbo_id), _int(tex_id), _int(attach_type), _int(tex_type), _int(mip_level))
 
 
-def rl_framebuffer_complete(id):
+def rl_framebuffer_complete(id_):
     # type: (int) -> bool
     """Verify framebuffer is complete"""
-    result = _rlFramebufferComplete(id)
-    return result
+    return _rlFramebufferComplete(_int(id_))
 
 
-def rl_unload_framebuffer(id):
+def rl_unload_framebuffer(id_):
     # type: (int) -> None
     """Delete framebuffer from GPU"""
-    _rlUnloadFramebuffer(id)
+    _rlUnloadFramebuffer(_int(id_))
 
 
 def rl_load_shader_code(vs_code, fs_code):
-    # type: (Union[str, CharPtr], Union[str, CharPtr]) -> int
+    # type: (bytes | str | None, bytes | str | None) -> int
     """Load shader from code strings"""
-    result = _rlLoadShaderCode(_str_in(vs_code), _str_in(fs_code))
-    return result
+    return _rlLoadShaderCode(_str_in(vs_code), _str_in(fs_code))
 
 
-def rl_compile_shader(shader_code, type):
-    # type: (Union[str, CharPtr], int) -> int
+def rl_compile_shader(shader_code, type_):
+    # type: (bytes | str | None, int) -> int
     """Compile custom shader and return shader id (type: RL_VERTEX_SHADER, RL_FRAGMENT_SHADER, RL_COMPUTE_SHADER)"""
-    result = _rlCompileShader(_str_in(shader_code), int(type))
-    return result
+    return _rlCompileShader(_str_in(shader_code), _int(type_))
 
 
 def rl_load_shader_program(v_shader_id, f_shader_id):
     # type: (int, int) -> int
     """Load custom shader program"""
-    result = _rlLoadShaderProgram(v_shader_id, f_shader_id)
-    return result
+    return _rlLoadShaderProgram(_int(v_shader_id), _int(f_shader_id))
 
 
-def rl_unload_shader_program(id):
+def rl_unload_shader_program(id_):
     # type: (int) -> None
     """Unload shader program"""
-    _rlUnloadShaderProgram(id)
+    _rlUnloadShaderProgram(_int(id_))
 
 
 def rl_get_location_uniform(shader_id, uniform_name):
-    # type: (int, Union[str, CharPtr]) -> int
+    # type: (int, bytes | str | None) -> int
     """Get shader location uniform"""
-    result = _rlGetLocationUniform(shader_id, _str_in(uniform_name))
-    return result
+    return _rlGetLocationUniform(_int(shader_id), _str_in(uniform_name))
 
 
 def rl_get_location_attrib(shader_id, attrib_name):
-    # type: (int, Union[str, CharPtr]) -> int
+    # type: (int, bytes | str | None) -> int
     """Get shader location attribute"""
-    result = _rlGetLocationAttrib(shader_id, _str_in(attrib_name))
-    return result
+    return _rlGetLocationAttrib(_int(shader_id), _str_in(attrib_name))
 
 
 def rl_set_uniform(loc_index, value, uniform_type, count):
-    # type: (int, bytes, int, int) -> None
+    # type: (int, bytes | str | None, int, int) -> None
     """Set shader value uniform"""
-    _rlSetUniform(int(loc_index), value, int(uniform_type), int(count))
+    _rlSetUniform(_int(loc_index), value, _int(uniform_type), _int(count))
 
 
 def rl_set_uniform_matrix(loc_index, mat):
     # type: (int, Matrix) -> None
     """Set shader value matrix"""
-    _rlSetUniformMatrix(int(loc_index), mat)
+    _rlSetUniformMatrix(_int(loc_index), mat)
 
 
 def rl_set_uniform_sampler(loc_index, texture_id):
     # type: (int, int) -> None
     """Set shader value sampler"""
-    _rlSetUniformSampler(int(loc_index), texture_id)
+    _rlSetUniformSampler(_int(loc_index), _int(texture_id))
 
 
-def rl_set_shader(id, locs):
-    # type: (int, Union[Seq[int], IntPtr]) -> None
+def rl_set_shader(id_, locs):
+    # type: (int, IntPtr) -> None
     """Set shader currently active (id and locations)"""
-    _rlSetShader(id, locs)
+    _rlSetShader(_int(id_), locs)
 
 
 def rl_load_compute_shader_program(shader_id):
     # type: (int) -> int
     """Load compute shader program"""
-    result = _rlLoadComputeShaderProgram(shader_id)
-    return result
+    return _rlLoadComputeShaderProgram(_int(shader_id))
 
 
 def rl_compute_shader_dispatch(group_x, group_y, group_z):
     # type: (int, int, int) -> None
-    """Dispatch compute shader (equivalent to *draw* for graphics pilepine)"""
-    _rlComputeShaderDispatch(group_x, group_y, group_z)
+    """Dispatch compute shader (equivalent to *draw* for graphics pipeline)"""
+    _rlComputeShaderDispatch(_int(group_x), _int(group_y), _int(group_z))
 
 
 def rl_load_shader_buffer(size, data, usage_hint):
-    # type: (int, bytes, int) -> int
+    # type: (int, bytes | str | None, int) -> int
     """Load shader storage buffer object (SSBO)"""
-    result = _rlLoadShaderBuffer(int(size), data, int(usage_hint))
-    return result
+    return _rlLoadShaderBuffer(_int(size), data, _int(usage_hint))
 
 
 def rl_unload_shader_buffer(ssbo_id):
     # type: (int) -> None
     """Unload shader storage buffer object (SSBO)"""
-    _rlUnloadShaderBuffer(ssbo_id)
+    _rlUnloadShaderBuffer(_int(ssbo_id))
 
 
-def rl_update_shader_buffer_elements(id, data, data_size, offset):
-    # type: (int, bytes, int, int) -> None
+def rl_update_shader_buffer(id_, data, data_size, offset):
+    # type: (int, bytes | str | None, int, int) -> None
     """Update SSBO buffer data"""
-    _rlUpdateShaderBufferElements(id, data, int(data_size), int(offset))
+    _rlUpdateShaderBuffer(_int(id_), data, _int(data_size), _int(offset))
 
 
-def rl_get_shader_buffer_size(id):
+def rl_bind_shader_buffer(id_, index):
+    # type: (int, int) -> None
+    """Bind SSBO buffer"""
+    _rlBindShaderBuffer(_int(id_), _int(index))
+
+
+def rl_read_shader_buffer(id_, dest, count, offset):
+    # type: (int, bytes | str | None, int, int) -> None
+    """Read SSBO buffer data (GPU->CPU)"""
+    _rlReadShaderBuffer(_int(id_), dest, _int(count), _int(offset))
+
+
+def rl_copy_shader_buffer(dest_id, src_id, dest_offset, src_offset, count):
+    # type: (int, int, int, int, int) -> None
+    """Copy SSBO data between buffers"""
+    _rlCopyShaderBuffer(_int(dest_id), _int(src_id), _int(dest_offset), _int(src_offset), _int(count))
+
+
+def rl_get_shader_buffer_size(id_):
     # type: (int) -> int
     """Get SSBO buffer size"""
-    result = _rlGetShaderBufferSize(id)
-    return result
+    return _rlGetShaderBufferSize(_int(id_))
 
 
-def rl_read_shader_buffer_elements(id, dest, count, offset):
-    # type: (int, bytes, int, int) -> None
-    """Bind SSBO buffer"""
-    _rlReadShaderBufferElements(id, dest, int(count), int(offset))
-
-
-def rl_bind_shader_buffer(id, index):
-    # type: (int, int) -> None
-    """Copy SSBO buffer data"""
-    _rlBindShaderBuffer(id, index)
-
-
-def rl_copy_buffers_elements(dest_id, src_id, dest_offset, src_offset, count):
-    # type: (int, int, int, int, int) -> None
-    """Copy SSBO buffer data"""
-    _rlCopyBuffersElements(dest_id, src_id, int(dest_offset), int(src_offset), int(count))
-
-
-def rl_bind_image_texture(id, index, format, readonly):
-    # type: (int, int, int, int) -> None
+def rl_bind_image_texture(id_, index, format_, readonly):
+    # type: (int, int, int, bool) -> None
     """Bind image texture"""
-    _rlBindImageTexture(id, index, format, int(readonly))
+    _rlBindImageTexture(_int(id_), _int(index), _int(format_), _bool(readonly))
 
 
 def rl_get_matrix_modelview():
     # type: () -> Matrix
     """Get internal modelview matrix"""
-    result = _rlGetMatrixModelview()
-    return result
+    return _rlGetMatrixModelview()
 
 
 def rl_get_matrix_projection():
     # type: () -> Matrix
     """Get internal projection matrix"""
-    result = _rlGetMatrixProjection()
-    return result
+    return _rlGetMatrixProjection()
 
 
 def rl_get_matrix_transform():
     # type: () -> Matrix
     """Get internal accumulated transform matrix"""
-    result = _rlGetMatrixTransform()
-    return result
+    return _rlGetMatrixTransform()
 
 
 def rl_get_matrix_projection_stereo(eye):
     # type: (int) -> Matrix
     """Get internal projection matrix for stereo render (selected eye)"""
-    result = _rlGetMatrixProjectionStereo(int(eye))
-    return result
+    return _rlGetMatrixProjectionStereo(_int(eye))
 
 
 def rl_get_matrix_view_offset_stereo(eye):
     # type: (int) -> Matrix
     """Get internal view offset matrix for stereo render (selected eye)"""
-    result = _rlGetMatrixViewOffsetStereo(int(eye))
-    return result
+    return _rlGetMatrixViewOffsetStereo(_int(eye))
 
 
 def rl_set_matrix_projection(proj):
@@ -12735,58 +13564,213 @@ def rl_load_draw_quad():
     """Load and draw a quad"""
     _rlLoadDrawQuad()
 
+# endregion (functions)
+
+# region CONTEXT MANAGERS
+
+# rlapi::raylib
+# ------------------------------------------------------------------------------
+
 @contextmanager
-def drawing():# type: () -> None
-    """Context manager for drawing"""
+def drawing():
+    """Context manager for BeginDrawing and EndDrawing"""
     _BeginDrawing()
     yield
     _EndDrawing()
 
+
 @contextmanager
-def scissor_mode(x, y, width, height):# type: (int, int, int, int) -> None
-    """Context manager for scissor mode"""
-    _BeginScissorMode(int(x), int(y), int(width), int(height))
+def scissor_mode(x, y, width, height):
+    """Context manager for BeginScissorMode and EndScissorMode"""
+    _BeginScissorMode(x, y, width, height)
     yield
     _EndScissorMode()
 
+
 @contextmanager
-def blend_mode(mode):# type: (int) -> None
-    """Context manager for blend mode"""
-    _BeginBlendMode(int(mode))
+def blend_mode(mode):
+    """Context manager for BeginBlendMode and EndBlendMode"""
+    _BeginBlendMode(mode)
     yield
     _EndBlendMode()
 
+
 @contextmanager
-def mode2d(camera):# type: (Camera2D) -> None
-    """Context manager for mode2d"""
+def mode2d(camera):
+    """Context manager for BeginMode2D and EndMode2D"""
     _BeginMode2D(camera)
     yield
     _EndMode2D()
 
+
 @contextmanager
-def mode3d(camera):# type: (Camera3D) -> None
-    """Context manager for mode3d"""
+def mode3d(camera):
+    """Context manager for BeginMode3D and EndMode3D"""
     _BeginMode3D(camera)
     yield
     _EndMode3D()
 
+
 @contextmanager
-def shader_mode(shader):# type: (Shader) -> None
-    """Context manager for shader mode"""
+def shader_mode(shader):
+    """Context manager for BeginShaderMode and EndShaderMode"""
     _BeginShaderMode(shader)
     yield
     _EndShaderMode()
 
+
 @contextmanager
-def texture_mode(target):# type: (RenderTexture2D) -> None
-    """Context manager for texture mode"""
+def texture_mode(target):
+    """Context manager for BeginTextureMode and EndTextureMode"""
     _BeginTextureMode(target)
     yield
     _EndTextureMode()
 
+
 @contextmanager
-def vr_stereo_mode(config):# type: (VrStereoConfig) -> None
-    """Context manager for vr stereo mode"""
+def vr_stereo_mode(config):
+    """Context manager for BeginVrStereoMode and EndVrStereoMode"""
     _BeginVrStereoMode(config)
     yield
     _EndVrStereoMode()
+
+
+# rlapi::rlgl
+# ------------------------------------------------------------------------------
+
+@contextmanager
+def rl_gl(mode):
+    """Context manager for rlBegin and rlEnd"""
+    _rlBegin(mode)
+    yield
+    _rlEnd()
+
+
+@contextmanager
+def rl_vertex_array(vao_id):
+    """Context manager for rlEnableVertexArray and rlDisableVertexArray"""
+    _rlEnableVertexArray(vao_id)
+    yield
+    _rlDisableVertexArray()
+
+
+@contextmanager
+def rl_vertex_buffer(id_):
+    """Context manager for rlEnableVertexBuffer and rlDisableVertexBuffer"""
+    _rlEnableVertexBuffer(id_)
+    yield
+    _rlDisableVertexBuffer()
+
+
+@contextmanager
+def rl_vertex_buffer_element(id_):
+    """Context manager for rlEnableVertexBufferElement and rlDisableVertexBufferElement"""
+    _rlEnableVertexBufferElement(id_)
+    yield
+    _rlDisableVertexBufferElement()
+
+
+@contextmanager
+def rl_vertex_attribute(index):
+    """Context manager for rlEnableVertexAttribute and rlDisableVertexAttribute"""
+    _rlEnableVertexAttribute(index)
+    yield
+    _rlDisableVertexAttribute()
+
+
+@contextmanager
+def rl_texture(id_):
+    """Context manager for rlEnableTexture and rlDisableTexture"""
+    _rlEnableTexture(id_)
+    yield
+    _rlDisableTexture()
+
+
+@contextmanager
+def rl_texture_cubemap(id_):
+    """Context manager for rlEnableTextureCubemap and rlDisableTextureCubemap"""
+    _rlEnableTextureCubemap(id_)
+    yield
+    _rlDisableTextureCubemap()
+
+
+@contextmanager
+def rl_shader(id_):
+    """Context manager for rlEnableShader and rlDisableShader"""
+    _rlEnableShader(id_)
+    yield
+    _rlDisableShader()
+
+
+@contextmanager
+def rl_framebuffer(id_):
+    """Context manager for rlEnableFramebuffer and rlDisableFramebuffer"""
+    _rlEnableFramebuffer(id_)
+    yield
+    _rlDisableFramebuffer()
+
+
+@contextmanager
+def rl_color_blend():
+    """Context manager for rlEnableColorBlend and rlDisableColorBlend"""
+    _rlEnableColorBlend()
+    yield
+    _rlDisableColorBlend()
+
+
+@contextmanager
+def rl_depth_test():
+    """Context manager for rlEnableDepthTest and rlDisableDepthTest"""
+    _rlEnableDepthTest()
+    yield
+    _rlDisableDepthTest()
+
+
+@contextmanager
+def rl_depth_mask():
+    """Context manager for rlEnableDepthMask and rlDisableDepthMask"""
+    _rlEnableDepthMask()
+    yield
+    _rlDisableDepthMask()
+
+
+@contextmanager
+def rl_backface_culling():
+    """Context manager for rlEnableBackfaceCulling and rlDisableBackfaceCulling"""
+    _rlEnableBackfaceCulling()
+    yield
+    _rlDisableBackfaceCulling()
+
+
+@contextmanager
+def rl_scissor_test():
+    """Context manager for rlEnableScissorTest and rlDisableScissorTest"""
+    _rlEnableScissorTest()
+    yield
+    _rlDisableScissorTest()
+
+
+@contextmanager
+def rl_wire_mode():
+    """Context manager for rlEnableWireMode and rlDisableWireMode"""
+    _rlEnableWireMode()
+    yield
+    _rlDisableWireMode()
+
+
+@contextmanager
+def rl_smooth_lines():
+    """Context manager for rlEnableSmoothLines and rlDisableSmoothLines"""
+    _rlEnableSmoothLines()
+    yield
+    _rlDisableSmoothLines()
+
+
+@contextmanager
+def rl_stereo_render():
+    """Context manager for rlEnableStereoRender and rlDisableStereoRender"""
+    _rlEnableStereoRender()
+    yield
+    _rlDisableStereoRender()
+
+# endregion (context managers)

@@ -2,7 +2,7 @@ Raylib-py LICENSE
 
 The MIT License
 
-Copyright (c) 2022 Jorge A. Gomes
+Copyright (c) 2023 Jorge A. Gomes
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@ SOFTWARE.
 
 C Raylic License
 
-Copyright (c) 2013-2022 Ramon Santamaria (@raysan5)
+Copyright (c) 2013-2023 Ramon Santamaria (@raysan5)
 
 This software is provided "as-is", without any express or implied warranty. In no event 
 will the authors be held liable for any damages arising from the use of this software.
