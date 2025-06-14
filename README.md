@@ -180,6 +180,32 @@ Please refer to [DOCS.md for v5.0.0b1](https://github.com/overdev/raylib-py/rele
     Includes all symbols in raymath.h and rlgl.h
 
 
+## Using raylib-py with custom binaries:
+
+When raylib-py is loading, it will check for the existence of a `.raylib` file in the current working dir.
+The presence of this file allows the loading of binaries other than those provided by the raylib-py package.
+
+Example of a `.raylib` file:
+
+```json
+{
+    "raylib": {
+        "win32": {
+            "32bit": "path/to/raylib/filename.dll",
+            "64bit": "path/to/raylib/filename.dll"
+        },
+        "linux": {
+            "32bit": "path/to/raylib/filename.so",
+            "64bit": "path/to/raylib/filename.so"
+        },
+        "darwin": {
+            "64bit": "path/to/raylib/filename.dylib"
+        }
+    }
+}
+```
+
+
 ## Issues:
 - Callback for logging will not work
 
