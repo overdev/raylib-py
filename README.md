@@ -13,25 +13,14 @@
 ![PyPI - Downloads](https://img.shields.io/pypi/dd/raylib-py?label=PyPI%20Downloads&style=plastic)
 
 ![GitHub all releases](https://img.shields.io/github/downloads/overdev/raylib-py/total?style=plastic)
-![GitHub release (by tag)](https://img.shields.io/github/downloads/overdev/raylib-py/v4.5.0/total?style=plastic)
+![GitHub release (by tag)](https://img.shields.io/github/downloads/overdev/raylib-py/v6.0.0/total?style=plastic)
 ![GitHub forks](https://img.shields.io/github/forks/overdev/raylib-py?style=social)
 
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/overdev/raylib-py?style=plastic)
-![GitHub commits since tagged version](https://img.shields.io/github/commits-since/overdev/raylib-py/v4.5.0?style=plastic)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/overdev/raylib-py/v6.0.0?style=plastic)
 
 A python binding for the great _C_ library **[raylib](https://github.com/raysan5/raylib)**.
 
-
-# WARNING: This is a releases-only repository.
-
-Please, read this [issue](https://github.com/overdev/raylib-py/issues/45) for more information.
-
-I intend to use this repository only to publish new raylib-py releases.
-The source in this repo is pretty much outdated and does not reflect the latest release.
-
-## Release Information:
-
-The latest release published here was generated from another project, as mentioned in #45.
 
 ## How to install:
 
@@ -44,7 +33,7 @@ $ pip install raylib-py
 You can also download the wheel from the [releases](https://github.com/overdev/raylib-py/releases) page and install it with pip locally:
 
 ```
-$ pip install path/to/raylib_py-5.0.0-py3-none-any.whl
+$ pip install path/to/raylib_py-6.0.0-py3-none-any.whl
 ```
 
 ## How to use:
@@ -78,18 +67,18 @@ if __name__ == '__main__':
 
 ## API Documentation
 
-Please refer to [DOCS.md for v5.0.0b1](https://github.com/overdev/raylib-py/releases/download/v5.0.0b1/DOCS.md)
+Please refer to [DOCS.md for v6.0.0](https://github.com/overdev/raylib-py/releases/download/v6.0.0) for documentation on raylib-py 6.0.
 
 ## Features:
 - PEP8 naming convention only:
 
     Structure attributes are in `snake_case`, classes and other types in `PascalCase`.
 
-- Type hinting (not type annotation):
+- Type annotation:
 
     ```python
-    def get_ray_collision_mesh(ray, mesh, transform):
-        # type: (Ray, Mesh, Matrix) -> RayCollision
+    def get_ray_collision_mesh(ray: Ray, mesh: Mesh, transform: Matrix) -> RayCollision:
+        ...
     ```
 
 - structures with functions as methods and properties:
@@ -101,6 +90,12 @@ Please refer to [DOCS.md for v5.0.0b1](https://github.com/overdev/raylib-py/rele
     # later...
     sound.play()                                    # same as play_sound(sound)
     length = position.length                        # same as vector2length(position); uses raymath.h functions
+
+    # creates an array of 3 Vector2 structures
+    triangle = Vector2.array(Vector2(10.0, 10.0), Vector2(20.0, 30.0), Vector2(0.0, 30.0))
+
+    # creates an array of 24 Image structures, zero initialized
+    frames = Image.array(length=24)
     ```
     
 - Vector{2,3,4}, Rectangle and Color have attribute swizzling;
@@ -179,55 +174,4 @@ Please refer to [DOCS.md for v5.0.0b1](https://github.com/overdev/raylib-py/rele
 
     Includes all symbols in raymath.h and rlgl.h
 
-
-## Using raylib-py with custom binaries:
-
-When raylib-py is loading, it will check for the existence of a `.raylib` file in the current working dir.
-The presence of this file allows the loading of binaries other than those provided by the raylib-py package.
-
-Example of a `.raylib` file:
-
-```json
-{
-    "raylib": {
-        "win32": {
-            "32bit": "path/to/raylib/filename.dll",
-            "64bit": "path/to/raylib/filename.dll"
-        },
-        "linux": {
-            "32bit": "path/to/raylib/filename.so",
-            "64bit": "path/to/raylib/filename.so"
-        },
-        "darwin": {
-            "64bit": "path/to/raylib/filename.dylib"
-        }
-    }
-}
-```
-
-
-## Issues:
-- Callback for logging will not work
-
-    I've no good workaround for wrapping C functions with variable number of arguments.
-    If you know how to solve this issue, your help would be appreciated.
-
-- Functions with `vararg` will not work
-
-    For the reason above.
-
-- Avoid string manipulation functions
-
-    For the reason above, also because some functions involve memory allocation and manual freeing of resources. Python string methods can provide you with same and more functionality.
-
-- Some examples are broken due to API changes
-
-    There was some function renaming, some changes in the examples to update to newer releases.
-
-## Would you like to have a more customized binding for raylib?
-
-Again, in issue 45 I explain the actual state of this project in more detail.
-
-It my seems like bad news but actually it is the contrary.
-
-Please, take a look at this project: [raylibpyctbg](https://github.com/overdev/raylibpyctbg)
+And more.
