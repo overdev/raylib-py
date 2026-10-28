@@ -13,11 +13,11 @@
 ![PyPI - Downloads](https://img.shields.io/pypi/dd/raylib-py?label=PyPI%20Downloads&style=plastic)
 
 ![GitHub all releases](https://img.shields.io/github/downloads/overdev/raylib-py/total?style=plastic)
-![GitHub release (by tag)](https://img.shields.io/github/downloads/overdev/raylib-py/v6.0.0/total?style=plastic)
+![GitHub release (by tag)](https://img.shields.io/github/downloads/overdev/raylib-py/v6.2.0/total?style=plastic)
 ![GitHub forks](https://img.shields.io/github/forks/overdev/raylib-py?style=social)
 
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/overdev/raylib-py?style=plastic)
-![GitHub commits since tagged version](https://img.shields.io/github/commits-since/overdev/raylib-py/v6.0.0?style=plastic)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/overdev/raylib-py/v6.2.0?style=plastic)
 
 A python binding for the great _C_ library **[raylib](https://github.com/raysan5/raylib)**.
 
@@ -33,7 +33,7 @@ $ pip install raylib-py
 You can also download the wheel from the [releases](https://github.com/overdev/raylib-py/releases) page and install it with pip locally:
 
 ```
-$ pip install path/to/raylib_py-6.0.0-py3-none-any.whl
+$ pip install path/to/raylib_py-6.2.0-py3-none-any.whl
 ```
 
 ## How to use:
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
 ## API Documentation
 
-Please refer to [DOCS.md for v6.0.0](https://github.com/overdev/raylib-py/releases/download/v6.0.0) for documentation on raylib-py 6.0.
+Please refer to [`raylibpy-documentation.html` for v6.2.0](https://github.com/overdev/raylib-py/releases/download/v6.2.0) for documentation on raylib-py 6.2.
 
 ## Features:
 - PEP8 naming convention only:
